@@ -1,17 +1,22 @@
-# Build the browser app and deploy it to Cloudflare Pages.
-#
-# Cloudflare rather than GitHub Pages because the demo is internal: a Pages site from a private repo
-# is still a *public* site on anything below Enterprise Cloud, whereas Cloudflare Access gates the
-# link by SSO. Nothing here assumes the repo is private, though — only that the assets are.
+# Build the browser app and publish it to GitHub Pages.
 #
 # The assets are in the repo under `assets/` — checkpoint, clip, robot model and the pre-exported
 # brace graph — so the build is a checkout away and there is no fetch step to keep in sync.
+#
+# Pages rather than a third-party host because the repo is public: the site serves the same files a
+# clone already gives you, so gating it would protect nothing, and this needs no account, no
+# secrets and no CLI.
 name: deploy
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -42,33 +47,26 @@ jobs:
 
       - name: Build
         run: |
+          # A project page is served from /<repo>/, and Vite bakes asset URLs at build time, so the
+          # base path has to be set here or the deployed page loads nothing.
           python -m robogym_online.build_app \
             --exert \
             --brace assets/brace.onnx \
+            --base-path "/${GITHUB_REPOSITORY#*/}/" \
             --output dist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-pages-artifact@v3
         with:
-          name: robogym-online-dist
           path: dist
-          retention-days: 14
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # Deploy only from main, so a PR gets the artifact above without touching the live link.
+    # Publish only from main, so a PR still gets its build checked without moving the live site.
     if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: robogym-online-dist
-          path: dist
-
-      # Access itself is configured once in the Cloudflare dashboard (a policy on the project's
-      # hostname restricted to the company domain); a deploy does not change it.
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=robogym-online
+      - id: deployment
+        uses: actions/deploy-pages@v4

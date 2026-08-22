@@ -660,6 +660,7 @@ def build(
     output: Path,
     exert: bool,
     brace: Path,
+    base_path: str,
 ) -> mjswan.Builder:
     contract = load_contract(onnx_dir)
     model = onnx.load(str(onnx_dir / "unified_pipeline.onnx"), load_external_data=True)
@@ -697,7 +698,9 @@ def build(
     # action history is seeded with a real reference rather than a zero pose.
     first_frame_dof = np.load(clip_path)["joint_pos"][0].astype(float).tolist()
 
-    builder = mjswan.Builder()
+    # A project site is served from a subpath (`/<repo>/`), and the bundle's asset URLs are baked
+    # at build time -- so a default of "/" deploys a page that loads nothing.
+    builder = mjswan.Builder(base_path=base_path)
     project = builder.add_project(name="G1 Force Control")
     scene = project.add_scene(name="Unitree G1", spec=spec, control_dt=control_dt)
     scene.set_trace_env(
@@ -848,6 +851,11 @@ def main() -> None:
         action="store_true",
         help="wire exert mode (needs --brace; blocked on onnxruntime-web, see the README)",
     )
+    parser.add_argument(
+        "--base-path",
+        default=os.environ.get("ROBOGYM_BASE_PATH", "/"),
+        help="URL prefix the site is served under, e.g. /robogym-online/ for a project page",
+    )
     parser.add_argument("--serve", action="store_true", help="serve the build on localhost")
     args = parser.parse_args()
     # Absolute: a relative output path is not resolved against the cwd downstream, so the build
@@ -856,7 +864,7 @@ def main() -> None:
 
     builder = build(
         args.onnx_dir, args.motion_file, args.mjcf, args.motion_index, args.output, args.exert,
-        args.brace,
+        args.brace, args.base_path,
     )
     app = builder.build(output_dir=str(args.output))
     if args.exert:
