@@ -1,10 +1,6 @@
-# Build output and materialized assets. The policy is ~23 MB and is not redistributed here; the
-# clip and the robot model are fetched too. Nothing large belongs in git.
+# Build output. The assets under `assets/` ARE tracked (see the README): the app is nothing without
+# them, and keeping them here is what makes a clone buildable and the CI deploy a one-step job.
 dist/
-assets/
-*.onnx
-*.npz
-*.pt
 policy_io_keys.json
 MUJOCO_LOG.TXT
 __pycache__/

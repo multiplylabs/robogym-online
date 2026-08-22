@@ -4,10 +4,8 @@
 # is still a *public* site on anything below Enterprise Cloud, whereas Cloudflare Access gates the
 # link by SSO. Nothing here assumes the repo is private, though — only that the assets are.
 #
-# The assets are not in the repo. The policy is not ours to redistribute and is ~23 MB besides, so
-# the checkpoint, the clip, the robot model and the pre-exported brace graph are fetched into
-# `assets/` before the build. Wire `fetch-assets` to wherever they live (a private release, S3, DVC,
-# W&B) — it is deliberately the only step that knows.
+# The assets are in the repo under `assets/` — checkpoint, clip, robot model and the pre-exported
+# brace graph — so the build is a checkout away and there is no fetch step to keep in sync.
 name: deploy
 
 on:
@@ -41,19 +39,6 @@ jobs:
           # gigabytes of wheels this job never runs a kernel on.
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e .
-
-      - name: Fetch assets
-        env:
-          ASSET_TOKEN: ${{ secrets.ASSET_TOKEN }}
-        run: |
-          # Expected layout, matching the ROBOGYM_* defaults in build_app.py:
-          #   assets/compiled_models/{unified_pipeline.onnx,unified_pipeline.yaml}
-          #   assets/compiled_models/../resolved_configs_inference.yaml
-          #   assets/motion.pt
-          #   assets/mjcf/g1_holo_compat.xml   (+ its meshes/)
-          #   assets/brace.onnx
-          echo "::error::fetch-assets is not wired up yet; see the comment above."
-          exit 1
 
       - name: Build
         run: |

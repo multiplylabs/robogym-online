@@ -10,9 +10,12 @@ reference clip in green, the force-adjusted goal in red, and the robot itself.
 
 Built on [mjswan](https://github.com/ttktjmt/mjswan) (Apache-2.0).
 
-> **The policy is not in this repo.** The checkpoint, the reference clip, the robot model and the
-> pre-exported brace graph are fetched at build time. What lives here is the browser app and the
-> bridge to the policy's contract.
+> **Everything needed to build is here**, under `assets/`: the exported policy, the reference clip,
+> the robot model and its meshes, and the pre-exported brace graph. Clone, install, build.
+>
+> The clip is a *converted* one (0.5 MB), not the ProtoMotions motion library it came from (170 MB
+> for 601 clips, of which this plays one). The brace graph is likewise pre-exported: exporting it
+> needs ProtoMotions and the training-side whole-body IK, which live elsewhere.
 
 ## What is interesting here
 
@@ -38,9 +41,11 @@ policy client-side therefore means running that solver client-side too.
 
 ```sh
 pip install -e .
-# Assets: see the ROBOGYM_* defaults in build_app.py, or pass the flags.
 python -m robogym_online.build_app --exert --brace assets/brace.onnx --serve
 ```
+
+Paths default to `assets/` and can be overridden with `--onnx-dir`, `--motion-file`, `--mjcf` or the
+matching `ROBOGYM_*` environment variables.
 
 `--serve` hosts it on localhost. The build is a plain static directory — it needs no COOP/COEP
 headers, so any static host or `python -m http.server` will serve it.

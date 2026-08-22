@@ -52,7 +52,7 @@ HERE = Path(__file__).resolve().parent
 # to redistribute. Point these at wherever they were materialized (CI fetches them; see the
 # workflow), or pass the flags.
 DEFAULT_ONNX_DIR = Path(os.environ.get("ROBOGYM_ONNX_DIR", "assets/compiled_models"))
-DEFAULT_MOTION = Path(os.environ.get("ROBOGYM_MOTION", "assets/motion.pt"))
+DEFAULT_MOTION = Path(os.environ.get("ROBOGYM_MOTION", "assets/motion.npz"))
 DEFAULT_MJCF = Path(os.environ.get("ROBOGYM_MJCF", "assets/mjcf/g1_holo_compat.xml"))
 
 # Proprioception history depth, from the contract's `historical.*` inputs.
@@ -675,15 +675,23 @@ def build(
 
     # The reference clip, resampled so one clip frame is one control step -- which is what makes
     # a `future_step_indices` offset mean the same thing it meant in training.
-    clip_bytes = convert(
-        motion_pt,
-        motion_index=motion_index,
-        target_fps=1.0 / control_dt,
-        body_names=body_names,
-    )
+    #
+    # An already-converted `.npz` is taken as-is. A ProtoMotions motion library is hundreds of
+    # megabytes and holds hundreds of clips; converting the one we play is a thousandth of that, so
+    # the repo carries the clip rather than the library.
     clip_path = output.parent / f"{motion_pt.stem}_{motion_index}.npz"
     clip_path.parent.mkdir(parents=True, exist_ok=True)
-    clip_path.write_bytes(clip_bytes)
+    if motion_pt.suffix == ".npz":
+        clip_path = motion_pt
+    else:
+        clip_path.write_bytes(
+            convert(
+                motion_pt,
+                motion_index=motion_index,
+                target_fps=1.0 / control_dt,
+                body_names=body_names,
+            )
+        )
 
     # The pose the robot holds before the first inference: the clip's first frame, so the
     # action history is seeded with a real reference rather than a zero pose.
