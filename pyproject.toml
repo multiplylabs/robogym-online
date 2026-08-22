@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "robogym-online"
+version = "0.1.0"
+description = "Whole-body humanoid force control in the browser: MuJoCo-WASM, ONNX policies, no server"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Apache-2.0" }
+
+dependencies = [
+  # The browser engine and its Builder. Pinned to a fork carrying the additions this app needs
+  # (windowed reference fields, structured policy inputs, the pose ghost, the hand spring
+  # contact, the ORT-Web session fallback); each is upstream-shaped and tracked for a PR back.
+  "mjswan @ git+https://github.com/multiplylabs/mjswan@robogym",
+  "mujoco>=3.10",
+  "onnx>=1.16",
+  "onnxruntime>=1.18",
+  "numpy>=1.26",
+  "pyyaml>=6",
+  # Only for the clip converter and the traced observation terms.
+  "torch>=2.4",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.6", "black>=24"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/robogym_online"]
+
+[tool.black]
+line-length = 110
+
+[tool.ruff]
+line-length = 110

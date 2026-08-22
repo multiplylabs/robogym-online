@@ -1,0 +1,12 @@
+# Build output and materialized assets. The policy is ~23 MB and is not redistributed here; the
+# clip and the robot model are fetched too. Nothing large belongs in git.
+dist/
+assets/
+*.onnx
+*.npz
+*.pt
+policy_io_keys.json
+MUJOCO_LOG.TXT
+__pycache__/
+*.egg-info/
+.venv/

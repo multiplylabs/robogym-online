@@ -1,0 +1,85 @@
+# Build the browser app and deploy it to Cloudflare Pages.
+#
+# Cloudflare rather than GitHub Pages because the demo is internal: a Pages site from a private repo
+# is still a *public* site on anything below Enterprise Cloud, whereas Cloudflare Access gates the
+# link by SSO. Nothing here assumes the repo is private, though — only that the assets are.
+#
+# The assets are not in the repo. The policy is not ours to redistribute and is ~23 MB besides, so
+# the checkpoint, the clip, the robot model and the pre-exported brace graph are fetched into
+# `assets/` before the build. Wire `fetch-assets` to wherever they live (a private release, S3, DVC,
+# W&B) — it is deliberately the only step that knows.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # mjswan's Builder shells out to Vite. Given a system Node it uses it rather than
+      # provisioning its own, which is both faster and avoids its npm-without-PATH bug.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Fetch assets
+        env:
+          ASSET_TOKEN: ${{ secrets.ASSET_TOKEN }}
+        run: |
+          # Expected layout, matching the ROBOGYM_* defaults in build_app.py:
+          #   assets/compiled_models/{unified_pipeline.onnx,unified_pipeline.yaml}
+          #   assets/compiled_models/../resolved_configs_inference.yaml
+          #   assets/motion.pt
+          #   assets/mjcf/g1_holo_compat.xml   (+ its meshes/)
+          #   assets/brace.onnx
+          echo "::error::fetch-assets is not wired up yet; see the comment above."
+          exit 1
+
+      - name: Build
+        run: |
+          python -m robogym_online.build_app \
+            --exert \
+            --brace assets/brace.onnx \
+            --output dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: robogym-online-dist
+          path: dist
+          retention-days: 14
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Deploy only from main, so a PR gets the artifact above without touching the live link.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: robogym-online-dist
+          path: dist
+
+      # Access itself is configured once in the Cloudflare dashboard (a policy on the project's
+      # hostname restricted to the company domain); a deploy does not change it.
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=robogym-online
