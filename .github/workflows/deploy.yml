@@ -36,7 +36,11 @@ jobs:
           node-version: "22"
 
       - name: Install
-        run: pip install -e .
+        run: |
+          # CPU torch first, explicitly: the default index resolves the CUDA build, which is
+          # gigabytes of wheels this job never runs a kernel on.
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e .
 
       - name: Fetch assets
         env:

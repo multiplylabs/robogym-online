@@ -15,13 +15,15 @@ dependencies = [
   # (windowed reference fields, structured policy inputs, the pose ghost, the hand spring contact,
   # the ORT-Web session fallback); each is upstream-shaped and tracked for a PR back.
   #
-  # The `examples` extra is not optional for us: it brings mjlab, whose entity API the observation
-  # terms are written against, plus torch and onnxruntime.
-  #
-  # `mujoco` and `onnx` are deliberately NOT pinned here. mjswan pins them, and it has to: the
-  # Python-side MuJoCo has to match the WASM engine its build ships. Restating a floor here only
-  # produces a resolver conflict with the version that actually works.
-  "mjswan[examples] @ git+https://github.com/multiplylabs/mjswan@robogym",
+  # NOT `mjswan[examples]`: that extra also carries myosuite, which requires mujoco < 3.7 and can
+  # therefore never coexist with mjlab's ~= 3.10 -- the extra is unsatisfiable as a whole. We need
+  # exactly one thing out of it, so mjlab is taken directly, at the version mjswan pins.
+  "mjswan @ git+https://github.com/multiplylabs/mjswan@robogym",
+  # mjlab's entity API is what the observation terms are written against; it also carries the
+  # mujoco floor (~= 3.10), so `mujoco` is left unpinned here on purpose.
+  "mjlab==1.5.3",
+  "onnxruntime>=1.18",
+  "torch>=2.4",
   "numpy>=1.26",
   "pyyaml>=6",
 ]
