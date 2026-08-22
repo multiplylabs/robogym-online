@@ -27,6 +27,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["ruff>=0.6", "black>=24"]
 
+# The mjswan pin is a git URL, which hatchling refuses to treat as a dependency unless direct
+# references are allowed explicitly.
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/robogym_online"]
 
