@@ -1,0 +1,134 @@
+[
+  {
+    "name": "idle",
+    "file": "idle.npz",
+    "source_index": 19166,
+    "command": [
+      -0.0003,
+      0.0001,
+      -0.0021
+    ],
+    "frames": 400
+  },
+  {
+    "name": "forward",
+    "file": "forward.npz",
+    "source_index": 16975,
+    "command": [
+      0.5425,
+      -0.0019,
+      -0.095
+    ],
+    "frames": 400
+  },
+  {
+    "name": "backward",
+    "file": "backward.npz",
+    "source_index": 6921,
+    "command": [
+      -0.402,
+      -0.0026,
+      -0.0657
+    ],
+    "frames": 394
+  },
+  {
+    "name": "run",
+    "file": "run.npz",
+    "source_index": 19872,
+    "command": [
+      1.4719,
+      0.0209,
+      -0.2274
+    ],
+    "frames": 203
+  },
+  {
+    "name": "left",
+    "file": "left.npz",
+    "source_index": 1134,
+    "command": [
+      0.3038,
+      0.4581,
+      0.2576
+    ],
+    "frames": 171
+  },
+  {
+    "name": "right",
+    "file": "right.npz",
+    "source_index": 6644,
+    "command": [
+      0.3034,
+      -0.4582,
+      -0.2649
+    ],
+    "frames": 171
+  },
+  {
+    "name": "forward_left",
+    "file": "forward_left.npz",
+    "source_index": 6753,
+    "command": [
+      0.4605,
+      0.3165,
+      4.0047
+    ],
+    "frames": 318
+  },
+  {
+    "name": "forward_right",
+    "file": "forward_right.npz",
+    "source_index": 269,
+    "command": [
+      0.4605,
+      -0.3164,
+      -4.0021
+    ],
+    "frames": 318
+  },
+  {
+    "name": "backward_left",
+    "file": "backward_left.npz",
+    "source_index": 17821,
+    "command": [
+      -0.298,
+      0.2457,
+      0.1113
+    ],
+    "frames": 400
+  },
+  {
+    "name": "backward_right",
+    "file": "backward_right.npz",
+    "source_index": 554,
+    "command": [
+      -0.2979,
+      -0.2457,
+      -0.1111
+    ],
+    "frames": 400
+  },
+  {
+    "name": "turn_left",
+    "file": "turn_left.npz",
+    "source_index": 3710,
+    "command": [
+      0.1946,
+      -0.0075,
+      35.6512
+    ],
+    "frames": 246
+  },
+  {
+    "name": "turn_right",
+    "file": "turn_right.npz",
+    "source_index": 25176,
+    "command": [
+      0.1945,
+      0.0075,
+      -35.6571
+    ],
+    "frames": 246
+  }
+]
