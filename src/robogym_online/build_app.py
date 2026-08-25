@@ -537,6 +537,7 @@ def build(
     exert: bool,
     brace: Path,
     base_path: str,
+    stream: str | None = None,
 ) -> mjswan.Builder:
     contract = load_contract(onnx_dir)
     model = onnx.load(str(onnx_dir / "unified_pipeline.onnx"), load_external_data=True)
@@ -654,6 +655,11 @@ def build(
         body_names=tuple(body_names),
         dataset_joint_names=joint_names,
         default=True,
+        # With a stream configured the bundled clip is only what plays until the generator's first
+        # frames arrive, at which point the browser switches to them and resets onto frame 0. The
+        # clip still has to be here: it carries the body/joint manifest and gives the robot a
+        # reference to track for the second or so the opening generation takes.
+        metadata={"stream": {"url": stream}} if stream else None,
         # The default source advances the clip off the value the runtime passes the command
         # manager, which is `timestep * decimation` -- the control step. So it steps exactly one
         # clip frame per control step (the clip is resampled to 1/control_dt for that), it holds
@@ -732,6 +738,14 @@ def main() -> None:
         default=os.environ.get("ROBOGYM_BASE_PATH", "/"),
         help="URL prefix the site is served under, e.g. /robogym-online/ for a project page",
     )
+    parser.add_argument(
+        "--stream",
+        default=os.environ.get("ROBOGYM_STREAM"),
+        help=(
+            "websocket URL of a wasd_server, e.g. ws://localhost:8765 -- makes the reference live "
+            "and steerable with WASD instead of a fixed clip"
+        ),
+    )
     parser.add_argument("--serve", action="store_true", help="serve the build on localhost")
     args = parser.parse_args()
     # Absolute: a relative output path is not resolved against the cwd downstream, so the build
@@ -740,7 +754,7 @@ def main() -> None:
 
     builder = build(
         args.onnx_dir, args.motion_file, args.mjcf, args.motion_index, args.output, args.exert,
-        args.brace, args.base_path,
+        args.brace, args.base_path, args.stream,
     )
     app = builder.build(output_dir=str(args.output))
     if args.exert:
