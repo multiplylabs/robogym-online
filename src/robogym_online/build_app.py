@@ -672,6 +672,19 @@ def build(
     return builder
 
 
+def install_stream_pointer(dist: Path, source: Path) -> None:
+    """Copy ``stream.json`` next to the built page, if the repo carries one.
+
+    The page reads it at load to find a generator. It lives beside the page rather than inside the
+    bundle so that moving the generator -- a restarted tunnel, a replaced machine -- costs a hundred
+    bytes rather than a rebuild and a redeploy of an eighty-megabyte site.
+    """
+    if not source.is_file():
+        return
+    shutil.copy2(source, dist / source.name)
+    print(f"  stream pointer -> {dist / source.name}: {source.read_text().strip()}")
+
+
 def install_brace_graph(dist: Path, brace: Path) -> None:
     """Copy the brace graph into each built scene, where its config's ``onnx`` ref points.
 
@@ -759,6 +772,7 @@ def main() -> None:
     app = builder.build(output_dir=str(args.output))
     if args.exert:
         install_brace_graph(args.output, args.brace)
+    install_stream_pointer(args.output, Path("stream.json"))
     print(f"built {args.output}")
     if args.serve or os.getenv("FORCE_WEB_SERVE") == "1":
         app.launch()
