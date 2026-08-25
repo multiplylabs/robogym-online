@@ -13,7 +13,8 @@ Controls (in the viewer window):
 
     W / S     walk forward / back        Q / E   turn left / right
     A / D     strafe left / right        space   stop
-    R / F     hand force +/- 5 N         X       zero the hand force
+    1 . . 9   pick a locomotion style    R / F   hand force +/- 5 N
+    X         zero the hand force
 
 The reference is generated ahead of the robot, not with it: :class:`ReferenceStream` keeps roughly a
 second in hand, so a keypress lands a stride or so later. That lag is inherent to steering a
@@ -232,6 +233,12 @@ def _make_key_callback(runner: Runner, state: dict):
             runner.hand_force[0] -= HAND_FORCE_STEP_N
         elif key == "x":
             runner.hand_force[:] = 0.0
+        elif key.isdigit() and key != "0":
+            styles = getattr(runner.stream, "styles", ())
+            index = int(key) - 1
+            if index < len(styles):
+                runner.stream.set_style(styles[index])
+                print(f"style: {styles[index]}")
 
     return key_callback
 
@@ -241,6 +248,7 @@ def main() -> None:
     parser.add_argument("--onnx-dir", type=Path, default=DEFAULT_ONNX_DIR)
     parser.add_argument("--mjcf", type=Path, default=DEFAULT_MJCF)
     parser.add_argument("--hand", default="left_rubber_hand")
+    parser.add_argument("--style", default=None, help="locomotion style to start in")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument(
         "--generator",
@@ -272,6 +280,11 @@ def main() -> None:
         args.generator, args.motionbricks_root,
     )
     runner.hand_force[:] = [float(v) for v in args.hand_force.split(",")]
+    if args.style:
+        runner.stream.set_style(args.style)
+    styles = getattr(runner.stream, "styles", ())
+    if styles:
+        print("styles (number keys): " + ", ".join(f"{i + 1}={n}" for i, n in enumerate(styles)))
 
     if args.script:
         from .ardy_reference import parse_segment

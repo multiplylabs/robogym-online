@@ -49,9 +49,26 @@ MOTIONBRICKS_FPS = 30.0
 # Frames of generated motion kept ahead of the consumer. Small on purpose: the generator is faster
 # than real time, and everything buffered was produced under an older command, so depth is latency.
 LEAD_FRAMES = 12
-# Speed thresholds, in m/s, for choosing a locomotion mode from the commanded speed.
+# The styles offered to an operator, in the order the number keys select them.
+#
+# MotionBricks carries more than these -- the crawls in particular -- and they are left out because
+# the force policy cannot track them: asked to hand-crawl it ends up on the floor within a couple of
+# seconds (measured, and unsurprising, since crawling is nowhere near what a walking tracker was
+# trained on). Everything listed here was measured tracking upright at 0.06-0.18 rad of joint error.
+STYLES: tuple[str, ...] = (
+    "walk",
+    "slow_walk",
+    "stealth_walk",
+    "walk_boxing",
+    "injured_walk",
+    "walk_happy_dance",
+    "walk_zombie",
+    "walk_gun",
+    "walk_scared",
+)
+
+# Below this commanded speed, in m/s, the robot is asked to stand rather than to walk.
 IDLE_SPEED = 0.05
-SLOW_WALK_SPEED = 0.45
 # Beyond this angle between travel and facing, use the slow clip. Just under a right angle, so
 # strafing and backing up are slow while a gentle diagonal still walks at pace.
 OFF_AXIS_SLOW_RAD = math.radians(75.0)
@@ -233,6 +250,22 @@ class MotionBricksStream:
 
     # -- command ----------------------------------------------------------------
 
+    @property
+    def styles(self) -> tuple[str, ...]:
+        """The styles this generator will accept, in selection order."""
+        return tuple(name for name in STYLES if name in self._modes)
+
+    @property
+    def style(self) -> str:
+        """The style currently selected."""
+        return self._walk_mode
+
+    def set_style(self, name: str) -> None:
+        """Choose the locomotion style. Takes effect on the next generated frame."""
+        if name not in self._modes:
+            raise ValueError(f"unknown style {name!r}; have {self.styles}")
+        self._walk_mode = name
+
     def set_command(self, forward: float, lateral: float, turn_deg: float) -> None:
         """Set the velocity command, in the robot's own frame (m/s, m/s, deg/s).
 
@@ -303,18 +336,7 @@ class MotionBricksStream:
         facing = np.array([math.cos(facing_angle), math.sin(facing_angle), 0.0])
         movement = np.array([math.cos(self._move_angle), math.sin(self._move_angle), 0.0])
 
-        # Sideways and backward travel go at the slow clip's pace. The speed of a reference comes
-        # from the clip, not from the commanded magnitude, and the walk clip carries it at over a
-        # metre a second in whatever direction it is pointed -- which the policy tracks forwards and
-        # falls over backwards. Off-axis travel is the case that needs the slower gait.
-        off_axis = abs((math.atan2(lateral, forward) + math.pi) % (2.0 * math.pi) - math.pi)
-        if speed <= IDLE_SPEED:
-            mode = "idle"
-        elif (speed < SLOW_WALK_SPEED or off_axis > OFF_AXIS_SLOW_RAD) and "slow_walk" in self._modes:
-            mode = "slow_walk"
-        else:
-            mode = self._walk_mode
-        mode_index = torch.tensor([[self._modes.index(mode)]])
+        mode_index = torch.tensor([[self._modes.index(self.current_mode())]])
 
         context = self._context_window()
         signals = {
@@ -350,13 +372,19 @@ class MotionBricksStream:
         return float(np.linalg.norm(span[-1] - span[0])) / (19.0 / MOTIONBRICKS_FPS)
 
     def current_mode(self) -> str:
-        """The locomotion clip the current command selects -- for diagnostics."""
-        forward, lateral, turn = self._command
-        speed = math.hypot(forward, lateral)
-        off_axis = abs((math.atan2(lateral, forward) + math.pi) % (2.0 * math.pi) - math.pi)
-        if speed <= IDLE_SPEED:
+        """The clip the current command and style select.
+
+        Standing still and travelling off-axis override the chosen style. The speed of a reference
+        comes from its clip rather than from the commanded magnitude, and every style here is a
+        *forward* gait carried at around a metre a second in whatever direction it is pointed --
+        which the policy tracks forwards and falls over backwards. Sideways and backward therefore
+        drop to the slow walk whatever style is selected.
+        """
+        forward, lateral, _ = self._command
+        if math.hypot(forward, lateral) <= IDLE_SPEED:
             return "idle"
-        if (speed < SLOW_WALK_SPEED or off_axis > OFF_AXIS_SLOW_RAD) and "slow_walk" in self._modes:
+        off_axis = abs((math.atan2(lateral, forward) + math.pi) % (2.0 * math.pi) - math.pi)
+        if off_axis > OFF_AXIS_SLOW_RAD and "slow_walk" in self._modes:
             return "slow_walk"
         return self._walk_mode
 

@@ -19,6 +19,7 @@ at 50 Hz, which as JSON would be several times that. Each data message is::
 
 Client messages are JSON: ``{"type": "command", "forward": .., "lateral": .., "turn": ..}``,
 ``{"type": "request", "from": i, "count": n}``, and one of the feedback messages --
+``{"type": "style", "name": ".."}`` (one of the styles the hello announced),
 ``{"type": "context", "qpos": [..], "frame": i}`` (the robot's pose, 7 + ndof in the contract's
 order, and the reference frame it is tracking) or
 ``{"type": "lag", "dx": .., "dy": ..}``.
@@ -118,6 +119,7 @@ class RemoteReferenceStream:
             raise RuntimeError(f"expected a hello, got {hello.get('type')!r}")
         self.control_dt = float(hello["control_dt"])
         self.body_names = list(hello["body_names"])
+        self.styles = tuple(hello.get("styles", ()))
         self._n_dofs = int(hello["n_dofs"])
         self._lead = lead
         self._block = block
@@ -137,6 +139,9 @@ class RemoteReferenceStream:
 
     def set_lag(self, dx: float, dy: float) -> None:
         self._socket.send(json.dumps({"type": "lag", "dx": float(dx), "dy": float(dy)}))
+
+    def set_style(self, name: str) -> None:
+        self._socket.send(json.dumps({"type": "style", "name": name}))
 
     def set_command(self, forward: float, lateral: float, turn_deg: float) -> None:
         self._socket.send(
@@ -212,6 +217,9 @@ async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None
                 "n_dofs": len(contract["joint_names"]),
                 "body_names": list(contract["body_names"]),
                 "fields": [[name, list(shape)] for name, shape in FIELDS],
+                # The locomotion styles this generator offers, in selection order, so the client
+                # can present them without knowing what is behind the socket.
+                "styles": list(getattr(stream, "styles", ())),
             }
         )
     )
@@ -232,6 +240,9 @@ async def _pump(websocket, stream) -> None:
         request = json.loads(message)  # a closed connection ends the iteration, not an error
         if request["type"] == "command":
             stream.set_command(request["forward"], request["lateral"], request["turn"])
+        elif request["type"] == "style":
+            stream.set_style(request["name"])
+            print(f"style: {request['name']}")
         elif request["type"] == "context":
             stream.set_context_qpos(
                 np.asarray(request["qpos"], dtype=np.float64), request.get("frame")
