@@ -30,7 +30,7 @@ import onnxruntime as ort
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from build_app import (  # noqa: E402
+from scene import (  # noqa: E402
     DEFAULT_MJCF,
     DEFAULT_MOTION,
     DEFAULT_ONNX_DIR,
@@ -129,8 +129,13 @@ def run(
         raise ValueError(f"no body named {hand!r}")
     force_w = np.asarray(hand_force, dtype=np.float64)
 
-    clip_bytes = convert(motion_pt, motion_index, 1.0 / control_dt, body_names)
-    npz = dict(np.load(__import__("io").BytesIO(clip_bytes)))
+    # A pre-converted `.npz` is played as-is, at the rate it was built for; only a ProtoMotions
+    # library needs slicing and resampling here.
+    if motion_pt.suffix == ".npz":
+        npz = dict(np.load(motion_pt))
+    else:
+        clip_bytes = convert(motion_pt, motion_index, 1.0 / control_dt, body_names)
+        npz = dict(np.load(__import__("io").BytesIO(clip_bytes)))
     clip = ClipWindow(npz, time_steps)
 
     # mjlab's per-body / per-joint element order is the model's, free joint excluded, and the
