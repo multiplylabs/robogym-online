@@ -57,6 +57,37 @@ headers, so any static host or `python -m http.server` will serve it.
 | `convert_motion.py` | Reference clip → mjswan's `body_world` npz, resampled to the control rate. |
 | `check_tracking.py` | Headless replica of the browser's control loop, for checking the contract without a browser. |
 
+## Driving it with a keyboard
+
+The published page plays a recorded clip. Point it at a running generator and the same page becomes
+steerable instead:
+
+```sh
+# on a machine with the model (no GPU needed -- see below)
+python -m robogym_online.wasd_server --generator onnx
+```
+
+then open the page with `?stream=ws://localhost:8765` (or a `wss://` host, which is what an
+HTTPS-served page requires -- a secure page may not open an insecure socket).
+
+| key | |
+|---|---|
+| `W` / `S` | walk forward / backward |
+| `A` / `D` | sidestep left / right |
+| `Q` / `E` | turn left / right |
+| `space` | stop |
+| `1` – `9` | locomotion style, listed bottom-left |
+
+The policy is a mimic tracker: it follows a reference and has no notion of a velocity command, so
+something upstream has to *invent* the reference. That is MotionBricks, in one of two forms:
+
+| `--generator` | needs | notes |
+|---|---|---|
+| `onnx` | CPU only, ~2.1 GB | the model frozen to ONNX, as SONIC's controller ships it. 22 ms per 2.1 s of motion; 12 styles |
+| `motionbricks` | a CUDA GPU, ~4 GB + 1.5 GB VRAM | the PyTorch release. 9 styles |
+
+Both talk the same protocol, so the browser cannot tell which is behind the socket.
+
 ## The controls
 
 **Hand Force** — six sliders applying an external force *to* each hand, in world axes, for
