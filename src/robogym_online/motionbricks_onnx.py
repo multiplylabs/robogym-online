@@ -19,9 +19,17 @@ checkpoint I have found; each is worth watching before trusting the label.
 
 **Where the sampling loop lives.** The Python agent keeps its own rolling buffer and hands out one
 frame at a time; the graph has no memory at all. Every call is given four frames of context and
-answers with up to sixty-four, of which this keeps a prefix -- so the context is simply the tail of
-what has already been committed, and the receding-horizon bookkeeping that was implicit becomes
-explicit here.
+answers with up to sixty-four, so the receding-horizon bookkeeping that was implicit becomes
+explicit here: the context is the tail of what has already been committed, and a prefix of the
+answer is kept.
+
+The answer does not begin where the context ends. Its first four frames *restate* the context --
+measurably so: they reproduce it to 0.009 rad where a frame of walking moves 0.017 -- and new motion
+starts at the fifth. The agent hides this by feeding the four frames it is about to play and then
+playing its own reconstruction of them in their place; committing from frame zero here instead
+replays four frames the robot has already walked, once per horizon. That reads as a stutter, and it
+costs distance: the reference stepped backwards by as much as nine centimetres at every seam and
+advanced twenty frames for every twenty-four generated, walking a sixth slower than it should.
 """
 
 from __future__ import annotations
@@ -90,6 +98,11 @@ ONNX_STYLES: tuple[str, ...] = (
 # needed this constant because its agent does the same bookkeeping internally.
 COMMIT_FRAMES = 24
 
+# Context frames handed to the graph, and equally the number of leading frames of its answer that
+# restate that context rather than continuing it. One constant because the model ties them together:
+# ask with four and the first four come back. See the module docstring.
+CONTEXT_FRAMES = 4
+
 # Threads for the session. The graph is the only heavy thing on this process.
 INTRA_OP_THREADS = 8
 
@@ -151,7 +164,7 @@ class MotionBricksOnnxStream(MotionBricksStream):
         Before anything has been generated the robot's default pose stands in, repeated: the model
         has to be given somewhere to start, and a standing pose is the honest one.
         """
-        window = 4
+        window = CONTEXT_FRAMES
         if self._qpos.shape[0] >= window:
             context = self._qpos[-window:].copy()
         else:
@@ -200,9 +213,12 @@ class MotionBricksOnnxStream(MotionBricksStream):
             }
             frames, count = self._session.run(None, feed)
             valid = int(np.ravel(count)[0])
-            # Only a prefix is kept: the rest is re-planned against whatever the command is by then,
-            # which is what makes a held key change direction promptly.
-            self._pending = np.asarray(frames[0, : min(valid, COMMIT_FRAMES)], dtype=np.float64)
+            # Committed from CONTEXT_FRAMES, not from zero: the frames before it restate the context
+            # the robot has already walked. Only a prefix of the rest is kept, so the remainder is
+            # re-planned against whatever the command is by then -- which is what makes a held key
+            # change direction promptly.
+            start = min(CONTEXT_FRAMES, valid)
+            self._pending = np.asarray(frames[0, start : min(valid, start + COMMIT_FRAMES)], dtype=np.float64)
 
         self._advance_correction()
         self._qpos = np.concatenate([self._qpos, self._pending[:1]], axis=0)
