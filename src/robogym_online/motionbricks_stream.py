@@ -132,14 +132,12 @@ class MotionBricksStream:
         self._assert_joint_order(motionbricks_root, self._builder.joint_names)
         self._walk_mode = mode
 
-        self._agent, self._controller, self._modes, self._horizon_dt = self._load_agent(
-            motionbricks_root, seed, device
-        )
+        self._setup_model(motionbricks_root, seed, device)
         # Real time between generated frames. Distinct from `_horizon_dt`, which is how far ahead a
         # generation call is asked to produce -- twenty times longer. Integrating the heading with
         # the horizon by mistake turns a 45 deg/s command into roughly 700.
         self._frame_dt = 1.0 / MOTIONBRICKS_FPS
-        self._agent.reset()
+        self._reset_model()
 
         # The operator's command, in the robot's own frame: m/s, m/s, deg/s.
         self._command = (0.0, 0.0, 0.0)
@@ -159,6 +157,20 @@ class MotionBricksStream:
 
         self._qpos = np.zeros((0, 7 + len(self._builder.joint_names)))
         self._reference: dict[str, np.ndarray] | None = None
+
+    # -- the model ----------------------------------------------------------------
+    #
+    # Everything below this line down to `_generate_frame` is the only part that knows which model
+    # is behind the stream. A backend replaces these four and inherits the rest.
+
+    def _setup_model(self, root: Path, seed: int | None, device: str) -> None:
+        """Load the model and record the mode names it accepts."""
+        self._agent, self._controller, self._modes, self._horizon_dt = self._load_agent(
+            root, seed, device
+        )
+
+    def _reset_model(self) -> None:
+        self._agent.reset()
 
     # -- setup ------------------------------------------------------------------
 
@@ -237,7 +249,7 @@ class MotionBricksStream:
         Loading the checkpoints costs a couple of minutes, so a server keeps one stream and resets
         it between clients rather than building another.
         """
-        self._agent.reset()
+        self._reset_model()
         self._command = (0.0, 0.0, 0.0)
         self._heading = 0.0
         self._move_angle = None
@@ -295,6 +307,26 @@ class MotionBricksStream:
     def _signals(self) -> dict:
         """The control signals for one generation step: direction, facing, mode, context."""
         torch = self._torch
+        facing, movement = self._command_vectors()
+        mode_index = torch.tensor([[self._modes.index(self.current_mode())]])
+        context = self._context_window()
+        signals = {
+            "movement_direction": torch.from_numpy(movement).float().view(1, -1),
+            "facing_direction": torch.from_numpy(facing).float().view(1, -1),
+            "mode": mode_index,
+            "context_mujoco_qpos": context,
+        }
+        signals["allowed_pred_num_tokens"] = self._controller.get_default_allowed_pred_num_tokens(
+            mode_index.item()
+        )
+        return signals
+
+    def _command_vectors(self) -> tuple[np.ndarray, np.ndarray]:
+        """Where the reference should face and travel, as world unit vectors.
+
+        The command half of a generation step, kept apart from how any particular backend wants it
+        packaged -- the same arithmetic has to serve every model behind this class.
+        """
         forward, lateral, turn = self._command
         speed = math.hypot(forward, lateral)
 
@@ -333,22 +365,10 @@ class MotionBricksStream:
         else:
             self._move_angle = facing_angle
 
-        facing = np.array([math.cos(facing_angle), math.sin(facing_angle), 0.0])
-        movement = np.array([math.cos(self._move_angle), math.sin(self._move_angle), 0.0])
-
-        mode_index = torch.tensor([[self._modes.index(self.current_mode())]])
-
-        context = self._context_window()
-        signals = {
-            "movement_direction": torch.from_numpy(movement).float().view(1, -1),
-            "facing_direction": torch.from_numpy(facing).float().view(1, -1),
-            "mode": mode_index,
-            "context_mujoco_qpos": context,
-        }
-        signals["allowed_pred_num_tokens"] = self._controller.get_default_allowed_pred_num_tokens(
-            mode_index.item()
+        return (
+            np.array([math.cos(facing_angle), math.sin(facing_angle), 0.0]),
+            np.array([math.cos(self._move_angle), math.sin(self._move_angle), 0.0]),
         )
-        return signals
 
     def chain_state(self) -> str:
         """heading / reference yaw / robot yaw, in degrees -- for diagnostics."""

@@ -25,6 +25,11 @@ DEFAULT_MJCF = Path(os.environ.get("ROBOGYM_MJCF", "assets/mjcf/g1_holo_compat.x
 DEFAULT_MOTIONBRICKS_ROOT = Path(
     os.environ.get("ROBOGYM_MOTIONBRICKS", "../GR00T-WholeBodyControl/motionbricks")
 )
+# The same generator frozen to ONNX, which SONIC's controller loads and CLAW drives. Runs on CPU,
+# so a machine hosting the browser demo needs no GPU.
+DEFAULT_PLANNER_ROOT = Path(
+    os.environ.get("ROBOGYM_PLANNER_ONNX", "../GR00T-WholeBodyControl")
+)
 
 # Half-extent of the ground plane, in metres. See `_add_scene_visuals`.
 _FLOOR_HALF_SIZE = 60.0

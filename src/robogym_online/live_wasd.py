@@ -30,7 +30,14 @@ from pathlib import Path
 import numpy as np
 
 from .check_tracking import _PROPRIO_HISTORY, _quat_apply_inv, _to_xyzw
-from .scene import DEFAULT_MJCF, DEFAULT_MOTIONBRICKS_ROOT, DEFAULT_ONNX_DIR, build_spec, load_contract
+from .scene import (
+    DEFAULT_MJCF,
+    DEFAULT_MOTIONBRICKS_ROOT,
+    DEFAULT_ONNX_DIR,
+    DEFAULT_PLANNER_ROOT,
+    build_spec,
+    load_contract,
+)
 from .wasd_stream import ReferenceStream
 
 # What each key commands: (forward m/s, lateral m/s, turn deg/s), in the robot's own frame.
@@ -114,6 +121,12 @@ class Runner:
 
             self.stream = MotionBricksStream(
                 contract, mjcf, Path(motionbricks_root or DEFAULT_MOTIONBRICKS_ROOT), seed=seed
+            )
+        elif generator == "onnx":
+            from .motionbricks_onnx import MotionBricksOnnxStream
+
+            self.stream = MotionBricksOnnxStream(
+                contract, mjcf, Path(motionbricks_root or DEFAULT_PLANNER_ROOT), seed=seed
             )
         elif generator == "ardy":
             self.stream = ReferenceStream(contract, mjcf, seed=seed)
@@ -253,7 +266,7 @@ def main() -> None:
     parser.add_argument(
         "--generator",
         default="motionbricks",
-        choices=["motionbricks", "ardy"],
+        choices=["motionbricks", "onnx", "ardy"],
         help="which model invents the reference the policy tracks",
     )
     parser.add_argument("--motionbricks-root", type=Path, default=DEFAULT_MOTIONBRICKS_ROOT)

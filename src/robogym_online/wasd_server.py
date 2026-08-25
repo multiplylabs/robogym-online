@@ -181,6 +181,11 @@ def _build_stream(contract: dict, mjcf: Path, seed: int | None, generator: str):
         from .scene import DEFAULT_MOTIONBRICKS_ROOT
 
         return MotionBricksStream(contract, mjcf, DEFAULT_MOTIONBRICKS_ROOT, seed=seed)
+    if generator == "onnx":
+        from .motionbricks_onnx import MotionBricksOnnxStream
+        from .scene import DEFAULT_PLANNER_ROOT
+
+        return MotionBricksOnnxStream(contract, mjcf, DEFAULT_PLANNER_ROOT, seed=seed)
     if generator == "ardy":
         from .wasd_stream import ReferenceStream
 
@@ -310,7 +315,7 @@ def main() -> None:
     parser.add_argument(
         "--generator",
         default="motionbricks",
-        choices=["motionbricks", "ardy"],
+        choices=["motionbricks", "onnx", "ardy"],
         help="which model invents the reference",
     )
     args = parser.parse_args()
