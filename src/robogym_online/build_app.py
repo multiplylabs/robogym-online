@@ -422,6 +422,9 @@ def hand_spring_config(contract: dict, hf: dict, control_dt: float) -> dict:
 _SLOPE_ANGLE_DEG = (10.0, 15.0)
 _SLOPE_LEAD_M = 3.0
 
+# What the operator may steer with on the ramp. See the note where it is declared.
+_TERRAIN_STYLES = ("walk",)
+
 
 def slope_command() -> mjswan.CommandTermConfig:
     """The operator's terrain control: one toggle that puts a ramp in the robot's path.
@@ -803,7 +806,11 @@ def add_terrain_policy(
         body_names=tuple(body_names),
         dataset_joint_names=joint_names,
         default=True,
-        metadata={"stream": {"url": stream}} if stream else None,
+        # Walking only. The generator's other styles are gaits for flat ground -- boxing on the
+        # spot, a zombie shuffle, a crouch -- and a ramp is not the place to find out how they
+        # cope. One entry also means the browser asserts it on connect rather than inheriting
+        # whatever style the last session left the generator on.
+        metadata={"stream": {"url": stream, "styles": list(_TERRAIN_STYLES)}} if stream else None,
     )
 
 
