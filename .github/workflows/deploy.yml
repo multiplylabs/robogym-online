@@ -1,7 +1,8 @@
 # Build the browser app and publish it to GitHub Pages.
 #
-# The assets are in the repo under `assets/` — checkpoint, clip, robot model and the pre-exported
-# brace graph — so the build is a checkout away and there is no fetch step to keep in sync.
+# The assets are in the repo under `assets/` — both checkpoints, clip, robot model and the
+# pre-exported brace graph — so the build is a checkout away and there is no fetch step to keep in
+# sync.
 #
 # Pages rather than a third-party host because the repo is public: the site serves the same files a
 # clone already gives you, so gating it would protect nothing, and this needs no account, no
@@ -52,6 +53,7 @@ jobs:
           python -m robogym_online.build_app \
             --exert \
             --brace assets/brace.onnx \
+            --slope-onnx-dir assets/compiled_models_slope \
             --base-path "/${GITHUB_REPOSITORY#*/}/" \
             --output dist
 
