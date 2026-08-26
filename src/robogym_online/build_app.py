@@ -49,14 +49,31 @@ from scene import (  # noqa: E402
     DEFAULT_MJCF,
     DEFAULT_MOTION,
     DEFAULT_ONNX_DIR,
+    SLOPE_BODY_NAMES,
     build_spec,
     load_contract,
 )
 
 HERE = Path(__file__).resolve().parent
 
-# Proprioception history depth, from the contract's `historical.*` inputs.
-_PROPRIO_HISTORY = 8
+
+def _proprio_history(contract: dict) -> int:
+    """Proprioception history depth, read from the contract's ``historical_*`` input shapes.
+
+    Not a constant: two students of the same robot can be trained with different history, and this
+    one is the difference between tracking and falling over on the spot -- the graph takes whatever
+    it is given, so a wrong depth is silently the wrong observation rather than an error. The
+    terrain student wants 25 frames where the force policy wants 8.
+    """
+    depths = {
+        int(entry["shape"][1])
+        for entry in contract["policy_inputs"]
+        if entry["name"].startswith("historical_")
+    }
+    if len(depths) != 1:
+        raise ValueError(f"contract's historical inputs disagree on history depth: {sorted(depths)}")
+    return depths.pop()
+
 
 # ---------------------------------------------------------------------------
 # Contract
@@ -97,7 +114,9 @@ def check_contract(model: onnx.ModelProto, contract: dict, mj_model: mujoco.MjMo
         for i in range(mj_model.njnt)
         if mj_model.jnt_type[i] != mujoco.mjtJoint.mjJNT_FREE
     ]
-    if model_bodies != body_names:
+    # The scene's own props compile after the robot, so the expectation is the contract's bodies
+    # *then* those -- which is what keeps every robot body at the index its observations read.
+    if model_bodies != body_names + list(SLOPE_BODY_NAMES):
         raise ValueError(
             "MJCF body order does not match the contract's `body_names`.\n"
             f"  model: {model_bodies}\n  yaml:  {body_names}"
@@ -122,6 +141,7 @@ def observation_groups(contract: dict, exert: bool) -> dict[str, ObservationGrou
     """
     anchor = int(contract["robot"]["anchor_body_index"])
     n_dofs = int(contract["robot"]["num_dofs"])
+    history = _proprio_history(contract)
     anchor_cfg = terms.SceneEntityCfg(
         name="robot",
         body_names=(contract["robot"]["anchor_body_name"],),
@@ -150,16 +170,14 @@ def observation_groups(contract: dict, exert: bool) -> dict[str, ObservationGrou
         groups[f"current_{name}"] = group(f"current_{name}", func, params)
         # The same term stacked by the runtime: newest-first, primed from the current frame
         # on reset -- which is how the runner seeds its own buffers.
-        groups[f"historical_{name}"] = group(
-            f"historical_{name}", func, params, history=_PROPRIO_HISTORY
-        )
+        groups[f"historical_{name}"] = group(f"historical_{name}", func, params, history=history)
 
     # The policy's own output history. `prev_action` is the runtime's stored action vector, which
     # for this policy is the absolute joint target (see `out_keys` in build()).
     from mjlab.envs.mdp import observations as mjlab_obs
 
     groups["historical_processed_actions"] = group(
-        "historical_processed_actions", mjlab_obs.last_action, history=_PROPRIO_HISTORY
+        "historical_processed_actions", mjlab_obs.last_action, history=history
     )
 
     mimic = {
@@ -179,9 +197,7 @@ def observation_groups(contract: dict, exert: bool) -> dict[str, ObservationGrou
         groups["hand_force_x_priv_bodies"] = group("hand_force_x_priv_bodies", terms.x_priv_bodies)
         groups["hand_force_x_priv_rot"] = group("hand_force_x_priv_rot", terms.x_priv_rot)
     else:
-        groups["hand_force_x_priv_bodies"] = group(
-            "hand_force_x_priv_bodies", terms.ref_state_body_pos
-        )
+        groups["hand_force_x_priv_bodies"] = group("hand_force_x_priv_bodies", terms.ref_state_body_pos)
         groups["hand_force_x_priv_rot"] = group("hand_force_x_priv_rot", terms.ref_state_body_rot)
 
     # The brace-fed block. With exert enabled these read the brace graph, which emits the
@@ -209,12 +225,16 @@ def observation_groups(contract: dict, exert: bool) -> dict[str, ObservationGrou
         groups["task_mode_mode_onehot"] = group(
             "task_mode_mode_onehot", terms.mode_onehot_const, {"mode": terms.MODE_COMP}
         )
-        groups["task_mode_force_cmd_eff"] = group(
-            "task_mode_force_cmd_eff", terms.force_cmd_eff_const
-        )
+        groups["task_mode_force_cmd_eff"] = group("task_mode_force_cmd_eff", terms.force_cmd_eff_const)
 
     groups["initial_noise"] = group("initial_noise", terms.initial_noise, {"num_dofs": n_dofs})
-    return groups
+    # Only what this graph asks for. The blocks above are the force policy's full 25-input set; a
+    # policy trained without force -- the terrain student, which takes 12 -- shares every term it
+    # does use, so the difference between them is which inputs their contracts declare, not
+    # different plumbing. `check_contract` has already established that the declaration matches
+    # the graph.
+    declared = set(contract["_runtime"]["onnx_in_names"])
+    return {name: cfg for name, cfg in groups.items() if name in declared}
 
 
 # Per-hand cap the compensation teacher was trained against (`tasks/force_comp/control.py`:
@@ -396,6 +416,39 @@ def hand_spring_config(contract: dict, hf: dict, control_dt: float) -> dict:
     }
 
 
+# Pitch range for the drop-in slope, in degrees, and how far ahead of the robot it starts. The
+# browser term carries the same defaults; stating them here keeps the build the single place they
+# are chosen.
+_SLOPE_ANGLE_DEG = (10.0, 15.0)
+_SLOPE_LEAD_M = 3.0
+
+
+def slope_command() -> mjswan.CommandTermConfig:
+    """The operator's terrain control: one toggle that puts a ramp in the robot's path.
+
+    Up, across a flat top, and down the far side. The pitch is redrawn on every placement rather
+    than fixed, so the same toggle is a fresh test each time -- and it is placed relative to
+    wherever the robot has walked to, not to the origin, which is the only placement that stays
+    useful once a live stream has been steering for a while.
+    """
+    return mjswan.CommandTermConfig(
+        term_name="SlopeTerrain",
+        params={"angle_range_deg": list(_SLOPE_ANGLE_DEG), "lead_m": _SLOPE_LEAD_M},
+        ui=mjswan.CommandUiConfig(
+            inputs=[
+                mjswan.CheckboxConfig(
+                    name="enabled",
+                    label=f"Slope ({_SLOPE_ANGLE_DEG[0]:.0f}-{_SLOPE_ANGLE_DEG[1]:.0f} deg) ahead",
+                    # On with the policy that can climb it. The two are one feature: this control
+                    # exists to park the ramp and get flat ground back, not to put a flat-ground
+                    # policy on a hill.
+                    default=True,
+                )
+            ]
+        ),
+    )
+
+
 def brace_command(contract: dict, brace_path: Path) -> mjswan.CommandTermConfig:
     """The x_priv brace graph, run as a stateful command term.
 
@@ -500,7 +553,7 @@ class _BraceStandIn:
         self.mode_onehot = torch.tensor([[0.0, 1.0]])
 
 
-def _write_io_keys(contract: dict, out_dir: Path) -> Path:
+def _write_io_keys(contract: dict, out_dir: Path, name: str = "policy_io_keys.json") -> Path:
     """Write the policy JSON carrying the graph's io keys, and return its path.
 
     The runtime maps io keys onto the graph's inputs and outputs **positionally**, and drives the
@@ -523,7 +576,7 @@ def _write_io_keys(contract: dict, out_dir: Path) -> Path:
         "out_keys": out_keys,
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / "policy_io_keys.json"
+    path = out_dir / name
     path.write_text(json.dumps(payload, indent=2))
     return path
 
@@ -538,6 +591,7 @@ def build(
     brace: Path,
     base_path: str,
     stream: str | None = None,
+    slope_onnx_dir: Path | None = None,
 ) -> mjswan.Builder:
     contract = load_contract(onnx_dir)
     model = onnx.load(str(onnx_dir / "unified_pipeline.onnx"), load_external_data=True)
@@ -669,7 +723,88 @@ def build(
         # wherever it got to while the reference teleports back to the clip's origin, and the two
         # never re-align.
     )
+
+    if slope_onnx_dir is not None:
+        add_terrain_policy(
+            scene, slope_onnx_dir, spec, clip_path, control_dt, first_frame_dof, output, stream
+        )
     return builder
+
+
+def add_terrain_policy(
+    scene,
+    onnx_dir: Path,
+    spec: mujoco.MjSpec,
+    clip_path: Path,
+    control_dt: float,
+    first_frame_dof: list[float],
+    output: Path,
+    stream: str | None = None,
+) -> None:
+    """The slope-trained student, as a second policy on the same scene.
+
+    It is a plain mimic tracker -- twelve inputs against the force policy's twenty-five, with no
+    hand-force block and, more tellingly, no future root *position*: it tracks the reference's
+    joints and the anchor's orientation and lets the base find its own height. That is what a
+    policy has to do on a hill, where the flat-ground root height the force policy tracks is simply
+    wrong.
+
+    It shares the scene, which is only sound because the two contracts agree on everything the
+    scene fixes -- physics timestep, control rate, joint and body order, gains. `check_contract`
+    re-asserts that here rather than trusting it.
+
+    The ramp lives on this policy alone. A control that could put the flat-ground policy on a slope
+    would mostly demonstrate it falling over.
+    """
+    contract = load_contract(onnx_dir)
+    model = onnx.load(str(onnx_dir / "unified_pipeline.onnx"), load_external_data=True)
+    check_contract(model, contract, spec.compile())
+
+    joint_names = list(contract["joint_names"])
+    body_names = list(contract["body_names"])
+    future_steps = [int(s) for s in contract["motion"]["future_step_indices"]]
+    if float(contract["timing"]["control_dt"]) != control_dt:
+        raise ValueError(
+            "the terrain policy runs at a different control rate than the scene's: "
+            f"{contract['timing']['control_dt']} vs {control_dt}"
+        )
+
+    policy = scene.add_policy(
+        name="Slope student (terrain)",
+        policy=model,
+        commands={
+            "motion": mjswan.CommandTermConfig(
+                term_name="TrackingCommand",
+                params={"time_steps": future_steps},
+            ),
+            "terrain": slope_command(),
+        },
+        observations=observation_groups(contract, exert=False),
+        actions={
+            "joint_pos": JointPositionActionCfg(
+                actuator_names=(".*",),
+                scale=1.0,
+                use_default_offset=False,
+                stiffness=dict(zip(joint_names, contract["control"]["stiffness"], strict=True)),
+                damping=dict(zip(joint_names, contract["control"]["damping"], strict=True)),
+            )
+        },
+        config_path=str(_write_io_keys(contract, output.parent, name="io_keys_slope.json")),
+        policy_joint_names=joint_names,
+        default_joint_pos=first_frame_dof,
+        policy_input_shapes=onnx_input_shapes(model),
+        initial_action=first_frame_dof,
+    )
+    policy.add_motion(
+        name="reference",
+        source=str(clip_path),
+        fps=1.0 / control_dt,
+        anchor_body_name=contract["robot"]["anchor_body_name"],
+        body_names=tuple(body_names),
+        dataset_joint_names=joint_names,
+        default=True,
+        metadata={"stream": {"url": stream}} if stream else None,
+    )
 
 
 def install_stream_pointer(dist: Path, source: Path) -> None:
@@ -759,6 +894,17 @@ def main() -> None:
             "and steerable with WASD instead of a fixed clip"
         ),
     )
+    parser.add_argument(
+        "--slope-onnx-dir",
+        type=Path,
+        default=(
+            Path(os.environ["ROBOGYM_SLOPE_ONNX_DIR"]) if os.environ.get("ROBOGYM_SLOPE_ONNX_DIR") else None
+        ),
+        help=(
+            "compiled_models/ of a slope-trained student; adds it as a second policy, the one "
+            "that carries the drop-in ramp. Omitted, the page is flat-ground only."
+        ),
+    )
     parser.add_argument("--serve", action="store_true", help="serve the build on localhost")
     args = parser.parse_args()
     # Absolute: a relative output path is not resolved against the cwd downstream, so the build
@@ -766,8 +912,16 @@ def main() -> None:
     args.output = args.output.resolve()
 
     builder = build(
-        args.onnx_dir, args.motion_file, args.mjcf, args.motion_index, args.output, args.exert,
-        args.brace, args.base_path, args.stream,
+        args.onnx_dir,
+        args.motion_file,
+        args.mjcf,
+        args.motion_index,
+        args.output,
+        args.exert,
+        args.brace,
+        args.base_path,
+        args.stream,
+        args.slope_onnx_dir,
     )
     app = builder.build(output_dir=str(args.output))
     if args.exert:

@@ -27,12 +27,28 @@ DEFAULT_MOTIONBRICKS_ROOT = Path(
 )
 # The same generator frozen to ONNX, which SONIC's controller loads and CLAW drives. Runs on CPU,
 # so a machine hosting the browser demo needs no GPU.
-DEFAULT_PLANNER_ROOT = Path(
-    os.environ.get("ROBOGYM_PLANNER_ONNX", "../GR00T-WholeBodyControl")
-)
+DEFAULT_PLANNER_ROOT = Path(os.environ.get("ROBOGYM_PLANNER_ONNX", "../GR00T-WholeBodyControl"))
 
 # Half-extent of the ground plane, in metres. See `_add_scene_visuals`.
 _FLOOR_HALF_SIZE = 60.0
+
+# The slope the viewer can drop in front of the robot: a climb, a flat top, and a descent back to
+# the floor. Sizes are declared once, here, and the browser reads them back off the compiled model
+# rather than keeping its own copy -- the two cannot drift.
+#
+# Each slab is a *mocap* body. A compiled MuJoCo model takes no new geometry, so "add a slope" can
+# only mean moving something the scene already carries, and mocap bodies are the kind a running
+# simulation lets you move: static to the solver, so the robot walks on them instead of shoving
+# them aside. Parked far below the floor when off.
+_SLOPE_RAMP_HALF_LENGTH = 1.25
+_SLOPE_PLATEAU_HALF_LENGTH = 1.0
+_SLOPE_HALF_WIDTH = 1.0
+_SLOPE_HALF_THICKNESS = 0.06
+_SLOPE_PARK_Z = -80.0
+
+# Compiled after the robot, so these are the model's trailing bodies and every robot body keeps the
+# index the policy's observations read it at. `check_contract` asserts exactly that.
+SLOPE_BODY_NAMES = ("slope_ascent", "slope_plateau", "slope_descent")
 
 
 def load_contract(onnx_dir: Path) -> dict:
@@ -54,10 +70,37 @@ def build_spec(mjcf: Path, physics_dt: float) -> mujoco.MjSpec:
     """
     spec = mujoco.MjSpec.from_file(str(mjcf))
     _add_scene_visuals(spec)
+    _add_slope(spec)
     # The contract's physics rate, not the MJCF's: `decimation = control_dt / physics_dt` has to
     # come out at the value the policy was trained with.
     spec.option.timestep = physics_dt
     return spec
+
+
+def _add_slope(spec: mujoco.MjSpec) -> None:
+    """Three parked slabs the browser positions into a ramp.
+
+    Sized here and placed there: the pitch is drawn per placement in the viewer, so the only thing
+    fixed at build time is how long each face is. Both ramps share the ascent's length, which is
+    what lets one angle serve both and still put the descent's far end on the floor.
+    """
+    half_lengths = {
+        "slope_ascent": _SLOPE_RAMP_HALF_LENGTH,
+        "slope_plateau": _SLOPE_PLATEAU_HALF_LENGTH,
+        "slope_descent": _SLOPE_RAMP_HALF_LENGTH,
+    }
+    for name in SLOPE_BODY_NAMES:
+        half_length = half_lengths[name]
+        body = spec.worldbody.add_body(name=name, mocap=True, pos=[0.0, 0.0, _SLOPE_PARK_Z])
+        body.add_geom(
+            name=name,
+            type=mujoco.mjtGeom.mjGEOM_BOX,
+            size=[half_length, _SLOPE_HALF_WIDTH, _SLOPE_HALF_THICKNESS],
+            # Lighter than the floor so the climb reads against it, and matte so it does not
+            # compete with the robot for the eye.
+            rgba=[0.52, 0.55, 0.60, 1.0],
+            condim=3,
+        )
 
 
 def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
@@ -153,4 +196,3 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
     # keeps the shadow map's resolution on the robot instead of spread over the whole plane.
     spec.stat.center = [0.0, 0.0, 0.8]
     spec.stat.extent = 1.6
-
