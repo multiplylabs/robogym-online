@@ -810,7 +810,13 @@ def add_terrain_policy(
         # spot, a zombie shuffle, a crouch -- and a ramp is not the place to find out how they
         # cope. One entry also means the browser asserts it on connect rather than inheriting
         # whatever style the last session left the generator on.
-        metadata={"stream": {"url": stream, "styles": list(_TERRAIN_STYLES)}} if stream else None,
+        #
+        # Declared whether or not this build knows a generator's address. The deployed page is
+        # built without one and reads it from a file beside itself at load, so a declaration made
+        # conditional on `--stream` would ship every style to exactly the site that matters.
+        metadata={
+            "stream": {"styles": list(_TERRAIN_STYLES), **({"url": stream} if stream else {})}
+        },
     )
 
 
