@@ -456,6 +456,9 @@ _TERRAIN_STYLES = ("walk",)
 # generator's boxing, dancing and shuffling styles are left out of the demo. Declared on the page
 # rather than removed from the generator, so the same server can keep serving other clients.
 _FLAT_STYLES = ("walk", "slow_walk", "stealth", "object_carrying")
+# The dropdown label for the wrench student. The checkpoint under assets/compiled_models_wrench is
+# g1_wrench_v6, and the contract carries no name of its own, so the version is stated here.
+_WRENCH_POLICY_NAME = "Wrench student v6 (force + terrain)"
 
 
 def slope_command(default_on: bool = True) -> mjswan.CommandTermConfig:
@@ -985,7 +988,7 @@ def add_wrench_policy(
     force_command, external_wrench = hand_force_command(contract)
 
     policy = scene.add_policy(
-        name="Wrench student (force + terrain)",
+        name=_WRENCH_POLICY_NAME,
         policy=model,
         commands={
             "motion": mjswan.CommandTermConfig(
