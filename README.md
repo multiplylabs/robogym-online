@@ -61,7 +61,7 @@ python -m robogym_online.build_app \
     --exert --brace assets/brace.onnx --wrench-brace assets/brace_wrench.onnx \
     --slope-onnx-dir  assets/compiled_models_slope \
     --wrench-onnx-dir assets/compiled_models_wrench \
-    --stream ws://127.0.0.1:8765 --serve
+    --half-weights --stream ws://127.0.0.1:8765 --serve
 ```
 
 | entry | flag | controls |
@@ -73,6 +73,24 @@ python -m robogym_online.build_app \
 The published page ships the wrench student alone, built with `--wrench-only`: one policy that
 exerts and compensates force and moment and carries the ramp, so a picker would only offer
 subsets of it. The three-entry build above is the local comparison page.
+
+### Load time
+
+The page is about 80 MB before it can move: the policy, the ONNX runtime, MuJoCo, the robot
+meshes and the brace. Two things keep that from being slower than it must be:
+
+- `--half-weights` stores the policies' large weights as float16, halving the policy download
+  (31 MB to 16 MB for the wrench student). A `Cast` back to float32 in front of each tensor keeps
+  the arithmetic unchanged; the runtime folds the casts at session creation. Checked headless,
+  the tracking error on the same rollouts agrees with the float32 model to the third decimal.
+- `assets/isolation-worker.js` is copied beside every build and loaded first. WebAssembly threads
+  need the page to be cross-origin isolated, which takes two response headers GitHub Pages cannot
+  send; without them onnxruntime runs single-threaded and MuJoCo on its unthreaded build. The
+  worker adds the headers from inside the page and reloads once. Where the server already sends
+  them, as `serve_dist.py` does, it does nothing.
+
+What is left is bandwidth and the one-off WebAssembly compile, so a second visit is quicker than
+the first.
 
 The wrench student is the force student's successor: the same braced-reference contract with a
 per-hand moment beside the force (`task_mode.torque_cmd_eff`), trained on terrain as well as flat

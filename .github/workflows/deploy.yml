@@ -53,7 +53,7 @@ jobs:
           # One policy: the wrench student, which exerts and compensates force and moment and
           # carries the ramp, so the page needs no picker.
           python -m robogym_online.build_app \
-            --wrench-only --exert \
+            --wrench-only --exert --half-weights \
             --wrench-onnx-dir assets/compiled_models_wrench \
             --wrench-brace assets/brace_wrench.onnx \
             --base-path "/${GITHUB_REPOSITORY#*/}/" \

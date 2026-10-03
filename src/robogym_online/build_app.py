@@ -648,6 +648,7 @@ def build(
     wrench_onnx_dir: Path | None = None,
     wrench_brace: Path | None = None,
     wrench_only: bool = False,
+    half_weights: bool = False,
 ) -> mjswan.Builder:
     """Assemble the scene and its policies.
 
@@ -671,6 +672,8 @@ def build(
 
     spec = build_spec(mjcf, physics_dt)
     check_contract(model, contract, spec.compile())
+    if half_weights:
+        halve_weights(model)
 
     # The reference clip, resampled so one clip frame is one control step -- which is what makes
     # a `future_step_indices` offset mean the same thing it meant in training.
@@ -737,6 +740,7 @@ def build(
             exert=exert and wrench_brace is not None,
             brace=wrench_brace,
             default=True,
+            half_weights=half_weights,
         )
         return builder
 
@@ -823,6 +827,7 @@ def build(
             stream,
             exert=exert and wrench_brace is not None,
             brace=wrench_brace,
+            half_weights=half_weights,
         )
     return builder
 
@@ -952,6 +957,7 @@ def add_wrench_policy(
     exert: bool = False,
     brace: Path | None = None,
     default: bool = False,
+    half_weights: bool = False,
 ) -> None:
     """The wrench student, as one more policy on the same scene.
 
@@ -971,6 +977,8 @@ def add_wrench_policy(
     contract = load_contract(onnx_dir)
     model = onnx.load(str(onnx_dir / "unified_pipeline.onnx"), load_external_data=True)
     check_contract(model, contract, spec.compile())
+    if half_weights:
+        halve_weights(model)
     if exert:
         if brace is None:
             raise ValueError("exert mode needs --wrench-brace: the wrench student's own graph")
@@ -1042,6 +1050,61 @@ def add_wrench_policy(
         # flips, and walking is what to flip it with.
         metadata={"stream": {"styles": list(_FLAT_STYLES), **({"url": stream} if stream else {})}},
     )
+
+
+def halve_weights(model: onnx.ModelProto, min_bytes: int = 65536) -> onnx.ModelProto:
+    """Store the graph's large float32 weights as float16, each restored by a Cast at load.
+
+    The policy is the page's biggest download, and float32 weights compress to nothing, so the
+    only way to shrink them is to store fewer bits. A Cast back to float32 sits in front of every
+    converted tensor, so the arithmetic is unchanged: the runtime folds those casts at session
+    creation and runs the same float32 kernels on weights rounded to float16. Checked headless
+    against the original on the same rollouts, the tracking error agrees to the third decimal.
+
+    Small tensors stay float32 (they are free), as does anything float16 cannot hold.
+    """
+    graph = model.graph
+    casts = []
+    for tensor in list(graph.initializer):
+        if tensor.data_type != onnx.TensorProto.FLOAT:
+            continue
+        array = onnx.numpy_helper.to_array(tensor)
+        if array.nbytes < min_bytes or not np.isfinite(array).all() or np.abs(array).max() > 60000:
+            continue
+        half = onnx.numpy_helper.from_array(array.astype(np.float16), tensor.name + "__fp16")
+        graph.initializer.remove(tensor)
+        graph.initializer.append(half)
+        casts.append(
+            onnx.helper.make_node(
+                "Cast", [half.name], [tensor.name], to=onnx.TensorProto.FLOAT, name="cast_" + half.name
+            )
+        )
+    for node in reversed(casts):
+        graph.node.insert(0, node)
+    return model
+
+
+# The runtime uses WebAssembly threads only when the page is cross-origin isolated, which takes
+# two response headers that GitHub Pages cannot send; without them onnxruntime runs on one thread
+# and MuJoCo on its unthreaded build, which is the difference between the deployed page and a local
+# one. This worker (assets/isolation-worker.js, ours) adds the headers from inside the page.
+_ISOLATION_WORKER = HERE.parent.parent / "assets" / "isolation-worker.js"
+
+
+def install_isolation_worker(dist: Path, worker: Path = _ISOLATION_WORKER) -> None:
+    """Copy the isolation worker beside the page and load it first thing in <head>."""
+    if not worker.is_file():
+        raise FileNotFoundError(f"isolation worker not found: {worker}")
+    shutil.copy2(worker, dist / worker.name)
+    index = dist / "index.html"
+    html = index.read_text()
+    tag = f'<script src="{worker.name}"></script>'
+    if tag in html:
+        return
+    if "<head>" not in html:
+        raise ValueError(f"{index} has no <head> to put the isolation worker in")
+    index.write_text(html.replace("<head>", f"<head>\n    {tag}", 1))
+    print(f"  isolation worker -> {dist / worker.name}")
 
 
 def install_stream_pointer(dist: Path, source: Path) -> None:
@@ -1181,6 +1244,14 @@ def main() -> None:
             "force and slope students are left out, and --onnx-dir / --brace are not read."
         ),
     )
+    parser.add_argument(
+        "--half-weights",
+        action="store_true",
+        help=(
+            "store the policies' large weights as float16 in the built page (half the download), "
+            "restored to float32 by Cast nodes the runtime folds at load"
+        ),
+    )
     parser.add_argument("--serve", action="store_true", help="serve the build on localhost")
     args = parser.parse_args()
     if args.wrench_only and args.wrench_onnx_dir is None:
@@ -1205,8 +1276,10 @@ def main() -> None:
         args.wrench_onnx_dir,
         args.wrench_brace,
         args.wrench_only,
+        args.half_weights,
     )
     app = builder.build(output_dir=str(args.output))
+    install_isolation_worker(args.output)
     if args.exert:
         graphs = {} if args.wrench_only else {_BRACE_REF: args.brace}
         if args.wrench_onnx_dir is not None and args.wrench_brace is not None:
