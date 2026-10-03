@@ -210,6 +210,7 @@ def observation_groups(contract: dict, exert: bool) -> dict[str, ObservationGrou
             ("hand_force_xpriv_anchor_rot_delta", terms.xpriv_anchor_rot_delta),
             ("task_mode_mode_onehot", terms.mode_onehot),
             ("task_mode_force_cmd_eff", terms.force_cmd_eff),
+            ("task_mode_torque_cmd_eff", terms.torque_cmd_eff),
         ):
             groups[name] = group(name, func)
     else:
@@ -226,6 +227,11 @@ def observation_groups(contract: dict, exert: bool) -> dict[str, ObservationGrou
             "task_mode_mode_onehot", terms.mode_onehot_const, {"mode": terms.MODE_COMP}
         )
         groups["task_mode_force_cmd_eff"] = group("task_mode_force_cmd_eff", terms.force_cmd_eff_const)
+        # The wrench checkpoints' second command channel. Zero without a brace to command it, which
+        # is what compensation means; only the wrench contracts declare it at all.
+        groups["task_mode_torque_cmd_eff"] = group(
+            "task_mode_torque_cmd_eff", terms.torque_cmd_eff_const
+        )
 
     groups["initial_noise"] = group("initial_noise", terms.initial_noise, {"num_dofs": n_dofs})
     # Only what this graph asks for. The blocks above are the force policy's full 25-input set; a
@@ -322,9 +328,12 @@ _EXERT_MAX_N = 9.0
 # Where the brace graph lands inside the scene's asset directory. `graphRefs` discovers any `onnx`
 # string under `commands`, so referencing it here is all the runtime needs to fetch it.
 _BRACE_REF = "command/brace.onnx"
+# The wrench student's own brace, beside the force student's. One graph per checkpoint, because a
+# brace IS the checkpoint's construction -- its endpoint stiffnesses, its caps, its lead constants.
+_WRENCH_BRACE_REF = "command/brace_wrench.onnx"
 
 
-def exert_dial_command() -> mjswan.CommandTermConfig:
+def exert_dial_command(max_torque: float | None = None) -> mjswan.CommandTermConfig:
     """The operator's exertion controls: a mode switch and a force vector per hand.
 
     The vector is in the **torso-yaw frame**, which is how training defines the command
@@ -335,7 +344,11 @@ def exert_dial_command() -> mjswan.CommandTermConfig:
 
     Declaration order IS the vector the brace graph reads (`UiCommand.getCommand` emits sliders and
     checkboxes in order), so this must stay in step with `brace_export.make_dial`:
-    ``[exert, fx_L, fy_L, fz_L, fx_R, fy_R, fz_R]``.
+    ``[exert, fx_L, fy_L, fz_L, fx_R, fy_R, fz_R]``, and on a wrench checkpoint the per-hand
+    moments after them, ``[tx_L, ty_L, tz_L, tx_R, ty_R, tz_R]`` in N.m.
+
+    ``max_torque`` is the checkpoint's own ceiling; passing none says this checkpoint has no moment
+    channel and leaves the dial the width it was.
     """
     inputs: list = [
         mjswan.CheckboxConfig(
@@ -356,6 +369,21 @@ def exert_dial_command() -> mjswan.CommandTermConfig:
                     enabled_when="exert",
                 )
             )
+    if max_torque:
+        # A moment, not a force: the hand twists about the axis rather than pushing along it. Same
+        # torso-yaw frame and the same mode fade, so the two halves of the wrench read alike.
+        for side in ("left", "right"):
+            for axis in ("x", "y", "z"):
+                inputs.append(
+                    mjswan.SliderConfig(
+                        name=f"{side}_t{axis}",
+                        label=f"{side.capitalize()} hand twist {axis.upper()} (N\u00b7m)",
+                        range=(-max_torque, max_torque),
+                        default=0.0,
+                        step=max_torque / 20.0,
+                        enabled_when="exert",
+                    )
+                )
     return mjswan.ui_command(inputs)
 
 
@@ -424,15 +452,23 @@ _SLOPE_LEAD_M = 3.0
 
 # What the operator may steer with on the ramp. See the note where it is declared.
 _TERRAIN_STYLES = ("walk",)
+# What the operator may steer with on flat ground: the gaits that stay upright and keep moving. The
+# generator's boxing, dancing and shuffling styles are left out of the demo. Declared on the page
+# rather than removed from the generator, so the same server can keep serving other clients.
+_FLAT_STYLES = ("walk", "slow_walk", "stealth", "object_carrying")
 
 
-def slope_command() -> mjswan.CommandTermConfig:
+def slope_command(default_on: bool = True) -> mjswan.CommandTermConfig:
     """The operator's terrain control: one toggle that puts a ramp in the robot's path.
 
     Up, across a flat top, and down the far side. The pitch is redrawn on every placement rather
     than fixed, so the same toggle is a fresh test each time -- and it is placed relative to
     wherever the robot has walked to, not to the origin, which is the only placement that stays
     useful once a live stream has been steering for a while.
+
+    ``default_on`` is how the policy carrying it means the control. On the slope-only student the
+    ramp is the point, so it is there from the start; on a policy that does force on flat ground
+    *and* terrain it is one of two things to try, so the operator drops it in.
     """
     return mjswan.CommandTermConfig(
         term_name="SlopeTerrain",
@@ -445,14 +481,14 @@ def slope_command() -> mjswan.CommandTermConfig:
                     # On with the policy that can climb it. The two are one feature: this control
                     # exists to park the ramp and get flat ground back, not to put a flat-ground
                     # policy on a hill.
-                    default=True,
+                    default=default_on,
                 )
             ]
         ),
     )
 
 
-def brace_command(contract: dict, brace_path: Path) -> mjswan.CommandTermConfig:
+def brace_command(contract: dict, brace_path: Path, ref: str = _BRACE_REF) -> mjswan.CommandTermConfig:
     """The x_priv brace graph, run as a stateful command term.
 
     Every graph output is a *state field*: the runtime holds each under its own name, serves it to
@@ -487,6 +523,16 @@ def brace_command(contract: dict, brace_path: Path) -> mjswan.CommandTermConfig:
     }
 
     graph = onnx.load(str(brace_path)).graph
+    # The dial's width is the graph's, not a constant: a wrench brace takes the moment sliders too,
+    # and a slot declared narrower than the graph's input feeds it a truncated command.
+    dial_width = next(
+        (
+            int(v.type.tensor_type.shape.dim[-1].dim_value)
+            for v in graph.input
+            if v.name == "dial"
+        ),
+        7,
+    )
     state_fields = []
     for value in graph.output:
         name = value.name.removeprefix("next_")
@@ -499,7 +545,7 @@ def brace_command(contract: dict, brace_path: Path) -> mjswan.CommandTermConfig:
     return mjswan.CommandTermConfig(
         term_name="OnnxCommand",
         params={
-            "onnx": _BRACE_REF,
+            "onnx": ref,
             # The runtime wants one field nominated as "the command"; the effective force is the
             # only one that reads as a command value.
             "command_field": "force_cmd_eff",
@@ -521,7 +567,7 @@ def brace_command(contract: dict, brace_path: Path) -> mjswan.CommandTermConfig:
                     "input": "ref_rot_window",
                     "shape": [1, steps, n_bodies, 4],
                 },
-                {"command": "exert", "field": "command", "input": "dial", "shape": [1, 7]},
+                {"command": "exert", "field": "command", "input": "dial", "shape": [1, dial_width]},
             ],
             "debug_vis": True,
             # The force-adjusted goal as a red copy of the robot, posed from the brace's own
@@ -553,6 +599,7 @@ class _BraceStandIn:
         self.x_priv_rot = torch.zeros(1, n_bodies, 4)
         self.x_priv_rot[..., 3] = 1.0
         self.force_cmd_eff = torch.zeros(1, n_hands, 3)
+        self.torque_cmd_eff = torch.zeros(1, n_hands, 3)
         self.mode_onehot = torch.tensor([[0.0, 1.0]])
 
 
@@ -595,7 +642,21 @@ def build(
     base_path: str,
     stream: str | None = None,
     slope_onnx_dir: Path | None = None,
+    wrench_onnx_dir: Path | None = None,
+    wrench_brace: Path | None = None,
+    wrench_only: bool = False,
 ) -> mjswan.Builder:
+    """Assemble the scene and its policies.
+
+    ``wrench_only`` ships the wrench student as the scene's one policy: the scene is sized off its
+    contract (``onnx_dir`` is then that checkpoint), and neither the force student nor the slope
+    student is added. One checkpoint that does force, moment and terrain is the page the demo
+    wants, and a dropdown with one entry is clearer than three that overlap.
+    """
+    if wrench_only:
+        if wrench_onnx_dir is None:
+            raise ValueError("--wrench-only needs --wrench-onnx-dir")
+        onnx_dir = wrench_onnx_dir
     contract = load_contract(onnx_dir)
     model = onnx.load(str(onnx_dir / "unified_pipeline.onnx"), load_external_data=True)
 
@@ -660,6 +721,22 @@ def build(
         )
     )
 
+    if wrench_only:
+        add_wrench_policy(
+            scene,
+            wrench_onnx_dir,
+            spec,
+            clip_path,
+            control_dt,
+            first_frame_dof,
+            output,
+            stream,
+            exert=exert and wrench_brace is not None,
+            brace=wrench_brace,
+            default=True,
+        )
+        return builder
+
     force_command, external_wrench = hand_force_command(contract)
     hand_spring = hand_spring_config(contract, load_hand_force_cfg(onnx_dir), control_dt)
 
@@ -716,7 +793,7 @@ def build(
         # frames arrive, at which point the browser switches to them and resets onto frame 0. The
         # clip still has to be here: it carries the body/joint manifest and gives the robot a
         # reference to track for the second or so the opening generation takes.
-        metadata={"stream": {"url": stream}} if stream else None,
+        metadata={"stream": {"styles": list(_FLAT_STYLES), **({"url": stream} if stream else {})}},
         # The default source advances the clip off the value the runtime passes the command
         # manager, which is `timestep * decimation` -- the control step. So it steps exactly one
         # clip frame per control step (the clip is resampled to 1/control_dt for that), it holds
@@ -730,6 +807,19 @@ def build(
     if slope_onnx_dir is not None:
         add_terrain_policy(
             scene, slope_onnx_dir, spec, clip_path, control_dt, first_frame_dof, output, stream
+        )
+    if wrench_onnx_dir is not None:
+        add_wrench_policy(
+            scene,
+            wrench_onnx_dir,
+            spec,
+            clip_path,
+            control_dt,
+            first_frame_dof,
+            output,
+            stream,
+            exert=exert and wrench_brace is not None,
+            brace=wrench_brace,
         )
     return builder
 
@@ -820,6 +910,137 @@ def add_terrain_policy(
     )
 
 
+def _max_torque(onnx_dir: Path) -> float:
+    """The checkpoint's moment ceiling (``max_torque``), for the dial's range.
+
+    Read rather than restated, like ``max_force``: a slider that runs past what the checkpoint was
+    trained to take is a demo that falls over at the end of its travel.
+    """
+    return float(load_hand_force_cfg(onnx_dir).get("max_torque", 0.0))
+
+
+def _check_wrench_brace(brace: Path, contract: dict) -> None:
+    """Fail the build when the brace graph cannot feed the contract's moment channel.
+
+    Wiring a force-only graph to a wrench policy is silent everywhere else: the runtime never
+    stores a field the graph does not emit, so ``task_mode.torque_cmd_eff`` would read its init
+    value forever and the twist half of the dial would do exactly nothing.
+    """
+    if "task_mode_torque_cmd_eff" not in set(contract["_runtime"]["onnx_in_names"]):
+        return
+    emitted = {v.name for v in onnx.load(str(brace)).graph.output}
+    if "next_torque_cmd_eff" not in emitted:
+        raise ValueError(
+            f"{brace} is a force-only brace, but this checkpoint takes a moment command.\n"
+            "Export its own:  pixi run -e sim2sim python projects/force_web/brace_export.py "
+            "--checkpoint <ckpt dir> --output brace_wrench.onnx"
+        )
+
+
+def add_wrench_policy(
+    scene,
+    onnx_dir: Path,
+    spec: mujoco.MjSpec,
+    clip_path: Path,
+    control_dt: float,
+    first_frame_dof: list[float],
+    output: Path,
+    stream: str | None = None,
+    exert: bool = False,
+    brace: Path | None = None,
+    default: bool = False,
+) -> None:
+    """The wrench student, as one more policy on the same scene.
+
+    It is the force student's successor: the same braced-reference contract with a per-hand
+    *moment* channel beside the force (``task_mode.torque_cmd_eff``), trained on terrain as well
+    as flat ground. So it carries both of the other two policies' controls -- the hand-force
+    sliders and the drop-in ramp -- where each of those carries one.
+
+    The ramp starts parked here rather than in the robot's path: with a policy that does both,
+    flat ground is the case the operator is more often after, and the toggle drops the slope in.
+
+    With ``exert`` it also gets the exertion panel, off its OWN brace graph: a brace is the
+    checkpoint's construction, not a shared utility, and this one's carries the angular twins the
+    force student's has no notion of -- the moment dial, the twist lead, the hand-orientation
+    target the IK takes. Passing the force student's graph here is caught rather than run.
+    """
+    contract = load_contract(onnx_dir)
+    model = onnx.load(str(onnx_dir / "unified_pipeline.onnx"), load_external_data=True)
+    check_contract(model, contract, spec.compile())
+    if exert:
+        if brace is None:
+            raise ValueError("exert mode needs --wrench-brace: the wrench student's own graph")
+        _check_wrench_brace(brace, contract)
+
+    joint_names = list(contract["joint_names"])
+    body_names = list(contract["body_names"])
+    future_steps = [int(s) for s in contract["motion"]["future_step_indices"]]
+    if float(contract["timing"]["control_dt"]) != control_dt:
+        raise ValueError(
+            "the wrench policy runs at a different control rate than the scene's: "
+            f"{contract['timing']['control_dt']} vs {control_dt}"
+        )
+
+    force_command, external_wrench = hand_force_command(contract)
+
+    policy = scene.add_policy(
+        name="Wrench student (force + terrain)",
+        policy=model,
+        commands={
+            "motion": mjswan.CommandTermConfig(
+                term_name="TrackingCommand",
+                params={"time_steps": future_steps},
+            ),
+            "hand_force": force_command,
+            "terrain": slope_command(default_on=False),
+            # After the motion, as everywhere: the brace reads the reference window, so the clip
+            # has to be positioned before it runs. mjswan resets terms in config order.
+            **(
+                {
+                    "exert": exert_dial_command(max_torque=_max_torque(onnx_dir)),
+                    "brace": brace_command(contract, brace, ref=_WRENCH_BRACE_REF),
+                }
+                if exert
+                else {}
+            ),
+        },
+        observations=observation_groups(contract, exert=exert),
+        actions={
+            "joint_pos": JointPositionActionCfg(
+                actuator_names=(".*",),
+                scale=1.0,
+                use_default_offset=False,
+                stiffness=dict(zip(joint_names, contract["control"]["stiffness"], strict=True)),
+                damping=dict(zip(joint_names, contract["control"]["damping"], strict=True)),
+            )
+        },
+        config_path=str(_write_io_keys(contract, output.parent, name="io_keys_wrench.json")),
+        policy_joint_names=joint_names,
+        default_joint_pos=first_frame_dof,
+        policy_input_shapes=onnx_input_shapes(model),
+        external_wrench=external_wrench,
+        hand_spring=(
+            hand_spring_config(contract, load_hand_force_cfg(onnx_dir), control_dt) if exert else None
+        ),
+        initial_action=first_frame_dof,
+        default=default,
+    )
+    policy.add_motion(
+        name="reference",
+        source=str(clip_path),
+        fps=1.0 / control_dt,
+        anchor_body_name=contract["robot"]["anchor_body_name"],
+        body_names=tuple(body_names),
+        dataset_joint_names=joint_names,
+        default=True,
+        # The flat-ground gaits, unlike the slope-only student: this one spends most of its time on
+        # flat ground, where those are what there is to steer. The ramp is a toggle the operator
+        # flips, and walking is what to flip it with.
+        metadata={"stream": {"styles": list(_FLAT_STYLES), **({"url": stream} if stream else {})}},
+    )
+
+
 def install_stream_pointer(dist: Path, source: Path) -> None:
     """Copy ``stream.json`` next to the built page, if the repo carries one.
 
@@ -833,28 +1054,33 @@ def install_stream_pointer(dist: Path, source: Path) -> None:
     print(f"  stream pointer -> {dist / source.name}: {source.read_text().strip()}")
 
 
-def install_brace_graph(dist: Path, brace: Path) -> None:
-    """Copy the brace graph into each built scene, where its config's ``onnx`` ref points.
+def install_brace_graph(dist: Path, graphs: dict[str, Path]) -> None:
+    """Copy each brace graph into every built scene, where its config's ``onnx`` ref points.
 
-    The builder writes the graphs it traced itself; this one is exported separately (it needs
-    protomotions and the checkpoint, which the app build does not), so it is placed afterwards
-    beside them. The runtime discovers it structurally -- any ``onnx`` string under ``commands`` --
-    so nothing else has to know about it.
+    The builder writes the graphs it traced itself; these are exported separately (they need
+    protomotions and the checkpoint, which the app build does not), so they are placed afterwards
+    beside them. The runtime discovers them structurally -- any ``onnx`` string under ``commands``
+    -- so nothing else has to know about them.
+
+    Keyed by ref because a brace belongs to a checkpoint: two policies exerting on one page are two
+    graphs, and the ref in each policy's command config is what tells them apart.
     """
-    if not brace.is_file():
-        raise FileNotFoundError(
-            f"brace graph not found: {brace}\n"
-            "Export it first:  pixi run -e sim2sim python projects/force_web/brace_export.py"
-        )
-    targets = list(dist.glob(f"*/assets/*/{Path(_BRACE_REF).parent.name}")) or [
-        d / Path(_BRACE_REF).parent.name for d in dist.glob("*/assets/*") if d.is_dir()
-    ]
-    if not targets:
-        raise RuntimeError(f"no scene asset directory under {dist}")
-    for target in targets:
-        target.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(brace, target / Path(_BRACE_REF).name)
-        print(f"  brace graph -> {target / Path(_BRACE_REF).name}")
+    for ref, brace in graphs.items():
+        if not brace.is_file():
+            raise FileNotFoundError(
+                f"brace graph not found: {brace}\n"
+                "Export it first:  pixi run -e sim2sim python projects/force_web/brace_export.py"
+            )
+        folder = Path(ref).parent.name
+        targets = list(dist.glob(f"*/assets/*/{folder}")) or [
+            d / folder for d in dist.glob("*/assets/*") if d.is_dir()
+        ]
+        if not targets:
+            raise RuntimeError(f"no scene asset directory under {dist}")
+        for target in targets:
+            target.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(brace, target / Path(ref).name)
+            print(f"  brace graph -> {target / Path(ref).name}")
 
 
 class _MotionWindowStandIn:
@@ -918,8 +1144,46 @@ def main() -> None:
             "that carries the drop-in ramp. Omitted, the page is flat-ground only."
         ),
     )
+    parser.add_argument(
+        "--wrench-onnx-dir",
+        type=Path,
+        default=(
+            Path(os.environ["ROBOGYM_WRENCH_ONNX_DIR"])
+            if os.environ.get("ROBOGYM_WRENCH_ONNX_DIR")
+            else None
+        ),
+        help=(
+            "compiled_models/ of a wrench student -- force plus a per-hand moment, trained on "
+            "terrain too. Adds it as a further policy, carrying both the hand-force sliders and "
+            "the ramp."
+        ),
+    )
+    parser.add_argument(
+        "--wrench-brace",
+        type=Path,
+        default=(
+            Path(os.environ["ROBOGYM_WRENCH_BRACE"]) if os.environ.get("ROBOGYM_WRENCH_BRACE") else None
+        ),
+        help=(
+            "the wrench student's own brace graph, from brace_export.py against its checkpoint. "
+            "With --exert this is what gives that policy the exertion panel; without it the "
+            "wrench entry is compensation-only."
+        ),
+    )
+    parser.add_argument(
+        "--wrench-only",
+        action="store_true",
+        help=(
+            "ship the wrench student as the page's only policy (needs --wrench-onnx-dir). The "
+            "force and slope students are left out, and --onnx-dir / --brace are not read."
+        ),
+    )
     parser.add_argument("--serve", action="store_true", help="serve the build on localhost")
     args = parser.parse_args()
+    if args.wrench_only and args.wrench_onnx_dir is None:
+        parser.error("--wrench-only needs --wrench-onnx-dir")
+    if args.wrench_only and args.exert and args.wrench_brace is None:
+        parser.error("--wrench-only with --exert needs --wrench-brace")
     # Absolute: a relative output path is not resolved against the cwd downstream, so the build
     # lands beside the module instead of where it was asked for.
     args.output = args.output.resolve()
@@ -935,10 +1199,16 @@ def main() -> None:
         args.base_path,
         args.stream,
         args.slope_onnx_dir,
+        args.wrench_onnx_dir,
+        args.wrench_brace,
+        args.wrench_only,
     )
     app = builder.build(output_dir=str(args.output))
     if args.exert:
-        install_brace_graph(args.output, args.brace)
+        graphs = {} if args.wrench_only else {_BRACE_REF: args.brace}
+        if args.wrench_onnx_dir is not None and args.wrench_brace is not None:
+            graphs[_WRENCH_BRACE_REF] = args.wrench_brace
+        install_brace_graph(args.output, graphs)
     install_stream_pointer(args.output, Path("stream.json"))
     print(f"built {args.output}")
     if args.serve or os.getenv("FORCE_WEB_SERVE") == "1":

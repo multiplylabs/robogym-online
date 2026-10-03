@@ -220,6 +220,16 @@ def force_cmd_eff(env, *, command_name: str = "brace", **_):
     return _brace(env, command_name).force_cmd_eff
 
 
+def torque_cmd_eff(env, *, command_name: str = "brace", **_):
+    """Effective (post-cap) per-hand moment command, torso-yaw frame.
+
+    The force's twin, and taken from the same place for the same reason: the brace applies a
+    *combined* effort cone -- force and moment share the arm actuators, so one scale bounds both --
+    and reading the raw dial here would tell the policy a wrench the goal was never braced for.
+    """
+    return _brace(env, command_name).torque_cmd_eff
+
+
 def initial_noise(env, *, num_dofs: int = 29, **_):
     """The flow prior's base-noise seed.
 
@@ -267,5 +277,16 @@ def mode_onehot_const(env, *, mode: tuple[float, float] = MODE_COMP, **_):
 
 def force_cmd_eff_const(env, *, num_hands: int = 2, **_):
     """No exertion command."""
+    del env
+    return torch.zeros(1, num_hands * 3)
+
+
+def torque_cmd_eff_const(env, *, num_hands: int = 2, **_):
+    """No exertion torque command.
+
+    The wrench checkpoints take a per-hand moment alongside the force. Only they declare this
+    input, and only a brace exported for them could fill it, so a build without one pins it to
+    zero -- the value the wrench student was trained to read whenever no moment is asked for.
+    """
     del env
     return torch.zeros(1, num_hands * 3)

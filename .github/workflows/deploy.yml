@@ -1,8 +1,7 @@
 # Build the browser app and publish it to GitHub Pages.
 #
-# The assets are in the repo under `assets/` — both checkpoints, clip, robot model and the
-# pre-exported brace graph — so the build is a checkout away and there is no fetch step to keep in
-# sync.
+# The assets are in the repo under `assets/` — the wrench checkpoint, its brace graph, the clip and
+# the robot model — so the build is a checkout away and there is no fetch step to keep in sync.
 #
 # Pages rather than a third-party host because the repo is public: the site serves the same files a
 # clone already gives you, so gating it would protect nothing, and this needs no account, no
@@ -50,10 +49,13 @@ jobs:
         run: |
           # A project page is served from /<repo>/, and Vite bakes asset URLs at build time, so the
           # base path has to be set here or the deployed page loads nothing.
+          #
+          # One policy: the wrench student, which exerts and compensates force and moment and
+          # carries the ramp, so the page needs no picker.
           python -m robogym_online.build_app \
-            --exert \
-            --brace assets/brace.onnx \
-            --slope-onnx-dir assets/compiled_models_slope \
+            --wrench-only --exert \
+            --wrench-onnx-dir assets/compiled_models_wrench \
+            --wrench-brace assets/brace_wrench.onnx \
             --base-path "/${GITHUB_REPOSITORY#*/}/" \
             --output dist
 

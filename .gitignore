@@ -2,6 +2,8 @@
 # them, and keeping them here is what makes a clone buildable and the CI deploy a one-step job.
 dist/
 policy_io_keys.json
+# The per-policy io-key files the build writes beside itself, one per extra checkpoint.
+io_keys_*.json
 MUJOCO_LOG.TXT
 __pycache__/
 *.egg-info/
