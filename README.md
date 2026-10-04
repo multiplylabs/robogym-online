@@ -83,6 +83,11 @@ meshes and the brace. Two things keep that from being slower than it must be:
   (31 MB to 16 MB for the wrench student). A `Cast` back to float32 in front of each tensor keeps
   the arithmetic unchanged; the runtime folds the casts at session creation. Checked headless,
   the tracking error on the same rollouts agrees with the float32 model to the third decimal.
+- The brace graphs are folded at build time (`optimize_graph`). The exporter leaves the unrolled
+  IK full of shape arithmetic, 55k nodes for the wrench brace, and the browser's runtime had to
+  walk all of it, on the main thread, before the robot could appear: minutes. onnxruntime does
+  the folding once, natively, at build time (13k nodes; page ready in about 14 s instead of
+  never), and the build refuses the result unless its outputs are identical to the original's.
 - `assets/isolation-worker.js` is copied beside every build and loaded first. WebAssembly threads
   need the page to be cross-origin isolated, which takes two response headers GitHub Pages cannot
   send; without them onnxruntime runs single-threaded and MuJoCo on its unthreaded build. The
