@@ -188,11 +188,15 @@ class MotionBricksOnnxStream(MotionBricksStream):
         takes closer to a minute.
         """
         facing, movement = self._command_vectors()
+        self._advance_target_speed()
         if self._pending.shape[0] == 0:
             mode = self.current_mode()
             feed = {
                 "context_mujoco_qpos": self._context(),
-                "target_vel": np.array([-1.0]),  # -1: the mode's own pace
+                # A requested travel speed in m/s, or -1 for the mode's own pace. The walk clip
+                # strides at about 1.0 m/s, which reads as a hurry in a force demo; a session asks
+                # for less (see `wasd_server`), rate-limited like the Python backend's.
+                "target_vel": np.array([-1.0 if self._speed_cmd is None else float(self._speed_cmd)]),
                 "mode": np.array([ONNX_MODES[mode]]),
                 "movement_direction": movement[None, :],
                 "facing_direction": facing[None, :],

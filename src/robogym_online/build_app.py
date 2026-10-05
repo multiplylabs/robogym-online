@@ -283,7 +283,7 @@ def hand_force_command(contract: dict) -> tuple[mjswan.CommandTermConfig, dict]:
             inputs.append(
                 mjswan.SliderConfig(
                     name=name,
-                    label=f"{side.capitalize()} hand {axis} (N)",
+                    label=f"Load on {side} hand {axis} (N)",
                     range=(-_HAND_FORCE_MAX_N, _HAND_FORCE_MAX_N),
                     default=0.0,
                     step=0.5,
@@ -324,6 +324,8 @@ def hand_force_command(contract: dict) -> tuple[mjswan.CommandTermConfig, dict]:
 
 # Exert ceiling from the checkpoint's own hand_force config (`max_force`), read at build time.
 _EXERT_MAX_N = 9.0
+# The force-only dial: ``[exert, fx_L, fy_L, fz_L, fx_R, fy_R, fz_R]``.
+_FORCE_DIAL_WIDTH = 7
 
 # Where the brace graph lands inside the scene's asset directory. `graphRefs` discovers any `onnx`
 # string under `commands`, so referencing it here is all the runtime needs to fetch it.
@@ -353,7 +355,7 @@ def exert_dial_command(max_torque: float | None = None) -> mjswan.CommandTermCon
     inputs: list = [
         mjswan.CheckboxConfig(
             name="exert",
-            label="Exert force (off = compensate)",
+            label="Exert force (off: compensate the load above)",
             default=False,
         )
     ]
@@ -362,7 +364,7 @@ def exert_dial_command(max_torque: float | None = None) -> mjswan.CommandTermCon
             inputs.append(
                 mjswan.SliderConfig(
                     name=f"{side}_f{axis}",
-                    label=f"{side.capitalize()} hand exert {axis.upper()} (N)",
+                    label=f"{side.capitalize()} hand push {axis.upper()} (N)",
                     range=(-_EXERT_MAX_N, _EXERT_MAX_N),
                     default=0.0,
                     step=0.25,
@@ -447,7 +449,7 @@ def hand_spring_config(contract: dict, hf: dict, control_dt: float) -> dict:
 # Pitch range for the drop-in slope, in degrees, and how far ahead of the robot it starts. The
 # browser term carries the same defaults; stating them here keeps the build the single place they
 # are chosen.
-_SLOPE_ANGLE_DEG = (10.0, 15.0)
+_SLOPE_ANGLE_DEG = (6.0, 10.0)
 _SLOPE_LEAD_M = 3.0
 
 # What the operator may steer with on the ramp. See the note where it is declared.
@@ -480,7 +482,7 @@ def slope_command(default_on: bool = True) -> mjswan.CommandTermConfig:
             inputs=[
                 mjswan.CheckboxConfig(
                     name="enabled",
-                    label=f"Slope ({_SLOPE_ANGLE_DEG[0]:.0f}-{_SLOPE_ANGLE_DEG[1]:.0f} deg) ahead",
+                    label="Slope ahead",
                     # On with the policy that can climb it. The two are one feature: this control
                     # exists to park the ramp and get flat ground back, not to put a flat-ground
                     # policy on a hill.
@@ -491,7 +493,9 @@ def slope_command(default_on: bool = True) -> mjswan.CommandTermConfig:
     )
 
 
-def brace_command(contract: dict, brace_path: Path, ref: str = _BRACE_REF) -> mjswan.CommandTermConfig:
+def brace_command(
+    contract: dict, brace_path: Path, ref: str = _BRACE_REF, dial_width: int | None = None
+) -> mjswan.CommandTermConfig:
     """The x_priv brace graph, run as a stateful command term.
 
     Every graph output is a *state field*: the runtime holds each under its own name, serves it to
@@ -527,15 +531,17 @@ def brace_command(contract: dict, brace_path: Path, ref: str = _BRACE_REF) -> mj
 
     graph = onnx.load(str(brace_path)).graph
     # The dial's width is the graph's, not a constant: a wrench brace takes the moment sliders too,
-    # and a slot declared narrower than the graph's input feeds it a truncated command.
-    dial_width = next(
-        (
-            int(v.type.tensor_type.shape.dim[-1].dim_value)
-            for v in graph.input
-            if v.name == "dial"
-        ),
-        7,
-    )
+    # and a slot declared narrower than the graph's input feeds it a truncated command. When the
+    # installed graph is narrowed to the force dial (see `narrow_dial`), the caller says so.
+    if dial_width is None:
+        dial_width = next(
+            (
+                int(v.type.tensor_type.shape.dim[-1].dim_value)
+                for v in graph.input
+                if v.name == "dial"
+            ),
+            7,
+        )
     state_fields = []
     for value in graph.output:
         name = value.name.removeprefix("next_")
@@ -649,6 +655,7 @@ def build(
     wrench_brace: Path | None = None,
     wrench_only: bool = False,
     half_weights: bool = False,
+    torque: bool = False,
 ) -> mjswan.Builder:
     """Assemble the scene and its policies.
 
@@ -741,6 +748,7 @@ def build(
             brace=wrench_brace,
             default=True,
             half_weights=half_weights,
+            torque=torque,
         )
         return builder
 
@@ -828,6 +836,7 @@ def build(
             exert=exert and wrench_brace is not None,
             brace=wrench_brace,
             half_weights=half_weights,
+            torque=torque,
         )
     return builder
 
@@ -958,6 +967,7 @@ def add_wrench_policy(
     brace: Path | None = None,
     default: bool = False,
     half_weights: bool = False,
+    torque: bool = False,
 ) -> None:
     """The wrench student, as one more policy on the same scene.
 
@@ -1007,10 +1017,15 @@ def add_wrench_policy(
             "terrain": slope_command(default_on=False),
             # After the motion, as everywhere: the brace reads the reference window, so the clip
             # has to be positioned before it runs. mjswan resets terms in config order.
+            # Without `torque` the moment dials are left off the panel and the installed graph's
+            # dial is narrowed to the force vector (`narrow_dial`), so the moment command the
+            # checkpoint reads is a constant zero: the demo is about force.
             **(
                 {
-                    "exert": exert_dial_command(max_torque=_max_torque(onnx_dir)),
-                    "brace": brace_command(contract, brace, ref=_WRENCH_BRACE_REF),
+                    "exert": exert_dial_command(max_torque=_max_torque(onnx_dir) if torque else None),
+                    "brace": brace_command(
+                        contract, brace, ref=_WRENCH_BRACE_REF, dial_width=None if torque else _FORCE_DIAL_WIDTH
+                    ),
                 }
                 if exert
                 else {}
@@ -1120,7 +1135,41 @@ def install_stream_pointer(dist: Path, source: Path) -> None:
     print(f"  stream pointer -> {dist / source.name}: {source.read_text().strip()}")
 
 
-def optimize_graph(source: Path, target: Path, max_passes: int = 4) -> None:
+def narrow_dial(model: onnx.ModelProto, width: int) -> onnx.ModelProto:
+    """Give the brace a ``dial`` input of ``width`` values, zero-padding the rest inside the graph.
+
+    A wrench brace takes the per-hand moments after the force vector. With the moment dials left
+    off the panel the UI emits only the force dial, so the graph is given that narrower input and
+    the moments it reads are a constant zero -- the value the student was trained to see whenever
+    no moment is asked for. The original input is renamed and fed by a Concat, which the optimizer
+    then folds with everything else.
+    """
+    graph = model.graph
+    dial = next((v for v in graph.input if v.name == "dial"), None)
+    if dial is None:
+        return model
+    dims = [d.dim_value for d in dial.type.tensor_type.shape.dim]
+    full = dims[-1]
+    if full <= width:
+        return model
+    wide = "dial_wide"
+    for node in graph.node:
+        for i, name in enumerate(node.input):
+            if name == wide:
+                raise ValueError(f"{wide!r} already exists in the brace graph")
+            if name == "dial":
+                node.input[i] = wide
+    dial.name = "dial"
+    dial.type.tensor_type.shape.dim[-1].dim_value = width
+    zeros = onnx.numpy_helper.from_array(np.zeros((*dims[:-1], full - width), np.float32), "dial_moment_zeros")
+    graph.initializer.append(zeros)
+    graph.node.insert(
+        0, onnx.helper.make_node("Concat", ["dial", zeros.name], [wide], axis=len(dims) - 1, name="dial_pad")
+    )
+    return model
+
+
+def optimize_graph(source: Path, target: Path, max_passes: int = 4, dial_width: int | None = None) -> None:
     """Fold a brace graph down to what the browser has to compile.
 
     The TorchScript exporter leaves the unrolled IK full of shape arithmetic -- Shape, Gather,
@@ -1138,6 +1187,8 @@ def optimize_graph(source: Path, target: Path, max_passes: int = 4) -> None:
 
     model = onnx.load(str(source))
     before = _count_nodes(model.graph)
+    if dial_width is not None:
+        narrow_dial(model, dial_width)
     del model.graph.value_info[:]  # stale symbolic shapes from export; inference below redoes them
     model = shape_inference.infer_shapes(model, data_prop=True)
     current = target.with_suffix(".pass.onnx")
@@ -1177,18 +1228,28 @@ def _check_same_outputs(original: Path, optimized: Path, seed: int = 0) -> None:
     b = ort.InferenceSession(str(optimized), providers=["CPUExecutionProvider"])
     rng = np.random.default_rng(seed)
     dtypes = {"tensor(float)": np.float32, "tensor(double)": np.float64, "tensor(int64)": np.int64, "tensor(bool)": np.bool_}
-    feeds = {}
+    feeds_a, feeds_b = {}, {}
+    narrow = {inp.name: inp.shape for inp in b.get_inputs()}
     for inp in a.get_inputs():
         shape = [d if isinstance(d, int) else 1 for d in inp.shape]
         dtype = dtypes[inp.type]
-        feeds[inp.name] = np.zeros(shape, dtype) if dtype is np.bool_ else (rng.standard_normal(shape) * 0.1).astype(dtype)
-    for name, x, y in zip([o.name for o in a.get_outputs()], a.run(None, feeds), b.run(None, feeds), strict=True):
+        value = np.zeros(shape, dtype) if dtype is np.bool_ else (rng.standard_normal(shape) * 0.1).astype(dtype)
+        feeds_a[inp.name] = value
+        # An input the optimized graph narrowed (`narrow_dial`) is fed its prefix; the original gets
+        # the same prefix with zeros after it, which is what the narrowed graph pads internally.
+        width = narrow.get(inp.name, shape)[-1]
+        if width != shape[-1]:
+            value[..., width:] = 0
+            feeds_b[inp.name] = np.ascontiguousarray(value[..., :width])
+        else:
+            feeds_b[inp.name] = value
+    for name, x, y in zip([o.name for o in a.get_outputs()], a.run(None, feeds_a), b.run(None, feeds_b), strict=True):
         if not np.array_equal(np.asarray(x), np.asarray(y)):
             diff = float(np.max(np.abs(np.asarray(x, np.float64) - np.asarray(y, np.float64))))
             raise ValueError(f"optimizing {original.name} changed output {name!r} (max |diff| {diff:.3e})")
 
 
-def install_brace_graph(dist: Path, graphs: dict[str, Path]) -> None:
+def install_brace_graph(dist: Path, graphs: dict[str, Path], dial_width: int | None = None) -> None:
     """Place each brace graph, folded for the browser, in every built scene where its config's ``onnx`` ref points.
 
     The builder writes the graphs it traced itself; these are exported separately (they need
@@ -1216,7 +1277,7 @@ def install_brace_graph(dist: Path, graphs: dict[str, Path]) -> None:
             target.mkdir(parents=True, exist_ok=True)
             destination = target / Path(ref).name
             if optimized is None:
-                optimize_graph(brace, destination)
+                optimize_graph(brace, destination, dial_width=dial_width)
                 optimized = destination
             else:
                 shutil.copy2(optimized, destination)
@@ -1326,6 +1387,14 @@ def main() -> None:
             "restored to float32 by Cast nodes the runtime folds at load"
         ),
     )
+    parser.add_argument(
+        "--torque",
+        action="store_true",
+        help=(
+            "give the wrench student its per-hand moment (twist) dials too. Off, the panel carries "
+            "force only and the moment command the checkpoint reads is a constant zero."
+        ),
+    )
     parser.add_argument("--serve", action="store_true", help="serve the build on localhost")
     args = parser.parse_args()
     if args.wrench_only and args.wrench_onnx_dir is None:
@@ -1351,6 +1420,7 @@ def main() -> None:
         args.wrench_brace,
         args.wrench_only,
         args.half_weights,
+        args.torque,
     )
     app = builder.build(output_dir=str(args.output))
     install_isolation_worker(args.output)
@@ -1358,7 +1428,8 @@ def main() -> None:
         graphs = {} if args.wrench_only else {_BRACE_REF: args.brace}
         if args.wrench_onnx_dir is not None and args.wrench_brace is not None:
             graphs[_WRENCH_BRACE_REF] = args.wrench_brace
-        install_brace_graph(args.output, graphs)
+        # The force brace's dial is already the force dial; narrowing is a no-op for it.
+        install_brace_graph(args.output, graphs, dial_width=None if args.torque else _FORCE_DIAL_WIDTH)
     install_stream_pointer(args.output, Path("stream.json"))
     print(f"built {args.output}")
     if args.serve or os.getenv("FORCE_WEB_SERVE") == "1":

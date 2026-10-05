@@ -216,6 +216,17 @@ def _build_stream(
     raise ValueError(f"unknown generator {generator!r}")
 
 
+# How fast the `walk` style travels, in m/s. The clip's own pace is about 1.0, which reads as a
+# hurry when the point of the demo is what the hands are doing; this stays above the slow-walk
+# crossover (`SLOW_WALK_ENTER`) so the gait itself is unchanged. Other styles keep their own pace.
+WALK_SPEED_M_S = float(os.environ.get("WASD_WALK_SPEED", "0.5"))
+
+
+def _apply_walk_speed(stream, style: str) -> None:
+    if hasattr(stream, "set_target_speed"):
+        stream.set_target_speed(WALK_SPEED_M_S if style == "walk" else None)
+
+
 async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None:
     """Serve one client off the shared generator, displacing whoever held it.
 
@@ -243,6 +254,7 @@ async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None
     styles = tuple(getattr(stream, "styles", ()))
     if styles and hasattr(stream, "set_style"):
         stream.set_style(styles[0])
+        _apply_walk_speed(stream, styles[0])
     await websocket.send(
         json.dumps(
             {
@@ -276,6 +288,7 @@ async def _pump(websocket, stream) -> None:
             stream.set_command(request["forward"], request["lateral"], request["turn"])
         elif request["type"] == "style":
             stream.set_style(request["name"])
+            _apply_walk_speed(stream, request["name"])
             print(f"style: {request['name']}")
         elif request["type"] == "context":
             stream.set_context_qpos(np.asarray(request["qpos"], dtype=np.float64), request.get("frame"))
