@@ -42,7 +42,9 @@ _FLOOR_HALF_SIZE = 60.0
 # them aside. Parked far below the floor when off.
 _SLOPE_RAMP_HALF_LENGTH = 1.25
 _SLOPE_PLATEAU_HALF_LENGTH = 1.0
-_SLOPE_HALF_WIDTH = 1.0
+# Wide enough that a walk steered a little off-axis stays on the ramp: at 2 m the robot could
+# step off the edge mid-climb and fall.
+_SLOPE_HALF_WIDTH = 2.0
 _SLOPE_HALF_THICKNESS = 0.06
 _SLOPE_PARK_Z = -80.0
 
