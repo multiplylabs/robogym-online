@@ -148,3 +148,12 @@ body { font-family:Barlow,Arial,sans-serif!important; color:var(--brace-ink); }
 .brace-gauge-track em {position:absolute;top:-3px;width:3px;height:15px;background:#306db8;border-radius:2px}
 .brace-exert-view .brace-force-modes {display:none}
 .brace-exert-view .brace-panel-intro p {display:none}
+
+.brace-requested {display:block;margin-top:3px}
+.brace-error-track {position:relative;height:7px;margin-top:12px;background:#e6ebef;border-radius:4px;overflow:hidden}
+.brace-error-track i {position:absolute;height:100%;background:#b18d65}
+.brace-error-track em {position:absolute;left:50%;height:100%;width:2px;background:#667d90}
+.brace-error-labels {display:flex;justify-content:space-between;font-size:10px;color:#657888;margin-top:4px}
+.brace-interaction-tabs button[aria-pressed=true] {background:#edf3f7;border-color:#a8bdcd;color:#36556e}
+.brace-gauge-track em {background:#7894ad}
+.brace-gauge-card {background:#f7fafc;border-color:#d5e0e8}

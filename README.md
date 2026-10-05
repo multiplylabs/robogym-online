@@ -435,3 +435,8 @@ The app depends on additions to mjswan that are generic rather than task-specifi
 reference fields, structured policy inputs, a pose ghost, an operator wrench and the hand spring
 contact, and the ORT-Web session fallback. They live on a fork, pinned in `pyproject.toml`, and each
 is tracked for a pull request back upstream.
+
+The live gauge distinguishes requested dial force from effective (feasible) force F*.
+Its signed instantaneous error is measured minus effective, consistent with the paper's
+feasible-target convention; the centered bar shows under/over and its current range.
+This live reading is distinct from the paper's completed-motion average-force metric.

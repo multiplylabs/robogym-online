@@ -31,7 +31,7 @@ type MjData = import('mujoco').MjData;
 
 /** Metres of arrow per newton. 9 N (the trained ceiling) reads as a forearm. */
 const ARROW_M_PER_N = 0.05;
-const COMMANDED_COLOR = 0x3fa9f5;
+const COMMANDED_COLOR = 0x7894ad;
 const EXERTED_COLOR = 0xf5a03f;
 
 export interface HandSpringTarget {
@@ -98,7 +98,7 @@ class ForceLabel {
         ctx.font = 'bold 30px system-ui, sans-serif';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#306db8';
-        ctx.fillText(`Target ${commanded.toFixed(1)} N`, 12, 32);
+        ctx.fillText(`Effective ${commanded.toFixed(1)} N`, 12, 32);
         ctx.fillStyle = '#9a5b13';
         ctx.fillText(`Actual ${exerted.toFixed(1)} N`, 12, 78);
         this.texture.needsUpdate = true;
@@ -222,7 +222,7 @@ export class HandSpringContact {
         parent.add(label.sprite);
         this.labels.push(label);
         const instrument = new THREE.Group(); instrument.name = `hand-force-gauge-${i}`;
-        const shell = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.20,20), new THREE.MeshStandardMaterial({color:0x306db8,metalness:.45,roughness:.35}));
+        const shell = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.20,20), new THREE.MeshStandardMaterial({color:0xa5b9ca,metalness:.15,roughness:.75}));
         shell.position.y=.15;
         const piston = new THREE.Mesh(new THREE.CylinderGeometry(.011,.011,.14,12), new THREE.MeshStandardMaterial({color:0xcbd9e7,metalness:.7,roughness:.25}));
         piston.name='gauge-piston'; piston.position.y=.025;
@@ -331,7 +331,7 @@ export class HandSpringContact {
         mjData.xpos[bodyId * 3 + 2],
       ];
       if (this.commandedArrows[t]) {
-        const cmdW = read('force_cmd_w');
+        const cmdW = read('force_cmd_eff');
         const cmdMag = cmdW ? Math.hypot(cmdW[h * 3], cmdW[h * 3 + 1], cmdW[h * 3 + 2]) : 0;
         const cmd = nRobot.map(v => v * cmdMag * ARROW_M_PER_N);
         placeArrow(this.commandedArrows[t], hand, cmd);
