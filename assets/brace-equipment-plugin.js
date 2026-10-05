@@ -156,8 +156,31 @@ class GymEquipment {
     }
     return error;
   }
+  referenceView() {
+    const settings = window.BraceReference ?? {mode:'body'};
+    const actual = this.context.bodies[this.torso];
+    if (!actual) return;
+    const roots = (this.context.mujocoRoot ?? this.context.scene).children;
+    const reference = roots.find(o => o.name === 'Tracking Ghost');
+    const braced = roots.find(o => o.name === 'brace ghost');
+    const anchorName = actual.name;
+    const refAnchor = reference?.children.find(o => o.name === anchorName);
+    if (!refAnchor) return;
+    reference.position.set(0,0,0);
+    if (settings.mode !== 'world') reference.position.copy(actual.position).sub(refAnchor.position);
+    if (braced) {
+      braced.position.set(0,0,0);
+      const anchor = this.context.readOnnxSlot?.({command:'brace',field:'ref_anchor_pos'});
+      if (anchor && settings.mode !== 'world') braced.position.set(actual.position.x-anchor[0],actual.position.y-anchor[2],actual.position.z+anchor[1]);
+      // In world view, map the policy's canonical XY origin back to the source frame.
+      if (anchor && settings.mode === 'world') braced.position.set(refAnchor.position.x-anchor[0],0,refAnchor.position.z+anchor[1]);
+    }
+    const positions = this.context.readOnnxSlot?.({command:'motion',field:'ref_body_pos_w'});
+    window.BraceReference = {...settings, sourceAnchor:refAnchor.position.toArray(), displayAnchor:refAnchor.position.clone().add(reference.position).toArray(), robotAnchor:actual.position.toArray(), policyAnchorXY:positions ? Array.from(positions.subarray((this.torso-1)*3,(this.torso-1)*3+2)) : []};
+  }
   update(dt) {
     if (!this.resolved && !this.resolve()) return;
+    this.referenceView();
     // Reference ghosts tint every shape, including initially transparent payload geoms.
     // Equipment belongs only to the physical robot, so hide those cloned shapes.
     this.context.scene.traverse(object => {

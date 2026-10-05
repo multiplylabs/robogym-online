@@ -421,5 +421,137 @@
     }
   ],
   "startup": "Controls gated until live context and >0.2 s of simulation after reset; reset clears mode/status and returns to weights.",
-  "force_buffers_verified": "Additive manual, mouse and spring forces; feedback reads only spring reaction"
+  "force_buffers_verified": "Additive manual, mouse and spring forces; feedback reads only spring reaction",
+  "canonical_reference_validation": {
+    "moving_cases": [
+      {
+        "label": "Idle forward",
+        "minHeight": 0.7859945663575945,
+        "maxHeight": 0.7905180543179277,
+        "rampAngleDeg": 0,
+        "minUpright": 0.9923407819987713,
+        "mae": 0.03898763656616211,
+        "start": [
+          -0.010320980913547032,
+          0.01925766412925829,
+          0.7905180543179277
+        ],
+        "end": [
+          -0.011605819522150812,
+          -0.00419194664548199,
+          0.7867986476513166
+        ]
+      },
+      {
+        "label": "Idle leftward",
+        "minHeight": 0.7774058526915294,
+        "maxHeight": 0.787582256088378,
+        "rampAngleDeg": 0,
+        "minUpright": 0.9924239626650596,
+        "mae": 0.010025469462076823,
+        "start": [
+          0.01936555588698974,
+          0.0024828007174242926,
+          0.7774058526915294
+        ],
+        "end": [
+          -0.012841183281091231,
+          0.0007354327568927771,
+          0.7870418035791766
+        ]
+      },
+      {
+        "label": "Stealth",
+        "minHeight": 0.7170932219780739,
+        "maxHeight": 0.7887666420608855,
+        "rampAngleDeg": 0,
+        "minUpright": 0.9628755371174849,
+        "mae": 1.081591852780046,
+        "start": [
+          0.0035031877001477176,
+          0.010888850324907415,
+          0.7847124915337582
+        ],
+        "end": [
+          2.9250444923751915,
+          -0.0009925204534302705,
+          0.7761801968233352
+        ]
+      },
+      {
+        "label": "Slow walk",
+        "minHeight": 0.7348963961735399,
+        "maxHeight": 0.8004055240569873,
+        "rampAngleDeg": 0,
+        "minUpright": 0.9745217329944206,
+        "mae": 0.9911261920271248,
+        "start": [
+          4.083347065283288,
+          0.009097358996993942,
+          0.7779173607703855
+        ],
+        "end": [
+          6.150689703023662,
+          -0.1700884466210989,
+          0.7841971168957612
+        ]
+      },
+      {
+        "label": "Object carrying",
+        "minHeight": 0.7063164443002858,
+        "maxHeight": 0.7865040223739189,
+        "rampAngleDeg": 0,
+        "minUpright": 0.969178158629111,
+        "mae": 0.7868882212145575,
+        "start": [
+          6.800292036285242,
+          -0.22171475301199747,
+          0.7849283259494637
+        ],
+        "end": [
+          10.656697217801291,
+          -0.21333440779862503,
+          0.7663193351191138
+        ]
+      },
+      {
+        "label": "Careful",
+        "minHeight": 0.7432850413418491,
+        "maxHeight": 0.7910827044461801,
+        "rampAngleDeg": 0,
+        "minUpright": 0.9570307227322894,
+        "mae": 1.0239773125484073,
+        "start": [
+          11.960546568205656,
+          -0.0831172479561938,
+          0.7803192217785072
+        ],
+        "end": [
+          15.33218506948463,
+          -0.952323179379288,
+          0.7703860281136156
+        ]
+      },
+      {
+        "label": "Stealth on slope",
+        "minHeight": 0.7065247384181678,
+        "maxHeight": 1.2115400063491018,
+        "rampAngleDeg": 9.857137087732553,
+        "minUpright": 0.9258690106523545,
+        "mae": 0.9588015011378697,
+        "start": [
+          16.15952897470161,
+          -1.1896345790837377,
+          0.7826270956152047
+        ],
+        "end": [
+          26.760484059381998,
+          -1.1578367095395574,
+          0.7343304288766076
+        ]
+      }
+    ],
+    "translation_policy_actions": "All outputs unchanged within 2e-4 tolerance for shared reference XY translation over 3 test fixtures",
+    "limitation": "A separate abrupt walking-stop to exertion transition trial fell; these controlled gait/slope results do not establish stability for every transition."
+  }
 }

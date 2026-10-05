@@ -157,3 +157,6 @@ body { font-family:Barlow,Arial,sans-serif!important; color:var(--brace-ink); }
 .brace-interaction-tabs button[aria-pressed=true] {background:#edf3f7;border-color:#a8bdcd;color:#36556e}
 .brace-gauge-track em {background:#7894ad}
 .brace-gauge-card {background:#f7fafc;border-color:#d5e0e8}
+
+.brace-reference-view {font-size:11px;color:var(--brace-muted);display:flex;gap:6px;align-items:center}.brace-reference-view select {font:inherit;padding:5px;border:1px solid #d5e0e8;border-radius:5px;background:#f7fafc;color:#36556e}
+@media(max-width:600px){.brace-reference-view {position:fixed;top:72px;left:10px;padding:6px;background:#ffffffed;border-radius:6px}}

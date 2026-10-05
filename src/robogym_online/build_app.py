@@ -1129,17 +1129,18 @@ def install_isolation_worker(dist: Path, worker: Path = _ISOLATION_WORKER) -> No
 @contextmanager
 def browser_contact_source():
     """Bundle our training-compatible contact and gauge, restoring the dependency source."""
-    engine = Path(mjswan.__file__).parent / "template/src/core/engine"
+    core = Path(mjswan.__file__).parent / "template/src/core"
     source = HERE.parent.parent / "assets"
-    originals = {engine / name: (engine / name).read_bytes()
-                 for name in ("handSpringContact.ts", "externalWrench.ts")}
+    targets = [core / "engine" / name for name in ("handSpringContact.ts", "externalWrench.ts")]
+    targets += [core / "command" / name for name in ("TrackingCommand.ts", "referenceFrame.ts")]
+    originals = {target: target.read_bytes() if target.exists() else None for target in targets}
     try:
         for target in originals:
             target.write_bytes((source / target.name).read_bytes())
         yield
     finally:
         for target, original in originals.items():
-            target.write_bytes(original)
+            target.write_bytes(original) if original is not None else target.unlink()
 
 
 def install_stream_pointer(dist: Path, source: Path) -> None:

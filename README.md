@@ -440,3 +440,13 @@ The live gauge distinguishes requested dial force from effective (feasible) forc
 Its signed instantaneous error is measured minus effective, consistent with the paper's
 feasible-target convention; the centered bar shows under/over and its current range.
 This live reading is distinct from the paper's completed-motion average-force metric.
+
+The green reference defaults to a body-aligned pose overlay: its anchor is placed at the
+robot's anchor in XYZ, while joint motion and heading differences are retained. This view
+compares pose, and does not measure global path or height error. The Reference selector's
+World trajectory view restores the original generator path for those comparisons.
+The red braced overlay uses the same unbraced anchor offset, preserving its brace displacement.
+Browser policy and brace position fields share a canonical XY origin at the first sampled
+reference anchor; reference heights, rotations, velocities and raw generator frames remain
+unchanged. `test_reference_frame.py` verifies the deployed ONNX is invariant to a shared XY
+translation, and `browser_reference.cjs` checks alignment, world view, force tracking and reset.
