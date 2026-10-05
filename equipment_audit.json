@@ -1,0 +1,81 @@
+{
+  "policy": "g1_wrench_v6",
+  "trials": 72,
+  "successes": 72,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "ramp_angles_deg": [
+    6,
+    10
+  ],
+  "grip_model": "ideal rigid grip; no finger, slip, drop or equipment collision dynamics",
+  "arm_servo": {
+    "transition_seconds": 1.5,
+    "stiffness_multiplier": 3,
+    "damping_multiplier": 2,
+    "effort_limits": "original motor limits",
+    "hold_pitch_rad": 0.5
+  },
+  "equipment": {
+    "dumbbells": {
+      "label": "Dumbbells",
+      "mass": 4.0,
+      "each": 2.0,
+      "target": [
+        0.21,
+        0.22,
+        -0.07
+      ],
+      "successes": 24,
+      "trials": 24,
+      "min_terrain_clearance_m": 0.6687977903249029,
+      "max_tilt_deg": 28.08326212934601
+    },
+    "kettlebell": {
+      "label": "Kettlebell",
+      "mass": 3.5,
+      "target": [
+        0.23,
+        0.1,
+        -0.06
+      ],
+      "successes": 24,
+      "trials": 24,
+      "min_terrain_clearance_m": 0.6832478369415669,
+      "max_tilt_deg": 27.979205006895818
+    },
+    "barbell": {
+      "label": "Barbell",
+      "mass": 3.0,
+      "target": [
+        0.23,
+        0.2,
+        -0.06
+      ],
+      "successes": 24,
+      "trials": 24,
+      "min_terrain_clearance_m": 0.6652716766255751,
+      "max_tilt_deg": 26.3736420347601
+    }
+  },
+  "styles": {
+    "stealth": 0.8,
+    "slow_walk": 0.5,
+    "object_carrying": 0.8,
+    "careful": 0.8
+  },
+  "browser_checks": [
+    "mass and visible geometry",
+    "shared grip activation",
+    "stable idle hold",
+    "put down",
+    "reset",
+    "manual force exclusivity",
+    "390 px mobile layout",
+    "no page errors"
+  ],
+  "preset_configuration": "Initial heavier presets: 2 kg per dumbbell, 3 kg barbell, 3.5 kg kettlebell"
+}

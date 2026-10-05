@@ -45,6 +45,9 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e .
 
+      - name: Test simulator contracts
+        run: python -m unittest discover -s tests -p 'test_*.py'
+
       - name: Build
         run: |
           # A project page is served from /<repo>/, and Vite bakes asset URLs at build time, so the

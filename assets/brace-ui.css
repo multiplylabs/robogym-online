@@ -101,3 +101,34 @@ body { font-family:Barlow,Arial,sans-serif!important; color:var(--brace-ink); }
  .brace-controls.brace-forces-open { max-height:calc(100dvh - 260px); }
  .brace-controls.brace-forces-open .mantine-ScrollArea-viewport { max-height:calc(100dvh - 308px)!important; }
 }
+/* Gym equipment: a small, visible selection before the force laboratory. */
+.brace-gym { margin:14px 0 18px; border:1px solid #d5e5fa; border-radius:8px; padding:12px; background:#f3f8ff; }
+.brace-gym-heading { display:flex; justify-content:space-between; align-items:center; }
+.brace-gym h2 { margin:0; font-size:16px; font-weight:600; }
+.brace-gym-tag { color:var(--brace-blue); font-size:10px; letter-spacing:1.2px; }
+.brace-gym-caption { margin:4px 0 12px; color:var(--brace-muted); font-size:12px; }
+.brace-gym-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.brace-gym-grid button { border:1px solid #d8e3ef; border-radius:4px; background:white; padding:9px 3px; color:var(--brace-ink); cursor:pointer; font:inherit; min-width:0; }
+.brace-gym-grid svg { display:block; width:54px; height:38px; max-width:100%; margin:0 auto 6px; fill:none; stroke:var(--brace-blue); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.brace-gym-grid strong,.brace-gym-grid span { display:block; font-size:11px; }
+.brace-gym-grid span { color:var(--brace-muted); font-size:12px; margin-top:2px; }
+.brace-gym-grid button[aria-pressed=true] { border-color:var(--brace-blue); background:#e7f0ff; }
+.brace-gym-grid button:disabled { opacity:.5; cursor:wait; }
+.brace-gym-summary { display:flex; align-items:center; justify-content:space-between; margin:12px 0 0; gap:8px; font-size:11px; }
+.brace-gym-remove { background:white; border:1px solid var(--brace-line); border-radius:4px; font:inherit; color:var(--brace-blue); cursor:pointer; padding:4px 7px; white-space:nowrap; }
+.brace-gym-remove:disabled { opacity:.45; cursor:default; }
+.brace-gym [role=status] { margin:8px 0; font-size:12px; color:var(--brace-muted); }
+.brace-gym [data-phase=carrying] { color:#247344; }
+.brace-gym [data-phase=error] { color:#a93232; }
+.brace-gym details { border-top:1px solid #d5e5fa; padding-top:7px; font-size:11px; color:var(--brace-muted); }
+.brace-gym summary { cursor:pointer; }
+.brace-gym details p { margin:8px 0; }
+.brace-gym button:focus-visible,.brace-gym summary:focus-visible { outline:2px solid var(--brace-blue); outline-offset:2px; }
+.brace-interaction-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+.brace-interaction-tabs button { padding:10px 7px; border:1px solid #d5e5fa; border-radius:4px; background:white; color:var(--brace-ink); cursor:pointer; font:inherit; }
+.brace-interaction-tabs strong,.brace-interaction-tabs span { display:block; }
+.brace-interaction-tabs strong { font-size:13px; font-weight:600; }
+.brace-interaction-tabs span { font-size:11px; color:var(--brace-muted); margin-top:3px; }
+.brace-interaction-tabs button[aria-pressed=true] { background:#e7f0ff; border-color:var(--brace-blue); color:var(--brace-blue); }
+.brace-interaction-tabs button:focus-visible { outline:2px solid var(--brace-blue); outline-offset:2px; }
+.brace-exert-view .brace-gym { display:none; }

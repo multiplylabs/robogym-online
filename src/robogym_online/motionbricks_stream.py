@@ -164,6 +164,9 @@ class MotionBricksStream:
 
         self._torch = torch
         self._builder = ReferenceBuilder(contract, mjcf)
+        from .equipment import CarryOverlay
+
+        self._carry = CarryOverlay(self._builder._model, self._builder.joint_names)
         self.control_dt = self._builder.control_dt
         self._assert_joint_order(motionbricks_root, self._builder.joint_names)
         self._walk_mode = mode
@@ -300,6 +303,7 @@ class MotionBricksStream:
         it between clients rather than building another.
         """
         self._reset_model()
+        self._carry.reset()
         self._command = (0.0, 0.0, 0.0)
         self._target_speed = None
         self._speed_cmd = None
@@ -312,6 +316,11 @@ class MotionBricksStream:
         self._correction = np.zeros(2)
         self._qpos = np.zeros((0, 7 + len(self._builder.joint_names)))
         self._reference = None
+
+    def set_equipment(self, name: str) -> None:
+        if name != self._carry.name:
+            print(f"equipment: {name}", flush=True)
+        self._carry.select(name, self._qpos)
 
     # -- command ----------------------------------------------------------------
 
@@ -592,7 +601,7 @@ class MotionBricksStream:
             needed = int(math.ceil((index + LEAD_FRAMES) * self.control_dt * MOTIONBRICKS_FPS)) + 2
             while self._qpos.shape[0] < needed:
                 self._generate_frame()
-            self._reference = self._builder.build(self._qpos, MOTIONBRICKS_FPS)
+            self._reference = self._builder.build(self._carry.apply(self._qpos), MOTIONBRICKS_FPS)
             if self.available > index:
                 return
 

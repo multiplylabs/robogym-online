@@ -1,0 +1,43 @@
+{
+  "policy": "g1_wrench_v6",
+  "equipment": {
+    "none": {
+      "label": "Empty hands",
+      "mass": 0
+    },
+    "dumbbells": {
+      "label": "Dumbbells",
+      "mass": 2.0,
+      "each": 1.0,
+      "target": [
+        0.21,
+        0.22,
+        -0.07
+      ]
+    },
+    "kettlebell": {
+      "label": "Kettlebell",
+      "mass": 3.5,
+      "target": [
+        0.23,
+        0.1,
+        -0.06
+      ]
+    },
+    "barbell": {
+      "label": "Barbell",
+      "mass": 2.0,
+      "target": [
+        0.23,
+        0.2,
+        -0.06
+      ]
+    }
+  },
+  "trials": 3,
+  "successes": 3,
+  "style": "stealth",
+  "ramp_angle_deg": 10,
+  "seed": 0,
+  "results_file": "equipment_light_trials.jsonl"
+}

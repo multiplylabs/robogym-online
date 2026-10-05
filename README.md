@@ -18,6 +18,51 @@ Built on [mjswan](https://github.com/ttktjmt/mjswan) (Apache-2.0).
 > exerting checkpoint, `brace.onnx` and `brace_wrench.onnx` — because exporting them needs
 > ProtoMotions and the training-side whole-body IK, which live elsewhere.
 
+
+## Gym equipment
+
+The public BRACE demo starts in Stealth with empty hands. The equipment gallery adds paired
+**1 kg dumbbells**, a shared **3.5 kg kettlebell**, or a shared **2 kg barbell**. Pick a tile,
+release the movement keys while the grip settles, then walk. Put down or Reset removes the load.
+Manual force presets remain available; switching between equipment and a force preset clears
+the previous load so weight is not counted twice. The reference trajectory is shown by default. The visible Compensate and Exert force actions
+switch between carrying weights and pushing with a preset or custom hand force.
+
+These are physical payloads, not renamed force arrows: hand-body mass, centre of mass and inertia
+change through MuJoCo's `mj_setConst`. A 1 kg dumbbell adds approximately 9.8 N of gravity plus
+inertial effects when accelerating. Shared equipment has a fixed-size model attached to the left
+palm and an equality weld to the right palm, so both hands carry one rigid object. This first version
+assumes ideal grips; finger articulation, slipping, dropping and equipment collisions are not simulated.
+
+Each equipment preset solves two joint-limited 7-DOF arm poses with torso-relative palm targets.
+The arms blend into those poses over 1.5 seconds using affine PD motor biases, with 3× the contract
+arm stiffness and 2× damping. Their combined torque remains capped at the original motor effort
+limits (25 Nm for shoulder/elbow/roll and 5 Nm for wrist pitch/yaw). Legs and waist stay under the
+walking policy. Selection is also sent on the existing generator context messages; decoded reference
+poses and their body velocities include the held arms, while raw MotionBricks context stays intact.
+The same holding pose works across Stealth, Slow walk, Object carrying and Careful.
+
+The initial sweep, using the earlier heavier 2 kg-per-hand dumbbells and 3 kg barbell
+(with the same 3.5 kg kettlebell), completed **72/72 loaded ramp crossings**: all three objects, all four
+styles, 6° and 10° ramps, and seeds 0–2. Results are in `equipment_trials.jsonl` and
+`equipment_audit.json`. This is evidence for those conditions, not a guarantee for arbitrary
+loads, slopes or steering.
+
+The current lighter presets also passed a Stealth crossing of the 10° ramp for each
+object (seed 0), plus browser mass, grip, removal and reset checks. These current-preset
+results are in `equipment_light_trials.jsonl` and `equipment_light_audit.json`.
+
+Run the loaded ramp audit using the public policy and native counterparts of the browser payload
+and arm servo. It detects falls and leaving the ramp, including failures followed by recovery:
+
+```sh
+python -m robogym_online.check_equipment --planner /path/to/planner_sonic.onnx \
+  --seeds 0 1 2 --angles 6 10 --output equipment_trials.jsonl
+python -m unittest discover -s tests -p 'test_*.py'
+# NODE_PATH must point to mjswan/template/node_modules. Local generator + port 8080 required.
+node tests/browser_equipment.cjs
+```
+
 ## What is interesting here
 
 A force-exertion policy of this kind is not deployable from its weights alone. It observes a

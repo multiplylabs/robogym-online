@@ -275,6 +275,7 @@ async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None
                 # The locomotion styles this generator offers, in selection order, so the client
                 # can present them without knowing what is behind the socket.
                 "styles": list(getattr(stream, "styles", ())),
+                "equipment": ["none", "dumbbells", "kettlebell", "barbell"] if hasattr(stream, "set_equipment") else [],
             }
         )
     )
@@ -300,6 +301,8 @@ async def _pump(websocket, stream) -> None:
             _apply_walk_speed(stream, request["name"])
             print(f"style: {request['name']}")
         elif request["type"] == "context":
+            if "equipment" in request and hasattr(stream, "set_equipment"):
+                stream.set_equipment(request["equipment"])
             stream.set_context_qpos(np.asarray(request["qpos"], dtype=np.float64), request.get("frame"))
             if os.environ.get("WASD_DEBUG"):
                 _debug["n"] = _debug.get("n", 0) + 1

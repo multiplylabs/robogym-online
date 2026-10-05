@@ -125,6 +125,10 @@
       disclosure.textContent = 'Forces & interaction';
       presetGroup.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
     }
+    window.braceClearForces = async () => {
+      while (state.busy) await frame();
+      return run(clear);
+    };
     function apply(value) {
       if (!Number.isFinite(value) || value < 0 || value > maximum() || Math.abs(value / Number(custom.step) - Math.round(value / Number(custom.step))) > .001) {
         custom.reportValidity();
@@ -132,6 +136,7 @@
         status.dataset.error = 'true';
         return;
       }
+      window.BraceGym?.remove();
       run(async () => {
         await clear();
         if (!value) return;

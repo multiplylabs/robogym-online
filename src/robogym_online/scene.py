@@ -73,6 +73,9 @@ def build_spec(mjcf: Path, physics_dt: float) -> mujoco.MjSpec:
     spec = mujoco.MjSpec.from_file(str(mjcf))
     _add_scene_visuals(spec)
     _add_slope(spec)
+    from robogym_online.equipment import add_equipment
+
+    add_equipment(spec)
     # The contract's physics rate, not the MJCF's: `decimation = control_dt / physics_dt` has to
     # come out at the value the policy was trained with.
     spec.option.timestep = physics_dt

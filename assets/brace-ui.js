@@ -10,7 +10,7 @@
   guide.className = 'brace-guide';
   guide.hidden = true;
   guide.setAttribute('aria-label', 'Scene annotations');
-  guide.innerHTML = `<div class="brace-eyebrow">Scene Guide</div><h2>What You’re Seeing</h2><dl><dt><i class="brace-dot robot"></i>Solid robot</dt><dd>The simulated G1 responding to the controller.</dd><dt><i class="brace-dot reference"></i>Green reference</dt><dd>The selected MotionBricks motion. Use “Show reference” to compare it with the robot.</dd><dt><i class="brace-dot braced"></i>Red braced motion</dt><dd>BRACE adjusts the reference to exert the requested hand force.</dd><dt><i class="brace-dot left"></i><i class="brace-dot right"></i>Hand load arrows</dt><dd>Orange is the left hand; blue is the right. Direction and length show the applied load.</dd></dl><p><strong>Try a slope.</strong> Enable “Slope ahead,” then hold W to walk across it. Release the key to stop.</p><p><strong>Try a load.</strong> Open “Forces & interaction,” choose Compensate or Exert, and click a force preset or enter a custom value. Use Clear force to remove it.</p><p class="brace-note">Object carrying is a motion style; this demo has no physical carried object.</p>`;
+  guide.innerHTML = `<div class="brace-eyebrow">Scene Guide</div><h2>What You’re Seeing</h2><dl><dt><i class="brace-dot robot"></i>Solid robot</dt><dd>The simulated G1 responding to the controller.</dd><dt><i class="brace-dot reference"></i>Green reference</dt><dd>The selected MotionBricks motion. Shown by default alongside the robot; uncheck “Show reference” to hide it.</dd><dt><i class="brace-dot braced"></i>Red braced motion</dt><dd>BRACE adjusts the reference to exert the requested hand force.</dd><dt><i class="brace-dot left"></i><i class="brace-dot right"></i>Hand load arrows</dt><dd>Orange is the left hand; blue is the right. Direction and length show the applied load.</dd></dl><p><strong>Try a slope.</strong> Enable “Slope ahead,” then hold W to walk across it. Release the key to stop.</p><p><strong>Pick up a weight.</strong> Choose dumbbells, a kettlebell or a barbell in the equipment gallery. To push, choose the visible “Exert force” action, and click a force preset or enter a custom value. Use Clear force to remove it.</p><p class="brace-note">Choose gym equipment to add physical mass and inertia. Shared weights use an ideal two-hand grip; fingers and dropping are not simulated.</p>`;
   document.body.append(guide);
   const help = header.querySelector('button');
   help.addEventListener('click', () => {
@@ -42,7 +42,7 @@
         panels.add(panel);
         const title = document.createElement('div');
         title.className = 'brace-panel-intro';
-        title.innerHTML = '<div class="brace-eyebrow">Explore BRACE</div><p>Pick a walking style below. Hold the keys or touch the direction keys to move.</p>';
+        title.innerHTML = '<div class="brace-eyebrow">Explore BRACE</div><p>Choose weights to compensate a load, or Exert force to push. Pick a walking style and hold the direction keys to move.</p>';
         const content = panel.querySelector('.mantine-ScrollArea-content > div > div');
         if (content) {
           content.prepend(title);

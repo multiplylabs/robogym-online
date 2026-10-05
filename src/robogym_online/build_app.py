@@ -582,7 +582,7 @@ def brace_command(
                 },
                 {"command": "exert", "field": "command", "input": "dial", "shape": [1, dial_width]},
             ],
-            "debug_vis": True,
+            "debug_vis": False,
             # The force-adjusted goal as a red copy of the robot, posed from the brace's own
             # `x_priv_bodies`/`x_priv_rot` -- so what is drawn is the pose the policy is actually
             # being asked for, not a redrawing of the dial. Beside mjswan's green reference ghost
@@ -732,7 +732,7 @@ def build(
             lookat=(0.0, 0.0, 0.15),
             distance=3.4,
             elevation=-14,
-            azimuth=135,
+            azimuth=45,
             origin_type=mjswan.ViewerConfig.OriginType.ASSET_BODY,
             body_name=contract["robot"]["anchor_body_name"],
         )
@@ -1137,22 +1137,61 @@ def install_stream_pointer(dist: Path, source: Path) -> None:
     print(f"  stream pointer -> {dist / source.name}: {source.read_text().strip()}")
 
 
-def install_brace_ui(dist: Path) -> None:
+def install_brace_ui(dist: Path, contract: dict | None = None, mjcf: Path = DEFAULT_MJCF) -> None:
     """Add the BRACE presentation without changing the simulator's native controls."""
     source = HERE.parent.parent / "assets"
     for page in (dist / "index.html", dist / "main" / "index.html"):
         if not page.is_file():
             continue
-        for name in ("brace-ui.css", "brace-ui.js", "brace-forces.js"):
+        for name in ("brace-ui.css", "brace-ui.js", "brace-forces.js", "brace-gym.js"):
             shutil.copy2(source / name, page.parent / name)
         html = page.read_text()
+        # Apply the native preference before React loads, preserving explicit user choices.
+        reference_default = ('<script data-brace-reference-default>\n'
+                             '{const u=new URL(location.href);if(!u.searchParams.has("ref")){u.searchParams.set("ref","1");history.replaceState(history.state,"",u);}}\n'
+                             '</script>')
+        if "data-brace-reference-default" in html:
+            html = re.sub(r"<script data-brace-reference-default>.*?</script>", reference_default,
+                          html, flags=re.DOTALL)
+        else:
+            html = html.replace("<head>", "<head>\n" + reference_default, 1)
         html = re.sub(r"<title>.*?</title>", "<title>BRACE · Interactive Demo</title>", html)
         if 'src="brace-ui.js"' not in html:
             html = html.replace("</head>", '<link rel="stylesheet" href="brace-ui.css">\n'
                                 '<script src="brace-ui.js" defer></script>\n</head>', 1)
         if 'src="brace-forces.js"' not in html:
             html = html.replace("</head>", '<script src="brace-forces.js" defer></script>\n</head>', 1)
+        if 'src="brace-gym.js"' not in html:
+            html = html.replace("</head>", '<script src="brace-gym.js" defer></script>\n</head>', 1)
         page.write_text(html)
+    from robogym_online.equipment import EQUIPMENT, payload_properties, solve_carry_pose
+
+    if contract is None:
+        contract = load_contract(source / "compiled_models_wrench")
+    equipment_model = build_spec(mjcf, float(contract["timing"]["physics_dt"])).compile()
+    catalog = {name: {**item, "payloads": payload_properties(name)} for name, item in EQUIPMENT.items()}
+    for name, item in catalog.items():
+        if name == "none":
+            continue
+        indices, angles, _ = solve_carry_pose(equipment_model, contract["joint_names"], name)
+        item["arms"] = [{"joint": contract["joint_names"][i], "target": float(q),
+                        "kp": float(contract["control"]["stiffness"][i])*3,
+                        "kd": float(contract["control"]["damping"][i])*2}
+                        for i, q in zip(indices, angles, strict=True)]
+    for config_path in dist.rglob("config.json"):
+        config = json.loads(config_path.read_text())
+        if "projects" not in config:
+            continue
+        config.update(uses_custom_js=True, plugins="assets/brace-equipment-plugin.js")
+        config_path.write_text(json.dumps(config, indent=2))
+        shutil.copy2(source / "brace-equipment-plugin.js", config_path.parent / "brace-equipment-plugin.js")
+    for policy_path in dist.rglob("*.json"):
+        if policy_path.name == "config.json":
+            continue
+        policy = json.loads(policy_path.read_text())
+        if "commands" in policy and "in_keys" in policy:
+            policy["commands"]["gym_equipment"] = {"name": "GymEquipment", "catalog": catalog}
+            policy_path.write_text(json.dumps(policy, indent=2))
 
 
 def narrow_dial(model: onnx.ModelProto, width: int) -> onnx.ModelProto:
@@ -1451,7 +1490,7 @@ def main() -> None:
         # The force brace's dial is already the force dial; narrowing is a no-op for it.
         install_brace_graph(args.output, graphs, dial_width=None if args.torque else _FORCE_DIAL_WIDTH)
     install_stream_pointer(args.output, Path("stream.json"))
-    install_brace_ui(args.output)
+    install_brace_ui(args.output, load_contract(args.wrench_onnx_dir or args.onnx_dir), args.mjcf)
     print(f"built {args.output}")
     if args.serve or os.getenv("FORCE_WEB_SERVE") == "1":
         app.launch()

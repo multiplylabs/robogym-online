@@ -25,6 +25,7 @@ dependencies = [
   "onnxruntime>=1.18",
   "torch>=2.4",
   "numpy>=1.26",
+  "scipy>=1.11",
   "pyyaml>=6",
 ]
 
