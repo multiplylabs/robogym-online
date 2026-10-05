@@ -60,6 +60,8 @@ def _yaw_deg(qpos) -> float:
     """Heading of a reported pose, in degrees -- for the debug line only."""
     w, x, y, z = (float(v) for v in qpos[3:7])
     return math.degrees(math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z)))
+
+
 _debug: dict = {}
 HEADER = struct.Struct("<ii")
 
@@ -145,9 +147,7 @@ class RemoteReferenceStream:
 
     def set_command(self, forward: float, lateral: float, turn_deg: float) -> None:
         self._socket.send(
-            json.dumps(
-                {"type": "command", "forward": forward, "lateral": lateral, "turn": turn_deg}
-            )
+            json.dumps({"type": "command", "forward": forward, "lateral": lateral, "turn": turn_deg})
         )
 
     def _fetch(self, start: int, count: int) -> None:
@@ -174,13 +174,36 @@ class RemoteReferenceStream:
         self._socket.close()
 
 
-def _build_stream(contract: dict, mjcf: Path, seed: int | None, generator: str):
+def _build_stream(
+    contract: dict,
+    mjcf: Path,
+    seed: int | None,
+    generator: str,
+    camera_req: str | None = None,
+    camera_rep: str | None = None,
+):
     """The generator behind this connection. One per client: each has its own command and robot."""
     if generator == "motionbricks":
         from .motionbricks_stream import MotionBricksStream
         from .scene import DEFAULT_MOTIONBRICKS_ROOT
 
         return MotionBricksStream(contract, mjcf, DEFAULT_MOTIONBRICKS_ROOT, seed=seed)
+    if generator == "camera_motionbricks":
+        from .camera_motionbricks_stream import (
+            DEFAULT_CAMERA_REP_ADDR,
+            DEFAULT_CAMERA_REQ_ADDR,
+            CameraMotionBricksStream,
+        )
+        from .scene import DEFAULT_MOTIONBRICKS_ROOT
+
+        return CameraMotionBricksStream(
+            contract,
+            mjcf,
+            DEFAULT_MOTIONBRICKS_ROOT,
+            req_addr=camera_req or DEFAULT_CAMERA_REQ_ADDR,
+            rep_addr=camera_rep or DEFAULT_CAMERA_REP_ADDR,
+            seed=seed,
+        )
     if generator == "onnx":
         from .motionbricks_onnx import MotionBricksOnnxStream
         from .scene import DEFAULT_PLANNER_ROOT
@@ -199,7 +222,7 @@ async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None
     One at a time: the generator carries a session's worth of state -- its own motion so far, the
     heading, the correction -- and there is one robot to drive. Loading a second copy is not the
     answer either, at a couple of minutes and several gigabytes.
-    
+
     The newest client wins, rather than being refused. Refusing looks like a broken demo from the
     outside: the page keeps playing its bundled clip and ignores the keyboard, with nothing to say
     why. And the holder is not always a browser -- an editor forwarding the port, or a tab left open
@@ -214,6 +237,12 @@ async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None
             pass
     in_use["client"] = websocket
     stream.reset()
+    # The style is generator state, so a new session would otherwise inherit whatever the previous
+    # one was left on -- a run, say -- while the page shows its first entry as selected. Start
+    # every session on the first offered style; the client re-selects from there.
+    styles = tuple(getattr(stream, "styles", ()))
+    if styles and hasattr(stream, "set_style"):
+        stream.set_style(styles[0])
     await websocket.send(
         json.dumps(
             {
@@ -249,9 +278,7 @@ async def _pump(websocket, stream) -> None:
             stream.set_style(request["name"])
             print(f"style: {request['name']}")
         elif request["type"] == "context":
-            stream.set_context_qpos(
-                np.asarray(request["qpos"], dtype=np.float64), request.get("frame")
-            )
+            stream.set_context_qpos(np.asarray(request["qpos"], dtype=np.float64), request.get("frame"))
             if os.environ.get("WASD_DEBUG"):
                 _debug["n"] = _debug.get("n", 0) + 1
                 if _debug["n"] % 50 == 0:
@@ -289,14 +316,21 @@ async def _pump(websocket, stream) -> None:
 
 
 async def _main(
-    onnx_dir: Path, mjcf: Path, host: str, port: int, seed: int | None, generator: str
+    onnx_dir: Path,
+    mjcf: Path,
+    host: str,
+    port: int,
+    seed: int | None,
+    generator: str,
+    camera_req: str | None = None,
+    camera_rep: str | None = None,
 ) -> None:
     import websockets
 
     contract = load_contract(onnx_dir)
     # Built before the socket opens, so a client's first page load does not wait on a checkpoint.
     print(f"loading the {generator} generator...")
-    stream = _build_stream(contract, mjcf, seed, generator)
+    stream = _build_stream(contract, mjcf, seed, generator, camera_req, camera_rep)
     in_use: dict = {"client": None}
     async with websockets.serve(
         lambda ws: _serve_client(ws, contract, stream, in_use), host, port, max_size=None
@@ -315,12 +349,31 @@ def main() -> None:
     parser.add_argument(
         "--generator",
         default="motionbricks",
-        choices=["motionbricks", "onnx", "ardy"],
+        choices=["motionbricks", "camera_motionbricks", "onnx", "ardy"],
         help="which model invents the reference",
+    )
+    parser.add_argument(
+        "--camera-req-addr",
+        default=None,
+        help="camera_motionbricks: request socket of the camera retarget server (default :28701)",
+    )
+    parser.add_argument(
+        "--camera-rep-addr",
+        default=None,
+        help="camera_motionbricks: reply socket of the camera retarget server (default :28702)",
     )
     args = parser.parse_args()
     asyncio.run(
-        _main(args.onnx_dir, args.mjcf, args.host, args.port, args.seed, args.generator)
+        _main(
+            args.onnx_dir,
+            args.mjcf,
+            args.host,
+            args.port,
+            args.seed,
+            args.generator,
+            args.camera_req_addr,
+            args.camera_rep_addr,
+        )
     )
 
 
