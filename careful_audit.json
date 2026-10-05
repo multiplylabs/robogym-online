@@ -1,0 +1,42 @@
+{
+  "style": "careful",
+  "planner_target_m_s": 0.8,
+  "policy": "g1_wrench_v6",
+  "trials": {
+    "careful_validation.jsonl": {
+      "completed": 15,
+      "total": 15
+    },
+    "careful_steering.jsonl": {
+      "completed": 3,
+      "total": 3
+    },
+    "careful_gentle_steering.jsonl": {
+      "completed": 3,
+      "total": 3
+    },
+    "careful_load.jsonl": {
+      "completed": 3,
+      "total": 3
+    },
+    "careful_flat.jsonl": {
+      "completed": 3,
+      "total": 3
+    }
+  },
+  "screening": "new_style_screening.jsonl",
+  "limits": "Native MuJoCo trials; turns and hand load tested separately. No carried payload. Observed success is not a universal guarantee.",
+  "browser_smoke": {
+    "success": true,
+    "style": "careful",
+    "context_count": 1091,
+    "page_errors": [],
+    "min_world_root_height_m": 0.7034099106753544,
+    "max_world_root_height_m": 1.22007023540163,
+    "final_xy_m": [
+      20.18607190862956,
+      -0.46852517955391887
+    ],
+    "course": "Browser Slope ahead randomized 6\u201310 degree ramp; held forward for 40 seconds, released for 3 seconds."
+  }
+}

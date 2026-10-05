@@ -69,16 +69,52 @@ STYLES: tuple[str, ...] = (
 
 # Below this commanded speed, in m/s, the robot is asked to stand rather than to walk.
 IDLE_SPEED = 0.05
+# Bounds on a requested travel speed, in m/s. Below the floor MotionBricks' root spring produces a
+# shuffle rather than a step -- it discards a target movement under 0.1 m in a second -- and a source
+# asking for less is better served by the idle clip. Under the ceiling is where the gaits live.
+MIN_TARGET_SPEED = 0.15
+MAX_TARGET_SPEED = 1.2
+# Where a requested speed changes which clip carries it, as a pair of thresholds: drop to the slow
+# clip below the first, return to the selected style above the second.
+#
+# The speed and the gait are separate knobs and both have to be right. A clip strides at its own
+# pace -- `slow_walk` about 0.3 m/s, `walk` about 1.0 -- so carrying one at a speed far from that
+# makes the reference's feet skate, which is exactly what a mimic tracker cannot follow. The
+# crossover therefore sits at the geometric mean of the two, sqrt(0.3 * 1.0) ~ 0.55, the speed where
+# stretching the slow clip and compressing the fast one are equally wrong; a threshold lower than
+# that (0.45 was measured) hands `walk` speeds under half its natural stride and the robot goes down.
+#
+# The gap between them is hysteresis, and it is not optional. A camera-derived speed is continuous
+# and sits wherever the operator is walking, so a single threshold gets crossed on noise: measured at
+# 0.5 m/s, a bare threshold changed the style five times a second, each change a discontinuity in the
+# reference. The gap is wider than the jitter (max 0.08 m/s between frames), so a crossing has to be
+# the operator actually changing pace.
+SLOW_WALK_ENTER = 0.48
+SLOW_WALK_EXIT = 0.62
+# Fastest the requested speed may change, m/s per second.
+#
+# The speed a clip carries is a constant; a measured one is not, and it goes straight into the root
+# spring's target a second ahead -- at double, by that model's convention. Passed through raw, a
+# frame-to-frame wobble of 0.15 m/s in the estimate (measured, walking at 0.9) throws that target
+# 0.3 m back and forth, which the reference wears as a lurch. An operator cannot change pace faster
+# than this anyway, so what the limit removes is estimator noise rather than intent.
+MAX_TARGET_ACCEL = 1.5
 # Beyond this angle between travel and facing, use the slow clip. Just under a right angle, so
 # strafing and backing up are slow while a gentle diagonal still walks at pace.
 OFF_AXIS_SLOW_RAD = math.radians(75.0)
+# A forward slope preset must not stretch the fallback gait to the same speed
+# while sidestepping/backing up. Cap until both requested and slewed directions
+# have returned to forward travel.
+MAX_OFF_AXIS_TARGET_SPEED = 0.3
 # How fast the direction of travel may change, degrees per second.
 #
 # Keys change instantly and a body cannot: going from A to D reverses the requested direction by 180
 # degrees between one frame and the next, and a robot in mid-stride is asked to be travelling the
 # other way immediately. Measured, that is enough to put it on the floor. Turning the request into a
-# rate-limited sweep costs about a second and a half for a full reversal.
-DIRECTION_SLEW_DEG_S = 120.0
+# rate-limited sweep costs three seconds for a full reversal. At 120 deg/s,
+# a strafe reversal with a 10 N hand load still fell in the steering regression;
+# 60 deg/s kept that sequence upright.
+DIRECTION_SLEW_DEG_S = 60.0
 # Fastest turn the gait can actually follow, degrees per second.
 #
 # This is a measured limit, not a taste: the generator is steered by a facing *direction*, and past
@@ -141,6 +177,20 @@ class MotionBricksStream:
 
         # The operator's command, in the robot's own frame: m/s, m/s, deg/s.
         self._command = (0.0, 0.0, 0.0)
+        # Whether the slow clip is currently carrying the walk. Hysteretic, so it is state rather
+        # than a test: see `SLOW_WALK_ENTER`.
+        self._slow_gait = False
+        # Speed the reference should actually travel at, m/s, or None to take the clip's own.
+        #
+        # A command here is a *direction*: how fast the reference then moves is a property of the
+        # clip, and every walking clip carries about a metre a second whatever magnitude was asked
+        # for. That is right for a key, which is only ever down or up, and wrong for a source that
+        # knows the speed it wants -- a camera watching an operator walk at half a metre a second
+        # otherwise gets a robot walking at a full one. See `_signals`.
+        self._target_speed: float | None = None
+        # The requested speed as actually sent, rate-limited towards `_target_speed` a frame at a
+        # time. None until the first request, which it snaps to rather than ramping up from zero.
+        self._speed_cmd: float | None = None
         # Heading the command is resolved against, integrated from the turn key.
         self._heading = 0.0
         # Direction of travel actually asked for, swept towards the commanded one. See
@@ -251,6 +301,9 @@ class MotionBricksStream:
         """
         self._reset_model()
         self._command = (0.0, 0.0, 0.0)
+        self._target_speed = None
+        self._speed_cmd = None
+        self._slow_gait = False
         self._heading = 0.0
         self._move_angle = None
         self._robot_xy = None
@@ -291,6 +344,25 @@ class MotionBricksStream:
     def command(self) -> tuple[float, float, float]:
         return self._command
 
+    def set_target_speed(self, speed: float | None) -> None:
+        """Ask the reference to travel at ``speed`` m/s, or ``None`` to take the clip's own."""
+        self._target_speed = None if speed is None else max(0.0, float(speed))
+
+    @property
+    def target_speed(self) -> float | None:
+        """The requested travel speed in m/s, or ``None`` if the clip's own is in use."""
+        return self._target_speed
+
+    @property
+    def heading(self) -> float:
+        """Facing the command is resolved against, in radians, integrated from the turn rate.
+
+        Open-loop from the command by design (see `_command_vectors`), which is what makes it the
+        thing to servo an external heading against: it says where the reference has actually been
+        asked to point, not where it noisily is.
+        """
+        return self._heading
+
     def set_context_qpos(self, qpos: np.ndarray, frame: int | None = None) -> None:
         """Report the consumer's robot pose, and the reference frame it is currently tracking.
 
@@ -307,6 +379,7 @@ class MotionBricksStream:
     def _signals(self) -> dict:
         """The control signals for one generation step: direction, facing, mode, context."""
         torch = self._torch
+        self._advance_target_speed()
         facing, movement = self._command_vectors()
         mode_index = torch.tensor([[self._modes.index(self.current_mode())]])
         context = self._context_window()
@@ -319,7 +392,28 @@ class MotionBricksStream:
         signals["allowed_pred_num_tokens"] = self._controller.get_default_allowed_pred_num_tokens(
             mode_index.item()
         )
+        if self._speed_cmd is not None:
+            # The model's own override for the clip's average speed: supplied here it replaces
+            # `avg_root_vel` in the root spring model, so the reference travels at the speed asked
+            # for instead of the one baked into the clip. The model ignores it while idle.
+            # A tensor, not a float: the model moves every signal it is handed onto its device
+            # before reading any of them, so a bare number raises there rather than here.
+            signals["target_vel"] = torch.tensor([[float(self._speed_cmd)]])
         return signals
+
+    def _advance_target_speed(self) -> None:
+        """Step the sent speed one frame towards the requested one. See `MAX_TARGET_ACCEL`."""
+        if self._target_speed is None:
+            self._speed_cmd = None
+            return
+        want = min(MAX_TARGET_SPEED, max(MIN_TARGET_SPEED, self._target_speed))
+        if self._off_axis_angle() > OFF_AXIS_SLOW_RAD:
+            want = min(want, MAX_OFF_AXIS_TARGET_SPEED)
+        if self._speed_cmd is None:
+            self._speed_cmd = want
+            return
+        limit = MAX_TARGET_ACCEL * self._frame_dt
+        self._speed_cmd += max(-limit, min(limit, want - self._speed_cmd))
 
     def _command_vectors(self) -> tuple[np.ndarray, np.ndarray]:
         """Where the reference should face and travel, as world unit vectors.
@@ -391,6 +485,14 @@ class MotionBricksStream:
         span = self._qpos[-20:, :2]
         return float(np.linalg.norm(span[-1] - span[0])) / (19.0 / MOTIONBRICKS_FPS)
 
+    def _off_axis_angle(self) -> float:
+        forward, lateral, _ = self._command
+        requested = abs(math.atan2(lateral, forward))
+        slewed = 0.0 if self._move_angle is None else abs(
+            (self._move_angle - self._heading + math.pi) % (2 * math.pi) - math.pi
+        )
+        return max(requested, slewed)
+
     def current_mode(self) -> str:
         """The clip the current command and style select.
 
@@ -403,9 +505,18 @@ class MotionBricksStream:
         forward, lateral, _ = self._command
         if math.hypot(forward, lateral) <= IDLE_SPEED:
             return "idle"
-        off_axis = abs((math.atan2(lateral, forward) + math.pi) % (2.0 * math.pi) - math.pi)
+        off_axis = self._off_axis_angle()
         if off_axis > OFF_AXIS_SLOW_RAD and "slow_walk" in self._modes:
             return "slow_walk"
+        if self._walk_mode == "walk" and self._speed_cmd is not None and "slow_walk" in self._modes:
+            # Two thresholds rather than one, so a speed sitting on the crossover does not flap the
+            # style. Idempotent: repeating the call without a new command repeats the answer, which
+            # is what lets a status line ask as freely as the generator does.
+            self._slow_gait = self._speed_cmd < (
+                SLOW_WALK_EXIT if self._slow_gait else SLOW_WALK_ENTER
+            )
+            if self._slow_gait:
+                return "slow_walk"
         return self._walk_mode
 
     def tracking_error(self) -> float:

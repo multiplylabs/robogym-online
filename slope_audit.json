@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-05",
+  "policy": "g1_wrench_v6",
+  "generator": "MotionBricks ONNX",
+  "success_definition": "Full ascent, plateau, descent, then 3 seconds upright; pelvis clearance >=0.4 m, tilt <=60 degrees, stays within course.",
+  "slope": {
+    "angle_range_deg": [
+      6,
+      10
+    ],
+    "lead_m": 3,
+    "ramp_surface_length_m": 2.5,
+    "plateau_length_m": 2,
+    "width_m": 4
+  },
+  "profiles": {
+    "slow_walk": {
+      "target_speed_m_s": 0.5,
+      "successes": 15,
+      "trials": 15,
+      "angles_deg": [
+        6,
+        8,
+        10
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "minimum_terrain_clearance_m": 0.7316590970526814,
+      "mean_joint_error_rad": 0.0856807578963116,
+      "median_episode_seconds": 35.88,
+      "stress_successes": 9,
+      "stress_trials": 9
+    },
+    "stealth": {
+      "target_speed_m_s": 0.8,
+      "successes": 15,
+      "trials": 15,
+      "angles_deg": [
+        6,
+        8,
+        10
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "minimum_terrain_clearance_m": 0.6845656443206285,
+      "mean_joint_error_rad": 0.11248164106233345,
+      "median_episode_seconds": 24.900000000000002,
+      "stress_successes": 9,
+      "stress_trials": 9
+    },
+    "object_carrying": {
+      "target_speed_m_s": 0.8,
+      "successes": 15,
+      "trials": 15,
+      "angles_deg": [
+        6,
+        8,
+        10
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "minimum_terrain_clearance_m": 0.6803230680869728,
+      "mean_joint_error_rad": 0.1716389188101604,
+      "median_episode_seconds": 20.84,
+      "stress_successes": 9,
+      "stress_trials": 9
+    }
+  },
+  "limitations": [
+    "Finite seed sample; observed success is not a guarantee.",
+    "Short turn pulses and hand disturbances tested separately.",
+    "Actual carried object mass and exertion contact not simulated.",
+    "12 degree screening used only one seed."
+  ],
+  "default_style": "slow_walk",
+  "steering": {
+    "maximum_turn_deg_s": 20,
+    "direction_slew_deg_s": 60,
+    "tested_pulses_deg_s": [
+      10,
+      20
+    ],
+    "pulse_seconds_each_direction": 1,
+    "sideways_backward_target_cap_m_s": 0.3,
+    "target_speed_max_accel_m_s2": 1.5
+  },
+  "flat_reversal_regression": {
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "episode_seconds": 30,
+    "before_off_axis_cap": {
+      "slow_walk_successes": 0,
+      "trials": 3
+    },
+    "after_off_axis_cap": {
+      "slow_walk": {
+        "successes": 3,
+        "trials": 3
+      },
+      "stealth": {
+        "successes": 3,
+        "trials": 3
+      },
+      "object_carrying": {
+        "successes": 3,
+        "trials": 3
+      }
+    }
+  },
+  "unit_tests_passed": 7,
+  "deployment": {
+    "local_http_port": 8080,
+    "generator_port": 8765,
+    "local_dist_rebuilt": true,
+    "published_static_site_redeployment": false
+  },
+  "browser_smoke": {
+    "url": "http://127.0.0.1:8080/?stream=ws://127.0.0.1:8765",
+    "style": "slow_walk",
+    "ramp_enabled": true,
+    "ramp_angle": "sampled from 6-10 degree preset",
+    "page_errors": [],
+    "context_samples": 1082,
+    "final_root_xy_m": [
+      12.911066762765063,
+      -0.39543679160640155
+    ],
+    "minimum_root_world_height_m": 0.7473162657818402,
+    "maximum_root_world_height_m": 1.2213837958456442,
+    "final_root_world_height_m": 0.782618122466952,
+    "completed_ramp": true,
+    "note": "Browser WebAssembly physics test; rendered screenshot timed out in software headless Chromium, so the linked videos are native MuJoCo recordings."
+  }
+}

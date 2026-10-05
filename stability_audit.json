@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-05",
+  "validation": "native MuJoCo/ONNX headless; websocket tests include public tunnel; browser rendering and ramp traversal not tested",
+  "settings": {
+    "walk_speed_m_s": 0.3,
+    "direction_slew_deg_s": 60,
+    "root_feedback_max_step_m": 0.002
+  },
+  "before": {
+    "feedback_walk_stop_max_root_step_m": 0.07316990213702967,
+    "feedback_walk_stop_worst_backward_step_m": -0.07278013229370117,
+    "walk_strafe_stop_at_0_5_m_s": {
+      "v6_fell_at_step": 1057,
+      "v12_fell_at_step": 991
+    }
+  },
+  "after": {
+    "v6_unloaded_30_s": [
+      {
+        "seed": 0,
+        "steps": 1500,
+        "fell": false,
+        "min_pelvis_height_m": 0.7376461952256254,
+        "mean_joint_error_rad": 0.07598822327563856
+      },
+      {
+        "seed": 1,
+        "steps": 1500,
+        "fell": false,
+        "min_pelvis_height_m": 0.7409946920313639,
+        "mean_joint_error_rad": 0.07650259991034052
+      },
+      {
+        "seed": 2,
+        "steps": 1500,
+        "fell": false,
+        "min_pelvis_height_m": 0.7257932555975666,
+        "mean_joint_error_rad": 0.07500229485069554
+      }
+    ],
+    "v6_left_hand_10_n_30_s": [
+      {
+        "seed": 0,
+        "steps": 1500,
+        "fell": false,
+        "min_pelvis_height_m": 0.7300170583843913
+      },
+      {
+        "seed": 1,
+        "steps": 1500,
+        "fell": false,
+        "min_pelvis_height_m": 0.7337097008934024
+      },
+      {
+        "seed": 2,
+        "steps": 1500,
+        "fell": false,
+        "min_pelvis_height_m": 0.7308012556984153
+      }
+    ],
+    "v12_unloaded": [
+      {
+        "seed": 0,
+        "fell": true,
+        "step": 1058
+      },
+      {
+        "seed": 1,
+        "fell": true,
+        "step": 1130
+      },
+      {
+        "seed": 2,
+        "fell": true,
+        "step": 796
+      }
+    ],
+    "v6_brace_10_n": {
+      "seconds": 10,
+      "final_pelvis_height_m": 0.775,
+      "upright": true,
+      "note": "brace/goal tracking check; does not emulate browser hand-spring contact"
+    },
+    "local_websocket": {
+      "steps": 1500,
+      "fell": false,
+      "min_pelvis_height_m": 0.7418072040244929
+    },
+    "public_websocket": {
+      "steps": 1500,
+      "fell": false,
+      "min_pelvis_height_m": 0.7272358890533448
+    },
+    "unit_tests_passed": 3
+  },
+  "deployment": {
+    "local_http_port": 8080,
+    "generator_port": 8765,
+    "policy": "existing v6 retained",
+    "stream_pointer": "repository and dist updated; GitHub Pages pointer still needs publication"
+  }
+}

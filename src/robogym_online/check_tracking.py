@@ -41,6 +41,22 @@ from convert_motion import convert  # noqa: E402
 
 _PROPRIO_HISTORY = 8
 
+def _proprio_history(contract: dict) -> int:
+    """Proprioception depth, off the contract's ``historical_*`` shapes.
+
+    Not a constant: the students differ on it, and a wrong depth is a silently wrong observation
+    rather than a shape error, because the graph takes whatever it is handed.
+    """
+    depths = {
+        int(entry["shape"][1])
+        for entry in contract["policy_inputs"]
+        if entry["name"].startswith("historical_")
+    }
+    if len(depths) != 1:
+        raise ValueError(f"contract's historical inputs disagree on history depth: {sorted(depths)}")
+    return depths.pop()
+
+
 
 def _to_xyzw(quat_wxyz: np.ndarray) -> np.ndarray:
     """wxyz -> xyzw on the last axis."""

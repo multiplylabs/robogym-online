@@ -29,7 +29,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .check_tracking import _PROPRIO_HISTORY, _quat_apply_inv, _to_xyzw
+from .check_tracking import _proprio_history, _quat_apply_inv, _to_xyzw
 from .scene import (
     DEFAULT_MJCF,
     DEFAULT_MOTIONBRICKS_ROOT,
@@ -148,12 +148,13 @@ class Runner:
 
         # Newest-first, seeded from the reference's first pose. Zeros here would inject a fictitious
         # whole-body step into the channel the policy reads load from.
+        depth = _proprio_history(self.contract)
         self.hist = {
-            "dof_pos": np.tile(first["joint_pos"][0], (_PROPRIO_HISTORY, 1)),
-            "dof_vel": np.tile(first["joint_vel"][0], (_PROPRIO_HISTORY, 1)),
-            "anchor_rot": np.tile(_to_xyzw(first["body_quat_w"][0, self.anchor]), (_PROPRIO_HISTORY, 1)),
-            "root_local_ang_vel": np.zeros((_PROPRIO_HISTORY, 3)),
-            "actions": np.tile(first["joint_pos"][0], (_PROPRIO_HISTORY, 1)),
+            "dof_pos": np.tile(first["joint_pos"][0], (depth, 1)),
+            "dof_vel": np.tile(first["joint_vel"][0], (depth, 1)),
+            "anchor_rot": np.tile(_to_xyzw(first["body_quat_w"][0, self.anchor]), (depth, 1)),
+            "root_local_ang_vel": np.zeros((depth, 3)),
+            "actions": np.tile(first["joint_pos"][0], (depth, 1)),
         }
 
     def step(self) -> float:
@@ -203,6 +204,7 @@ class Runner:
             "hand_force_xpriv_anchor_rot_delta": np.array([[0.0, 0.0, 0.0, 1.0]]),
             "task_mode_mode_onehot": np.array([[0.0, 1.0]]),  # [exert, comp]
             "task_mode_force_cmd_eff": np.zeros((1, 2, 3)),
+            "task_mode_torque_cmd_eff": np.zeros((1, 2, 3)),
             "initial_noise": np.zeros((1, self.n_dofs)),
         }
         feed = {k: np.ascontiguousarray(v, dtype=np.float32) for k, v in feed.items() if k in self.in_names}

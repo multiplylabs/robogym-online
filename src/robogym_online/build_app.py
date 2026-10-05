@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -458,6 +459,9 @@ _TERRAIN_STYLES = ("walk",)
 # generator's boxing, dancing and shuffling styles are left out of the demo. Declared on the page
 # rather than removed from the generator, so the same server can keep serving other clients.
 _FLAT_STYLES = ("walk", "slow_walk", "stealth", "object_carrying")
+# The wrench page uses explicitly selected gaits at their tested planner speeds.
+# Normal walk's threshold-driven gait changes are unnecessary in this palette.
+_WRENCH_STYLES = ("stealth", "slow_walk", "object_carrying", "careful")
 # The dropdown label for the wrench student. The checkpoint under assets/compiled_models_wrench is
 # g1_wrench_v6, and the contract carries no name of its own, so the version is stated here.
 _WRENCH_POLICY_NAME = "Wrench student v6 (force + terrain)"
@@ -709,7 +713,7 @@ def build(
     # A project site is served from a subpath (`/<repo>/`), and the bundle's asset URLs are baked
     # at build time -- so a default of "/" deploys a page that loads nothing.
     builder = mjswan.Builder(base_path=base_path)
-    project = builder.add_project(name="G1 Force Control")
+    project = builder.add_project(name="BRACE")
     scene = project.add_scene(name="Unitree G1", spec=spec, control_dt=control_dt)
     scene.set_trace_env(
         build_single_entity_trace_env(
@@ -1060,10 +1064,8 @@ def add_wrench_policy(
         body_names=tuple(body_names),
         dataset_joint_names=joint_names,
         default=True,
-        # The flat-ground gaits, unlike the slope-only student: this one spends most of its time on
-        # flat ground, where those are what there is to steer. The ramp is a toggle the operator
-        # flips, and walking is what to flip it with.
-        metadata={"stream": {"styles": list(_FLAT_STYLES), **({"url": stream} if stream else {})}},
+        # Validated with complete ramp crossings; the ramp remains an operator toggle.
+        metadata={"stream": {"styles": list(_WRENCH_STYLES), **({"url": stream} if stream else {})}},
     )
 
 
@@ -1133,6 +1135,24 @@ def install_stream_pointer(dist: Path, source: Path) -> None:
         return
     shutil.copy2(source, dist / source.name)
     print(f"  stream pointer -> {dist / source.name}: {source.read_text().strip()}")
+
+
+def install_brace_ui(dist: Path) -> None:
+    """Add the BRACE presentation without changing the simulator's native controls."""
+    source = HERE.parent.parent / "assets"
+    for page in (dist / "index.html", dist / "main" / "index.html"):
+        if not page.is_file():
+            continue
+        for name in ("brace-ui.css", "brace-ui.js", "brace-forces.js"):
+            shutil.copy2(source / name, page.parent / name)
+        html = page.read_text()
+        html = re.sub(r"<title>.*?</title>", "<title>BRACE · Interactive Demo</title>", html)
+        if 'src="brace-ui.js"' not in html:
+            html = html.replace("</head>", '<link rel="stylesheet" href="brace-ui.css">\n'
+                                '<script src="brace-ui.js" defer></script>\n</head>', 1)
+        if 'src="brace-forces.js"' not in html:
+            html = html.replace("</head>", '<script src="brace-forces.js" defer></script>\n</head>', 1)
+        page.write_text(html)
 
 
 def narrow_dial(model: onnx.ModelProto, width: int) -> onnx.ModelProto:
@@ -1431,6 +1451,7 @@ def main() -> None:
         # The force brace's dial is already the force dial; narrowing is a no-op for it.
         install_brace_graph(args.output, graphs, dial_width=None if args.torque else _FORCE_DIAL_WIDTH)
     install_stream_pointer(args.output, Path("stream.json"))
+    install_brace_ui(args.output)
     print(f"built {args.output}")
     if args.serve or os.getenv("FORCE_WEB_SERVE") == "1":
         app.launch()

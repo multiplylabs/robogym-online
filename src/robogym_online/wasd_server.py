@@ -112,7 +112,7 @@ class RemoteReferenceStream:
     steering lag -- fetching two seconds ahead makes the robot visibly late to start walking.
     """
 
-    def __init__(self, url: str, lead: int = 40, block: int = 50) -> None:
+    def __init__(self, url: str, lead: int = 40, block: int = 25) -> None:
         from websockets.sync.client import connect
 
         self._socket = connect(url)
@@ -216,15 +216,24 @@ def _build_stream(
     raise ValueError(f"unknown generator {generator!r}")
 
 
-# How fast the `walk` style travels, in m/s. The clip's own pace is about 1.0, which reads as a
-# hurry when the point of the demo is what the hands are doing; this stays above the slow-walk
-# crossover (`SLOW_WALK_ENTER`) so the gait itself is unchanged. Other styles keep their own pace.
-WALK_SPEED_M_S = float(os.environ.get("WASD_WALK_SPEED", "0.5"))
+# Use slow_walk at its natural pace. At 0.5 m/s the normal walk is compressed
+# without crossing SLOW_WALK_ENTER; both v6 and v12 fell in walk/strafe/stop
+# rollouts before the feedback fix. Prefer 0.3 for force work and reversals.
+WALK_SPEED_M_S = float(os.environ.get("WASD_WALK_SPEED", "0.3"))
+# Explicit gaits validated on the full 6/8/10-degree ramp. These are planner
+# target speeds, not promises about measured robot speed. Keep gait identity
+# rather than routing these styles through the normal walk's speed thresholds.
+STYLE_SPEEDS_M_S = {
+    "slow_walk": float(os.environ.get("WASD_SLOW_WALK_SPEED", "0.5")),
+    "stealth": float(os.environ.get("WASD_STEALTH_SPEED", "0.8")),
+    "object_carrying": float(os.environ.get("WASD_OBJECT_CARRYING_SPEED", "0.8")),
+    "careful": float(os.environ.get("WASD_CAREFUL_SPEED", "0.8")),
+}
 
 
 def _apply_walk_speed(stream, style: str) -> None:
     if hasattr(stream, "set_target_speed"):
-        stream.set_target_speed(WALK_SPEED_M_S if style == "walk" else None)
+        stream.set_target_speed(STYLE_SPEEDS_M_S.get(style, WALK_SPEED_M_S if style == "walk" else None))
 
 
 async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None:

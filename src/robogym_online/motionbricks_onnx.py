@@ -38,7 +38,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .motionbricks_stream import MotionBricksStream
+from .motionbricks_stream import CORRECTION_GAIN, CORRECTION_STEP_M, MotionBricksStream
 
 # Where the frozen model lives inside a GR00T Whole-Body Control checkout.
 PLANNER_RELATIVE = Path("gear_sonic_deploy/planner/target_vel/V2/planner_sonic.onnx")
@@ -78,17 +78,17 @@ ONNX_MODES: dict[str, int] = {
 # for the same reason the Python backend leaves out its crawls: this is a walking tracker, and a
 # reference that goes to the floor takes the robot with it.
 ONNX_STYLES: tuple[str, ...] = (
-    "walk",
-    "slow_walk",
-    "run",
     "stealth",
+    "slow_walk",
+    "object_carrying",
+    "walk",
+    "run",
     "walk_boxing",
     "injured",
     "happy",
     "happy_dance",
     "zombie",
     "careful",
-    "object_carrying",
     "scared",
 )
 
@@ -174,9 +174,28 @@ class MotionBricksOnnxStream(MotionBricksStream):
             if self._qpos.shape[0]:
                 seed[-self._qpos.shape[0] :] = self._qpos
             context = seed
-        context[:, 0] += float(self._correction[0])
-        context[:, 1] += float(self._correction[1])
+        # Committed frames already include the incremental root correction. Adding an
+        # offset here again applies it all at once at every horizon boundary.
         return context[None, ...]
+
+    def _advance_correction(self) -> None:
+        """Translate uncommitted frames by at most one correction step.
+
+        The ONNX graph plans a whole horizon at once. Shifting only its context
+        concentrates the accumulated feedback into the first frame of that horizon,
+        causing backwards jumps. Instead, apply feedback at the output frame rate;
+        the next context inherits those corrected frames without another translation.
+        """
+        if self._robot_xy is None or self._reference is None:
+            return
+        positions = self._reference["body_pos_w"]
+        index = positions.shape[0] - 1 if self._robot_frame is None else self._robot_frame
+        index = max(0, min(index, positions.shape[0] - 1))
+        step = CORRECTION_GAIN * (self._robot_xy - positions[index, 0, :2])
+        length = float(np.linalg.norm(step))
+        if length > CORRECTION_STEP_M:
+            step *= CORRECTION_STEP_M / length
+        self._pending[:, :2] += step
 
     def _generate_frame(self) -> None:
         """Take one frame, generating another horizon when the last one runs out.
@@ -217,12 +236,18 @@ class MotionBricksOnnxStream(MotionBricksStream):
             }
             frames, count = self._session.run(None, feed)
             valid = int(np.ravel(count)[0])
+            if valid <= CONTEXT_FRAMES or valid > frames.shape[1]:
+                raise RuntimeError(f"planner returned invalid continuation length {valid}")
             # Committed from CONTEXT_FRAMES, not from zero: the frames before it restate the context
             # the robot has already walked. Only a prefix of the rest is kept, so the remainder is
             # re-planned against whatever the command is by then -- which is what makes a held key
             # change direction promptly.
             start = min(CONTEXT_FRAMES, valid)
-            self._pending = np.asarray(frames[0, start : min(valid, start + COMMIT_FRAMES)], dtype=np.float64)
+            self._pending = np.array(
+                frames[0, start : min(valid, start + COMMIT_FRAMES)], dtype=np.float64, copy=True
+            )
+            if not np.isfinite(self._pending).all():
+                raise RuntimeError("planner returned non-finite poses")
 
         self._advance_correction()
         self._qpos = np.concatenate([self._qpos, self._pending[:1]], axis=0)

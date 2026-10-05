@@ -151,6 +151,77 @@ something upstream has to *invent* the reference. That is MotionBricks, in one o
 
 Both talk the same protocol, so the browser cannot tell which is behind the socket.
 
+The wrench page offers four explicit gaits, starting with `stealth`. The
+generator preserves the selected forward gait instead of silently replacing
+stealth or object carrying at a speed threshold. Sideways/backward commands use
+the slow gait with a 0.3 m/s target cap, including the direction-slew transition
+back to forward travel. Each forward style has its own planner target speed:
+
+| Style | Target speed | Complete ramp crossings at 6/8/10 degrees |
+|---|---|---|
+| Slow walk | 0.5 m/s | 15/15 |
+| Stealth (default) | 0.8 m/s | 15/15 |
+| Object carrying | 0.8 m/s | 15/15 |
+| Careful | 0.8 m/s | 15/15 |
+
+These are ONNX planner targets, not measured robot speeds. Slow walk has the
+largest terrain-relative pelvis clearance and lowest tracking error, so it is
+available as the slower alternative. Stealth starts each new session by default.
+Override with `WASD_SLOW_WALK_SPEED`, `WASD_STEALTH_SPEED` or
+`WASD_OBJECT_CARRYING_SPEED`. The legacy `walk` style retains its automatic gait
+selection and `WASD_WALK_SPEED` override for other clients.
+
+The slope preset stays at 6–10 degrees, with the toe 3 m ahead of the robot, a
+2.5 m ascent, 2 m plateau, matched descent and 4 m width. Validation used five
+seeds at each angle; success requires crossing the whole course and stopping
+upright for 3 seconds. Another 27 runs at 10 degrees passed with short 10/20
+deg/s steering pulses or a 10 N hand disturbance, tested separately. Continuous
+turning, exertion contact and an actual carried payload were not covered.
+The object-carrying entry is a motion style, not a simulated loaded object.
+
+Very low speed was not uniformly safer: object carrying at 0.3 m/s left the
+course at 8 degrees, and native slow walk fell on the descent at 12 degrees.
+12-degree results were screened with one seed, so the default upper limit stays
+at 10 degrees. These are observed simulation results, not guaranteed success.
+
+```sh
+python -m robogym_online.check_slope --planner /path/to/planner_sonic.onnx \
+  --styles slow_walk --speeds 0.5 --angles 6 8 10 --seeds 0 1 2 3 4
+# Use stealth or object_carrying with --speeds 0.8 for their validated settings.
+# At 10 degrees, optional stress cases: --turn-pulse 10 or --hand-force 10 0 0
+```
+
+Raw trials are in `slope_validation.jsonl`, `slope_steering_load.jsonl`,
+`slope_screening.jsonl` and `slope_angle_screening.jsonl`; recordings in
+`slope_previews/` show each selected gait crossing a 10-degree ramp.
+
+The ONNX generator applies root feedback to uncommitted output frames, capped at
+2 mm per emitted frame. Its next context already includes that translation.
+Applying the accumulated offset to each new context instead produced backward
+root jumps up to 7.3 cm in a 30-second walk/stop test. Height, orientation and joint
+poses are left to MotionBricks; no extra ground-height or yaw correction is applied.
+Travel direction now slews at 60 degrees per second (three seconds for a full
+reversal). This also kept the strafe reversal upright with a 10 N hand load in
+the three-seed check; a faster direction sweep still fell in that loaded case.
+
+To repeat the steering regression (idle, walk, strafe, reverse, back, turn, stop):
+
+```sh
+python -m unittest discover -s tests -v
+python -m robogym_online.check_stability --planner /path/to/planner_sonic.onnx
+# Compare another checkpoint without replacing the page's policy or brace:
+python -m robogym_online.check_stability --planner /path/to/planner_sonic.onnx \
+  --onnx-dir /path/to/g1_wrench_v12/student/compiled_models
+# Exercise the live websocket and its session defaults:
+python -m robogym_online.check_stability --remote ws://127.0.0.1:8765 --seeds 0
+```
+
+`ROBOGYM_PLANNER_ONNX` may name either a GR00T checkout or the planner ONNX file.
+The check exits unsuccessfully at the first fall and prints minimum pelvis height,
+joint error and, for a local generator, maximum reference root step and final lag.
+It checks compensation with optional `--hand-force fx fy fz`; exertion and ramp
+behavior require separate checks with the checkpoint's matching brace.
+
 ## Driving it with a camera
 
 The keyboard invents a velocity command; a camera can invent it instead -- and supply the upper body
@@ -199,6 +270,34 @@ Setup notes: the generator runs in an env with torch+CUDA, `motionbricks` and `p
 `mjswan` (the `.venv`), which the launcher does once if `dist/` is not already stream-capable.
 
 ## The controls
+
+The interactive page is branded **BRACE** and links back to the research page. The primary
+view keeps walking styles, reference visibility, the slope switch and reset visible. Open
+**Forces & interaction** and choose **Compensate** (external hand load) or **Exert** (robot push).
+Choose the hand and direction, then click a preset to apply it immediately, or enter a custom
+value in newtons and click **Apply force**. The force stays active until **Clear force**;
+changing mode, hand or direction clears the previous force. Compensation presets are 5/10/20 N,
+and exertion presets are 2/5/8 N. Custom values respect the native control limits (25 N per hand
+for compensation, 20 N each when both hands are selected to respect the 40 N total budget;
+9 N per hand for the current exertion checkpoint). Compensation uses world axes; exertion follows
+the robot's heading. **Individual axes** restores the original sliders.
+**Display & model settings** restores
+the model selectors and visualization switches. **Annotations** explains the scene colors
+and suggests experiments. Direction keys also work as hold-to-move touch controls.
+The floor uses white and light-blue checker tiles, with a stronger blue ramp and a light sky.
+The presentation files are `assets/brace-ui.css`, `assets/brace-ui.js`, and `assets/brace-forces.js`; the builder installs
+them beside both entry pages, so no installed mjswan source needs editing.
+
+**Careful walking** is now included in the wrench page at a **0.8 m/s planner target**
+(`WASD_CAREFUL_SPEED` to override). It is an existing MotionBricks mode, newly exposed in
+this demo. Screening careful, happy and injured at native, 0.6 and 0.8 targets on a 10° ramp
+found careful strongest: 3/3 completed; happy left the course once; injured fell twice.
+Careful at 0.8 then completed 15/15 full-ramp trials across 6/8/10° and five seeds, 9/9
+10° steering/load trials (10°/s or 20°/s brief turn pulses, or a constant 10 N hand load,
+tested separately), and 3/3 flat-ground walk/strafe/reverse/stop trials. These are measured
+successes for these conditions, not a guarantee of failure-free behavior. See
+`careful_audit.json` and its referenced JSONL trial records. The carrying style still has
+no physical payload attached.
 
 **Hand Force** — six sliders applying an external force *to* each hand, in world axes, for
 compensation. Arrows show what is applied.

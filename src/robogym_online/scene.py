@@ -98,9 +98,8 @@ def _add_slope(spec: mujoco.MjSpec) -> None:
             name=name,
             type=mujoco.mjtGeom.mjGEOM_BOX,
             size=[half_length, _SLOPE_HALF_WIDTH, _SLOPE_HALF_THICKNESS],
-            # Lighter than the floor so the climb reads against it, and matte so it does not
-            # compete with the robot for the eye.
-            rgba=[0.52, 0.55, 0.60, 1.0],
+            # A slightly stronger blue distinguishes the ramp from the pale checker floor.
+            rgba=[0.62, 0.76, 0.92, 1.0],
             condim=3,
         )
 
@@ -117,8 +116,8 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
         name="skybox",
         type=mujoco.mjtTexture.mjTEXTURE_SKYBOX,
         builtin=mujoco.mjtBuiltin.mjBUILTIN_GRADIENT,
-        rgb1=[0.24, 0.34, 0.44],
-        rgb2=[0.04, 0.06, 0.09],
+        rgb1=[0.93, 0.97, 1.0],
+        rgb2=[0.99, 0.995, 1.0],
         width=512,
         height=3072,
     )
@@ -127,9 +126,9 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
         type=mujoco.mjtTexture.mjTEXTURE_2D,
         builtin=mujoco.mjtBuiltin.mjBUILTIN_CHECKER,
         mark=mujoco.mjtMark.mjMARK_EDGE,
-        rgb1=[0.34, 0.38, 0.42],
-        rgb2=[0.28, 0.32, 0.36],
-        markrgb=[0.62, 0.67, 0.72],
+        rgb1=[0.98, 0.99, 1.0],
+        rgb2=[0.70, 0.82, 0.95],
+        markrgb=[0.72, 0.82, 0.94],
         width=300,
         height=300,
     )
@@ -140,9 +139,9 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
         name="groundplane",
         texrepeat=[_FLOOR_HALF_SIZE * 4.0 / 3.0] * 2,
         texuniform=True,
-        reflectance=0.18,
-        shininess=0.1,
-        specular=0.2,
+        reflectance=0.04,
+        shininess=0.0,
+        specular=0.02,
     )
     ground.textures[mujoco.mjtTextureRole.mjTEXROLE_RGB] = "groundplane"
 
@@ -189,7 +188,7 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
         castshadow=False,
     )
 
-    spec.visual.headlight.ambient = [0.40, 0.41, 0.44]
+    spec.visual.headlight.ambient = [0.80, 0.85, 0.90]
     spec.visual.headlight.diffuse = [0.30, 0.30, 0.32]
     spec.visual.headlight.specular = [0.15, 0.15, 0.15]
     spec.visual.quality.shadowsize = 4096
