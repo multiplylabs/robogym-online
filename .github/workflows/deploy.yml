@@ -62,6 +62,11 @@ jobs:
             --base-path "/${GITHUB_REPOSITORY#*/}/" \
             --output dist
 
+      - name: Check browser contact against training equations
+        run: |
+          export NODE_PATH="$(python -c 'import mjswan; from pathlib import Path; print(Path(mjswan.__file__).parent / "template/node_modules")')"
+          node tests/contact_parity.cjs
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

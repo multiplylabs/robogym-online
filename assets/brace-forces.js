@@ -54,7 +54,7 @@
     const widget = document.createElement('section');
     widget.className = 'brace-force-actions';
     widget.setAttribute('aria-label', 'Quick force controls');
-    widget.innerHTML = `<fieldset><legend class="brace-sr-only">Force action</legend><div class="brace-force-modes" role="group" aria-label="Force mode"><button type="button" data-mode="compensate" aria-pressed="true"><strong>Compensate</strong><span>Resist a hand load</span></button><button type="button" data-mode="exert" aria-pressed="false"><strong>Exert</strong><span>Ask the robot to push</span></button></div><div class="brace-force-target"><label>Hand<select aria-label="Force hand"><option value="right">Right hand</option><option value="left">Left hand</option><option value="both">Both hands</option></select></label><label>Direction<select aria-label="Force direction"><option value="X:1">+X · Forward</option><option value="X:-1">−X · Backward</option><option value="Y:1">+Y · Left</option><option value="Y:-1">−Y · Right</option><option value="Z:1">+Z · Up</option><option value="Z:-1">−Z · Down</option></select></label></div><p class="brace-force-frame"></p><div class="brace-force-presets" role="group" aria-label="Preset force values"></div><form class="brace-force-custom"><label>Custom force (N)<input type="number" aria-label="Custom force in newtons" value="5" min="0" step="0.5" required></label><button type="submit">Apply force</button></form><div class="brace-force-footer"><button type="button" class="brace-force-clear">Clear force</button><button type="button" class="brace-force-detail-toggle" aria-expanded="false">Individual axes</button></div><p class="brace-force-status" role="status" aria-live="polite">No force applied.</p></fieldset>`;
+    widget.innerHTML = `<fieldset><legend class="brace-sr-only">Force action</legend><div class="brace-force-modes" role="group" aria-label="Force mode"><button type="button" data-mode="compensate" aria-pressed="true"><strong>Compensate</strong><span>Resist a hand load</span></button><button type="button" data-mode="exert" aria-pressed="false"><strong>Exert</strong><span>Ask the robot to push</span></button></div><div class="brace-force-target"><label>Hand<select aria-label="Force hand"><option value="right">Right hand</option><option value="left">Left hand</option><option value="both">Both hands</option></select></label><label>Direction<select aria-label="Force direction"><option value="X:1">+X · Forward</option><option value="X:-1">−X · Backward</option><option value="Y:1">+Y · Left</option><option value="Y:-1">−Y · Right</option><option value="Z:1">+Z · Up</option><option value="Z:-1">−Z · Down</option></select></label></div><p class="brace-force-frame"></p><section class="brace-gauge-card" aria-label="Live force gauge" hidden><div class="brace-gauge-heading"><strong>Spring force gauge</strong><span>LIVE</span></div><p>A steady hand pushes the sliding pad. Blue is the target; amber is the measured reaction.</p><div class="brace-gauge-hands"></div><small class="brace-gauge-note">Choose a force to begin. Readings come from the virtual contact, in newtons.</small></section><div class="brace-force-presets" role="group" aria-label="Preset force values"></div><form class="brace-force-custom"><label>Custom force (N)<input type="number" aria-label="Custom force in newtons" value="5" min="0" step="0.5" required></label><button type="submit">Apply force</button></form><div class="brace-force-footer"><button type="button" class="brace-force-clear">Clear force</button><button type="button" class="brace-force-detail-toggle" aria-expanded="false">Individual axes</button></div><p class="brace-force-status" role="status" aria-live="polite">No force applied.</p></fieldset>`;
     disclosure.after(widget);
     const state = { mode: 'compensate', busy: false, activeValue: 0 };
     const fieldset = widget.querySelector('fieldset');
@@ -63,12 +63,29 @@
     const custom = widget.querySelector('input[type=number]');
     const status = widget.querySelector('[role=status]');
     const presetGroup = widget.querySelector('.brace-force-presets');
+    let lastGaugeUpdate = 0;
+    window.addEventListener('brace:force-reading', event => {
+      if (window.BraceExert) window.BraceExert.reading = event.detail;
+      const now = performance.now(); if (now-lastGaugeUpdate < 100) return; lastGaugeUpdate = now;
+      const {commanded,measured} = event.detail;
+      const target = widget.querySelector('.brace-gauge-hands');
+      target.replaceChildren();
+      for (let h=0;h<2;h++) {
+        const cmd=Math.hypot(...commanded.slice(h*3,h*3+3)), actual=measured[h] ?? 0;
+        if (cmd < .01) continue;
+        const row=document.createElement('div'); row.className='brace-gauge-hand';
+        row.innerHTML=`<strong>${h===0 ? 'Left' : 'Right'} hand</strong><div class="brace-gauge-values"><span>Target <b>${cmd.toFixed(1)} N</b></span><span>Measured <b>${actual.toFixed(1)} N</b></span></div><div class="brace-gauge-track"><i style="width:${Math.min(100,Math.max(0,actual)/9*100)}%"></i><em style="left:${Math.min(100,cmd/9*100)}%"></em></div><small>Error ${(actual-cmd).toFixed(1)} N</small>`;
+        target.append(row);
+      }
+      widget.querySelector('.brace-gauge-note').textContent=target.children.length ? 'The target includes the checkpoint’s reach and balance limits. Small piston motion creates force; the hands stay near their IK pose.' : 'Choose a force to begin. Readings come from the virtual contact, in newtons.';
+    });
     function maximum() {
       const section = controls(panel)[state.mode === 'exert' ? 'exert' : 'load'];
       const limit = Number(slider(section, 'right', 'X')?.getAttribute('aria-valuemax') ?? 0);
       return state.mode === 'compensate' && hand.value === 'both' ? Math.min(limit, 20) : limit;
     }
     function repaint() {
+      fieldset.disabled=state.busy || !window.BraceGym?.ready;
       const max = maximum();
       custom.max = String(max);
       custom.step = state.mode === 'exert' ? '0.25' : '0.5';
@@ -78,6 +95,8 @@
         b.disabled = b.dataset.mode === 'exert' && !controls(panel).exert;
       });
       const world = state.mode === 'compensate';
+      widget.querySelector('.brace-gauge-card').hidden = world;
+      if (window.BraceExert) window.BraceExert.enabled = !world && window.BraceGym?.selected === 'none';
       widget.querySelector('.brace-force-frame').textContent = world ? 'Directions use the world axes. Values are per hand.' : 'Directions follow the robot’s heading. Values are per hand.';
       direction.options[0].text = world ? '+X · World X' : '+X · Forward';
       direction.options[1].text = world ? '−X · World X' : '−X · Backward';
@@ -125,6 +144,8 @@
       disclosure.textContent = 'Forces & interaction';
       presetGroup.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
     }
+    window.addEventListener('brace:ready',repaint);
+    window.addEventListener('brace:gym-reset', () => { state.mode='compensate'; state.activeValue=0; disclosure.textContent='Forces & interaction'; status.textContent='No force applied.'; delete status.dataset.error; repaint(); });
     window.braceClearForces = async () => {
       while (state.busy) await frame();
       return run(clear);

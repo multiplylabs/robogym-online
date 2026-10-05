@@ -1,0 +1,425 @@
+{
+  "policy": "g1_wrench_v6",
+  "browser": "Chromium / MuJoCo-WASM",
+  "force_source": "Applied Kelvin-Voigt reaction, not requested force",
+  "reference": "Torso-relative IK; raw MotionBricks context and leg references preserved",
+  "feedback": {
+    "gain_per_s": 6,
+    "filter_tau_s": 0.07,
+    "joint_slew_rad_per_s": 0.5,
+    "max_joint_offset_rad": 0.5,
+    "jacobian_regularization": 0.002
+  },
+  "baseline_idle_forward_5N": {
+    "mean_N": 4.181833476766973,
+    "mae_N": 0.818166523233027,
+    "reference": "Previous unmodified gait arms / no task-space force feedback"
+  },
+  "idle_settle_s": 10,
+  "idle_sample_s": 3,
+  "idle_cases": [
+    {
+      "hand": "right",
+      "direction": "X:1",
+      "value": 2,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 2.001327422948984,
+          "target": 2,
+          "mae": 0.0424500245314378,
+          "maxError": 0.1411510705947876
+        }
+      ],
+      "minHeight": 0.7860837909588448
+    },
+    {
+      "hand": "right",
+      "direction": "X:1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 4.9997504857870245,
+          "target": 5,
+          "mae": 0.016464325097891,
+          "maxError": 0.06875467300415039
+        }
+      ],
+      "minHeight": 0.785470824248899
+    },
+    {
+      "hand": "right",
+      "direction": "X:1",
+      "value": 8,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 8.006657728782066,
+          "target": 8,
+          "mae": 0.019605214779193584,
+          "maxError": 0.06075000762939453
+        }
+      ],
+      "minHeight": 0.7850507449283541
+    },
+    {
+      "hand": "left",
+      "direction": "X:1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "left",
+          "mean": 4.999973150400015,
+          "target": 5,
+          "mae": 0.02658499204195463,
+          "maxError": 0.06067466735839844
+        }
+      ],
+      "minHeight": 0.7852060510704617
+    },
+    {
+      "hand": "both",
+      "direction": "X:1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "left",
+          "mean": 4.995710697174072,
+          "target": 5,
+          "mae": 0.020293827056884765,
+          "maxError": 0.06264352798461914
+        },
+        {
+          "hand": "right",
+          "mean": 4.999315032958984,
+          "target": 5,
+          "mae": 0.032942008972167966,
+          "maxError": 0.13079547882080078
+        }
+      ],
+      "minHeight": 0.7853085210339608
+    },
+    {
+      "hand": "right",
+      "direction": "X:-1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 5.007505340576172,
+          "target": 5,
+          "mae": 0.0341705322265625,
+          "maxError": 0.11692523956298828
+        }
+      ],
+      "minHeight": 0.7843012058055626
+    },
+    {
+      "hand": "right",
+      "direction": "Z:1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 5.000666031470666,
+          "target": 5,
+          "mae": 0.09638415850125827,
+          "maxError": 0.3355240821838379
+        }
+      ],
+      "minHeight": 0.7851556786622821
+    },
+    {
+      "hand": "right",
+      "direction": "Z:-1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 5.002288055419922,
+          "target": 5,
+          "mae": 0.06500225067138672,
+          "maxError": 0.16443586349487305
+        }
+      ],
+      "minHeight": 0.7835760068650705
+    },
+    {
+      "hand": "right",
+      "direction": "Y:-1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 4.999884898845966,
+          "target": 5,
+          "mae": 0.009812868558443509,
+          "maxError": 0.052004337310791016
+        }
+      ],
+      "minHeight": 0.7833473304399176
+    },
+    {
+      "hand": "right",
+      "direction": "Y:1",
+      "value": 5,
+      "summary": [
+        {
+          "hand": "right",
+          "mean": 4.9970643424987795,
+          "target": 5,
+          "mae": 0.009936580657958985,
+          "maxError": 0.03543519973754883
+        }
+      ],
+      "minHeight": 0.7862294436692684
+    }
+  ],
+  "max_idle_case_mae_N": 0.09638415850125827,
+  "limitations": "Single trial per case. Moving measurements vary with gait. Rendered gauge follows the reference station; no independent collision body or torsional sensor.",
+  "local_motion_cases": [
+    {
+      "label": "Idle forward",
+      "minHeight": 0.7816779522964176,
+      "minUpright": 0.9921863159122101,
+      "mae": 0.023472913106282554,
+      "start": [
+        0.006292603127528615,
+        0.0008573328032729233,
+        0.7819127495946899
+      ],
+      "end": [
+        -0.004795800844714857,
+        0.0034220461222206396,
+        0.7864990980603195
+      ]
+    },
+    {
+      "label": "Idle leftward",
+      "minHeight": 0.7777060333837075,
+      "minUpright": 0.9925090737229313,
+      "mae": 0.012044556935628255,
+      "start": [
+        0.021135753259119785,
+        0.0009725345236797562,
+        0.7777060333837075
+      ],
+      "end": [
+        -0.0029867812104990886,
+        0.005869072884461501,
+        0.7870023203506978
+      ]
+    },
+    {
+      "label": "Stealth",
+      "minHeight": 0.7067547651720131,
+      "minUpright": 0.9708776017088577,
+      "mae": 0.5417807868548802,
+      "start": [
+        -0.0010303799042072567,
+        -0.002478701194041382,
+        0.785608091566691
+      ],
+      "end": [
+        2.752726112068096,
+        0.007914600650068881,
+        0.7591005331646125
+      ]
+    },
+    {
+      "label": "Slow walk",
+      "minHeight": 0.7542849069207989,
+      "minUpright": 0.9692669848296388,
+      "mae": 0.5327707570174645,
+      "start": [
+        4.051493935071764,
+        0.00656759639869016,
+        0.771209564238205
+      ],
+      "end": [
+        5.9279696972244915,
+        -0.28496822624250734,
+        0.7622119252451828
+      ]
+    },
+    {
+      "label": "Object carrying",
+      "minHeight": 0.7007955559523943,
+      "minUpright": 0.9648603177469142,
+      "mae": 0.6958971977233886,
+      "start": [
+        6.614874930011391,
+        -0.46761203537182844,
+        0.7680430131416389
+      ],
+      "end": [
+        10.647945649953417,
+        -0.53512971553399,
+        0.7259073283671801
+      ]
+    },
+    {
+      "label": "Careful",
+      "minHeight": 0.70765377067318,
+      "minUpright": 0.9769859284026862,
+      "mae": 0.477998956044515,
+      "start": [
+        12.034000884984184,
+        -0.6474558380480309,
+        0.7448996658564869
+      ],
+      "end": [
+        16.8467840956828,
+        -1.1110560132035385,
+        0.7409103840525152
+      ]
+    },
+    {
+      "label": "Stealth on slope",
+      "minHeight": 0.7017671977930097,
+      "minUpright": 0.9612804728487576,
+      "mae": 0.46800309690562164,
+      "start": [
+        17.957517854358994,
+        -1.201100465367006,
+        0.7851422135765472
+      ],
+      "end": [
+        27.733500036506367,
+        -0.5314824227535679,
+        0.765303144046675
+      ]
+    }
+  ],
+  "public_motion_cases": [
+    {
+      "label": "Idle forward",
+      "minHeight": 0.7858803198129433,
+      "maxHeight": 0.7916609834484313,
+      "rampAngleDeg": 0,
+      "minUpright": 0.9922197140973326,
+      "mae": 0.04170316457748413,
+      "start": [
+        -0.03228215635345025,
+        0.012849177895936493,
+        0.7895531389577123
+      ],
+      "end": [
+        -0.007135153859074385,
+        0.0008936335852610483,
+        0.7865423362989755
+      ]
+    },
+    {
+      "label": "Idle leftward",
+      "minHeight": 0.7775278563175416,
+      "maxHeight": 0.7876283962131382,
+      "rampAngleDeg": 0,
+      "minUpright": 0.991377139216339,
+      "mae": 0.00996692364032452,
+      "start": [
+        0.02285843038109325,
+        0.0019161680532900978,
+        0.7775278563175416
+      ],
+      "end": [
+        -0.009141924510402298,
+        0.0010207289301217626,
+        0.7871211259459037
+      ]
+    },
+    {
+      "label": "Stealth",
+      "minHeight": 0.7086516986453333,
+      "maxHeight": 0.7849517240857387,
+      "rampAngleDeg": 0,
+      "minUpright": 0.9813548474307505,
+      "mae": 0.9215108326503209,
+      "start": [
+        -0.0022792090118065617,
+        0.015348900857828555,
+        0.7849517240857387
+      ],
+      "end": [
+        3.0812636933988187,
+        0.11217924479318309,
+        0.7718787557425654
+      ]
+    },
+    {
+      "label": "Slow walk",
+      "minHeight": 0.7558229833662313,
+      "maxHeight": 0.7958443978915782,
+      "rampAngleDeg": 0,
+      "minUpright": 0.9738279357371411,
+      "mae": 0.9021353340148925,
+      "start": [
+        4.4913854555521,
+        0.205760320029684,
+        0.7761439939734505
+      ],
+      "end": [
+        6.419091051748067,
+        0.09414303485091557,
+        0.7592296239048042
+      ]
+    },
+    {
+      "label": "Object carrying",
+      "minHeight": 0.7095423234012774,
+      "maxHeight": 0.7863408557194016,
+      "rampAngleDeg": 0,
+      "minUpright": 0.97080151550156,
+      "mae": 0.7093073771550105,
+      "start": [
+        7.032604649754958,
+        -0.035389743435470224,
+        0.7849692833778323
+      ],
+      "end": [
+        10.938045648796246,
+        0.012802069608520263,
+        0.7572053853767465
+      ]
+    },
+    {
+      "label": "Careful",
+      "minHeight": 0.7258864549440581,
+      "maxHeight": 0.7868196746409294,
+      "rampAngleDeg": 0,
+      "minUpright": 0.976811578108841,
+      "mae": 0.7900596765371469,
+      "start": [
+        12.386757891329841,
+        0.11606958848607427,
+        0.7842001013408265
+      ],
+      "end": [
+        16.18777198665612,
+        -0.07123871628374971,
+        0.7365929863172738
+      ]
+    },
+    {
+      "label": "Stealth on slope",
+      "minHeight": 0.7178440559922932,
+      "maxHeight": 1.2137520504544903,
+      "rampAngleDeg": 9.857137087732552,
+      "minUpright": 0.9333536532674983,
+      "mae": 0.9302076900128237,
+      "start": [
+        17.881310951230688,
+        -0.1267573309219076,
+        0.7886954012581788
+      ],
+      "end": [
+        29.284635804453636,
+        0.7427035975252274,
+        0.7456321106360295
+      ]
+    }
+  ],
+  "startup": "Controls gated until live context and >0.2 s of simulation after reset; reset clears mode/status and returns to weights.",
+  "force_buffers_verified": "Additive manual, mouse and spring forces; feedback reads only spring reaction"
+}

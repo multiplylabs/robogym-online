@@ -26,6 +26,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import json
 import os
 import re
@@ -443,6 +444,7 @@ def hand_spring_config(contract: dict, hf: dict, control_dt: float) -> dict:
         "two_sided": _b("two_sided_spring"),
         "damping": _b("contact_damping"),
         "dt": control_dt,
+        "damper_vel_ema_alpha": float(hf.get("damper_vel_ema_alpha", 0.3)),
         "gauge": True,
     }
 
@@ -1124,6 +1126,22 @@ def install_isolation_worker(dist: Path, worker: Path = _ISOLATION_WORKER) -> No
     print(f"  isolation worker -> {dist / worker.name}")
 
 
+@contextmanager
+def browser_contact_source():
+    """Bundle our training-compatible contact and gauge, restoring the dependency source."""
+    engine = Path(mjswan.__file__).parent / "template/src/core/engine"
+    source = HERE.parent.parent / "assets"
+    originals = {engine / name: (engine / name).read_bytes()
+                 for name in ("handSpringContact.ts", "externalWrench.ts")}
+    try:
+        for target in originals:
+            target.write_bytes((source / target.name).read_bytes())
+        yield
+    finally:
+        for target, original in originals.items():
+            target.write_bytes(original)
+
+
 def install_stream_pointer(dist: Path, source: Path) -> None:
     """Copy ``stream.json`` next to the built page, if the repo carries one.
 
@@ -1481,7 +1499,8 @@ def main() -> None:
         args.half_weights,
         args.torque,
     )
-    app = builder.build(output_dir=str(args.output))
+    with browser_contact_source():
+        app = builder.build(output_dir=str(args.output))
     install_isolation_worker(args.output)
     if args.exert:
         graphs = {} if args.wrench_only else {_BRACE_REF: args.brace}

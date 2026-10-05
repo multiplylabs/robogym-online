@@ -41,6 +41,12 @@ class GymEquipment {
     this.holdWeight = 0; this.holdElapsed = 0; this.holdName = 'none';
     this.resolved = true;
     window.BraceGym.physics = () => ({applied:this.applied, desired:this.desired, elapsed:this.elapsed, gripError:this.desired === 'none' ? 0 : this.gripError(this.desired), masses:this.hands.map(b => Number(m.body_mass[b])), welds:Object.fromEntries(Object.entries(this.equalities).map(([n,i]) => [n,Boolean(this.context.mjData.eq_active[i])])), root:Array.from(this.context.mjData.qpos.subarray(0,3)), meshes:this.meshes.filter(g => g.mesh.visible).length, hands:this.hands.map(b => Array.from(this.context.mjData.xpos.subarray(b*3,b*3+3))), torso:Array.from(this.context.mjData.xpos.subarray(this.torso*3,this.torso*3+3))});
+    window.BraceGym.force = () => {
+      const read = field => Array.from(this.context.readOnnxSlot?.({command:'brace',field}) ?? []);
+      const ascent=bn.indexOf('slope_ascent'), mocap=ascent < 0 ? -1 : m.body_mocapid[ascent];
+      const rampQuat=mocap < 0 ? null : this.context.mjData.mocap_quat.subarray(mocap*4,mocap*4+4);
+      return {rampAngleDeg:rampQuat ? Math.abs(2*Math.atan2(rampQuat[2],rampQuat[0])*180/Math.PI) : null, time:Number(this.context.mjData.time), raw:Array.from(this.context.readOnnxSlot?.({command:'exert',field:'command'}) ?? []), commanded:read('force_cmd_eff'), kv:read('endpoint_kv'), cv:read('endpoint_cv'), axis:read('push_axis_local'), refHand:read('ref_hand_pos'), refAnchor:read('ref_anchor_pos'), anchorDelta:read('xpriv_anchor_pos_delta'), reaction:this.hands.map(b => Array.from(this.context.mjData.xfrc_applied.subarray(b*6,b*6+3))), root:Array.from(this.context.mjData.qpos.subarray(0,3)), rootQuat:Array.from(this.context.mjData.qpos.subarray(3,7))};
+    };
     this.apply('none'); return true;
   }
   apply(name) {
@@ -70,7 +76,7 @@ class GymEquipment {
   }
   startHold(name) {
     const {mjModel:m,mjData:d} = this.context;
-    this.holdName = name; this.holdElapsed = 0;
+    this.holdName = name; this.holdElapsed = 0; this.forceOffset = this.arms.map(() => 0); this.forceFiltered = [0,0];
     this.holdStartWeight = this.holdWeight;
     this.holdStart = this.arms.map(a => Number(d.qpos[a.qadr]));
     this.holdTarget = name === 'none' ? this.holdStart : this.catalog[name].arms.map(a => a.target);
@@ -93,12 +99,49 @@ class GymEquipment {
     const t = Math.min(this.holdElapsed/1.5,1), s=t*t*t*(10-15*t+6*t*t);
     const goalWeight = this.holdName === 'none' ? 0 : 1;
     const w = this.holdWeight = this.holdStartWeight*(1-s)+goalWeight*s;
+    if (this.holdName === "exertion" && t === 1) this.trackForce(dt);
     this.arms.forEach((a,i) => {
-      const target = this.holdStart[i]*(1-s)+this.holdTarget[i]*s, adr=a.actuator*10;
+      const target = this.holdStart[i]*(1-s)+this.holdTarget[i]*s + (this.forceOffset?.[i] ?? 0)*s, adr=a.actuator*10;
       m.actuator_gainprm[adr]=1-w; m.actuator_biasprm[adr]=w*a.kp*target;
       m.actuator_biasprm[adr+1]=-w*a.kp; m.actuator_biasprm[adr+2]=-w*a.kd;
     });
     if (goalWeight === 0 && t === 1) this.restoreArms();
+  }
+  // Integrate a task-space force error into bounded joint targets; contact forces stay physical.
+  trackForce(dt) {
+    const {mjModel:m,mjData:d} = this.context;
+    const read = field => this.context.readOnnxSlot?.({command:'brace',field});
+    const feedback=this.catalog.exertion.feedback;
+    const command = read('force_cmd_eff'), axis = read('push_axis_local'), kv = read('endpoint_kv');
+    if (!command || !axis || !kv) return;
+    const q=d.xquat.subarray(this.torso*4,this.torso*4+4);
+    const yaw=Math.atan2(2*(q[0]*q[3]+q[1]*q[2]),1-2*(q[2]*q[2]+q[3]*q[3]));
+    const c=Math.cos(yaw),sn=Math.sin(yaw);
+    for (let h=0;h<2;h++) {
+      const magnitude=Math.hypot(...command.subarray(h*3,h*3+3));
+      if (magnitude < .01) {
+        for (let k=0;k<7;k++) this.forceOffset[h*7+k] *= Math.exp(-dt/.6);
+        this.forceFiltered[h]=0; continue;
+      }
+      const n=[c*axis[h*3]-sn*axis[h*3+1],sn*axis[h*3]+c*axis[h*3+1],axis[h*3+2]];
+      const b=this.hands[h], p=d.xpos.subarray(b*3,b*3+3);
+      const measured=window.BraceExert?.reading?.measured[h] ?? 0;
+      const blend=1-Math.exp(-dt/feedback.filter_tau);
+      this.forceFiltered[h]+=blend*(measured-this.forceFiltered[h]);
+      const gradients=this.arms.slice(h*7,h*7+7).map(a=>{
+        const axis=d.xaxis.subarray(a.joint*3,a.joint*3+3),anchor=d.xanchor.subarray(a.joint*3,a.joint*3+3);
+        const r=Array.from(p,(v,k)=>v-anchor[k]);
+        return n[0]*(axis[1]*r[2]-axis[2]*r[1])+n[1]*(axis[2]*r[0]-axis[0]*r[2])+n[2]*(axis[0]*r[1]-axis[1]*r[0]);
+      });
+      const norm=gradients.reduce((v,j)=>v+j*j,0)+feedback.regularization;
+      const error=(magnitude-this.forceFiltered[h])/Math.max(40,kv[h]);
+      gradients.forEach((j,k)=>{
+        const i=h*7+k,a=this.arms[i],delta=Math.max(-feedback.joint_rate*dt,Math.min(feedback.joint_rate*dt,feedback.gain*dt*error*j/norm));
+        const lo=Math.max(-feedback.joint_offset,m.jnt_range[a.joint*2]+.01-this.holdTarget[i]);
+        const hi=Math.min(feedback.joint_offset,m.jnt_range[a.joint*2+1]-.01-this.holdTarget[i]);
+        this.forceOffset[i]=Math.max(lo,Math.min(hi,this.forceOffset[i]+delta));
+      });
+    }
   }
   gripError(name) {
     const d = this.context.mjData, t = this.torso;
@@ -127,9 +170,11 @@ class GymEquipment {
     if (selected !== this.desired) {
       const previousError = window.BraceGym?.lastError;
       this.apply('none'); if (previousError) window.BraceGym.status(previousError, 'error');
-      this.startHold(selected); this.desired = selected; this.elapsed = 0; this.readyFor = 0;
+      this.desired = selected; this.elapsed = 0; this.readyFor = 0;
       if (selected !== 'none') window.BraceGym?.status('Preparing grip… release the movement keys.', 'preparing');
     }
+    const hold = selected !== 'none' ? selected : window.BraceExert?.enabled ? 'exertion' : 'none';
+    if (hold !== this.holdName) this.startHold(hold);
     this.updateHold(dt);
     if (this.desired === 'none' || this.applied === this.desired) return;
     this.elapsed += dt;
@@ -144,7 +189,10 @@ class GymEquipment {
   reset() {
     if (this.resolved) { this.apply('none'); this.restoreArms(); }
     this.desired = 'none'; this.elapsed = 0; this.readyFor = 0;
+    if (window.BraceGym) window.BraceGym.lastContext=undefined;
     window.BraceGym?.remove();
+    if (window.BraceExert) window.BraceExert.enabled=false;
+    window.dispatchEvent(new CustomEvent('brace:gym-reset'));
   }
   dispose() { if (this.resolved) { this.apply('none'); this.restoreArms(); } this.resolved = false; }
 }

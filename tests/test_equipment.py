@@ -52,6 +52,21 @@ class EquipmentTests(unittest.TestCase):
         overlay.reset()
         np.testing.assert_array_equal(overlay.apply(future), original)
 
+    def test_exertion_pose_changes_only_future_arm_reference_and_adds_no_mass(self):
+        overlay = CarryOverlay(self.model, self.contract["joint_names"])
+        q = np.tile(self.model.qpos0, (10, 1))
+        overlay.select("exertion", q)
+        future = np.tile(q[0], (80, 1))
+        composed = overlay.apply(future)
+        arms = overlay.poses["exertion"][0] + 7
+        other = np.setdiff1d(np.arange(self.model.nq), arms)
+        np.testing.assert_array_equal(composed[:, other], future[:, other])
+        np.testing.assert_array_equal(composed[:10], future[:10])
+        np.testing.assert_allclose(composed[-1, arms], overlay.poses["exertion"][1])
+        base = self.model.body_mass.sum()
+        set_payload(self.model, self.data, "exertion")
+        self.assertAlmostEqual(self.model.body_mass.sum(), base)
+
     def test_servo_retains_effort_limits_and_restores_motor(self):
         hold = ArmHold(
             self.model,

@@ -3,6 +3,7 @@
   'use strict';
   let selected = 'none', capable = false, statusText = 'Connecting to the gym…', phase = 'empty';
   let widget;
+  window.BraceExert = {enabled:false};
   const catalog = {
     dumbbells: {label:'Dumbbells', weight:'1 kg each', detail:'One in each hand · 2 kg total', icon:'<path d="M9 18h30M13 12v12M19 9v18M29 9v18M35 12v12"/>'},
     kettlebell: {label:'Kettlebell', weight:'3.5 kg', detail:'Shared handle · both hands', icon:'<path d="M17 14v-4a7 7 0 0 1 14 0v4"/><path d="M16 17a11 11 0 1 0 16 0Z"/>'},
@@ -11,21 +12,25 @@
   function repaint() {
     if (!widget) return;
     widget.querySelectorAll('[data-equipment]').forEach(b => {
-      b.disabled = !capable || !window.BraceGym.physics;
+      b.disabled = !window.BraceGym.ready;
       b.setAttribute('aria-pressed', String(b.dataset.equipment === selected));
     });
     widget.querySelector('.brace-gym-remove').disabled = selected === 'none';
+    const panel=widget.closest('.brace-controls');
+    panel.querySelectorAll('.brace-interaction-tabs button').forEach(b=>{b.disabled=!window.BraceGym.ready;b.querySelector('span').textContent=window.BraceGym.ready ? (b.dataset.interaction==='weights' ? 'Carry weights' : 'Push with the hands') : capable ? 'Preparing robot…' : 'Connecting…';});
     const status = widget.querySelector('[role=status]'); status.textContent = statusText; status.dataset.phase = phase;
     widget.querySelector('.brace-gym-total').textContent = selected === 'none' ? 'No payload' : catalog[selected].detail;
   }
   window.BraceGym = {
     get selected() { return selected; },
+    get ready() { return Boolean(capable && this.physics && this.lastContext && this.force?.().time > .2); },
     remove() { this.lastError = undefined; selected = 'none'; statusText = 'Empty hands. Choose a weight to begin.'; phase = 'empty'; repaint(); },
     status(text, state) { this.lastError = state === 'error' ? text : undefined; statusText = text; phase = state; repaint(); },
     async select(name) {
       if (!capable || !catalog[name]) return;
       if (selected === name) { this.remove(); return; }
       await window.braceClearForces?.();
+      window.BraceExert.enabled = false;
       selected = name; this.status('Preparing grip… release the movement keys.', 'preparing');
     }
   };
@@ -46,14 +51,14 @@
       });
       this.addEventListener('close', () => {
         if (!this.isGym) return;
-        capable = false; window.BraceGym.remove(); window.BraceGym.status('Generator disconnected. Reconnect before equipping.', 'error');
+        capable = false; window.BraceGym.lastContext = undefined; window.braceClearForces?.(); window.BraceExert.enabled = false; window.BraceGym.remove(); window.BraceGym.status('Generator disconnected. Reconnect before equipping.', 'error');
       });
     }
     send(data) {
       if (this.isGym && capable && typeof data === 'string') {
         try {
           const message = JSON.parse(data);
-          if (message.type === 'context') { window.BraceGym.lastContext = {frame:message.frame,equipment:selected}; data = JSON.stringify({...message, equipment:selected}); }
+          if (message.type === 'context') { window.BraceGym.lastContext = {frame:message.frame,equipment:window.BraceExert.enabled ? 'exertion' : selected}; data = JSON.stringify({...message, equipment:window.BraceExert.enabled ? 'exertion' : selected}); }
         } catch { /* Leave non-JSON traffic unchanged. */ }
       }
       return super.send(data);
@@ -73,16 +78,25 @@
       const exert = button.dataset.interaction === 'exert';
       if (exert) window.BraceGym.remove();
       await window.braceClearForces?.();
+      window.BraceExert.enabled = exert;
       panel.classList.toggle('brace-exert-view', exert);
       panel.classList.toggle('brace-forces-open', exert);
       panel.querySelector('.brace-disclosure')?.setAttribute('aria-expanded', String(exert));
       tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
-      if (exert) panel.querySelector('.brace-force-actions [data-mode=exert]')?.click();
+      panel.querySelector(`.brace-force-actions [data-mode=${exert ? 'exert' : 'compensate'}]`)?.click();
     }));
+    window.addEventListener('brace:gym-reset',()=>{
+      panel.classList.remove('brace-exert-view','brace-forces-open');
+      panel.querySelector('.brace-disclosure')?.setAttribute('aria-expanded','false');
+      tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.interaction==='weights')));
+      repaint();
+    });
     widget.querySelectorAll('[data-equipment]').forEach(b => b.addEventListener('click', () => window.BraceGym.select(b.dataset.equipment)));
     widget.querySelector('.brace-gym-remove').addEventListener('click', () => window.BraceGym.remove());
     repaint();
   }
+  let previousReady=false;
+  setInterval(()=>{const ready=window.BraceGym.ready;if(ready!==previousReady){previousReady=ready;repaint();window.dispatchEvent(new CustomEvent('brace:ready'));}},100);
   let scheduled = false;
   new MutationObserver(() => {
     if (scheduled) return; scheduled = true;

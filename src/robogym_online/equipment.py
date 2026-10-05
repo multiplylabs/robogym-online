@@ -15,6 +15,18 @@ from scipy.spatial.transform import Rotation
 # Geometry stays the same when mass changes. All lengths are metres.
 EQUIPMENT = {
     "none": {"label": "Empty hands", "mass": 0},
+    "exertion": {
+        "label": "Force gauge",
+        "mass": 0,
+        "target": [0.21, 0.22, -0.07],
+        "feedback": {
+            "gain": 6.0,
+            "filter_tau": 0.07,
+            "joint_rate": 0.5,
+            "joint_offset": 0.5,
+            "regularization": 0.002,
+        },
+    },
     "dumbbells": {"label": "Dumbbells", "mass": 2.0, "each": 1.0, "target": [0.21, 0.22, -0.07]},
     "kettlebell": {"label": "Kettlebell", "mass": 3.5, "target": [0.23, 0.10, -0.06]},
     "barbell": {"label": "Barbell", "mass": 2.0, "target": [0.23, 0.20, -0.06]},

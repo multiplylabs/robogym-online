@@ -358,11 +358,40 @@ so the brace applies one combined effort cone that bounds both, and a hand alrea
 less moment left to give. Watch `force_cmd_eff` and `torque_cmd_eff` fall together as either dial
 climbs — that is the cone, not a bug.
 
-**The gauge** — at each hand, the commanded force (blue) against the exerted force (orange), as
-arrows and as a reading in newtons. Commanded is the *effective* post-cap value the policy observes,
-not the raw dial, so the two numbers are directly comparable. Force only: the browser's contact is a
-linear Kelvin-Voigt spring with no torsional twin, so a commanded moment reaches the policy and
-shapes the goal but has nothing to read back against.
+**The gauge** — Exert shows a blue spring-loaded instrument at each active hand, with a moving
+pad and piston. The panel repeats target (blue), measured reaction (amber), and signed error in
+newtons. Target is the effective post-cap command; an 8 N request can be reduced by reach,
+effort or balance limits. Measured force comes from the Kelvin-Voigt contact applied to the robot,
+not the command or a display animation. The instrument is a visual representation of that virtual
+contact, following the reference station; it is not an independently colliding world object.
+
+Selecting Exert eases the upper-body reference into a fixed torso-relative IK pose over 1.5 seconds,
+without altering raw planner context or leg references. Torque-limited arm servos hold the pose;
+a slow Jacobian force-feedback correction adjusts their targets to achieve the effective force.
+Offsets are bounded to 0.5 rad and slew to 0.5 rad/s, with original actuator torque and joint limits.
+Feedback gain is 6/s, with a 0.07 s measurement filter and 0.002 Jacobian regularization.
+The legs and torso remain controlled by the wrench policy. Interaction controls wait for the live
+stream handover and initial reset before accepting actions, avoiding cleared startup commands. Clear releases the contact and returns
+the hands toward their neutral pose; selecting weights or Reset clears exertion.
+
+`assets/handSpringContact.ts` and `assets/externalWrench.ts` are bundled during builds. Both
+accumulate into the force buffer, which the runtime clears once per control step. The old inactive
+contact zeroed hand buffers after manual loads were applied, silently removing compensation forces.
+Feedback now reads the spring sensor separately from other loads and mouse forces. It
+matches training's signed smooth lead clamp and damps an EMA-filtered derivative of **raw** lead
+(`damper_vel_ema_alpha=0.3`), independently primed for each hand. The previous browser instead
+differentiated saturated lead without the training EMA. The build temporarily overlays the
+mjswan contact source and restores the dependency in a `finally` block. `tests/contact_parity.cjs`
+checks the training equations, signed forces, inactive-hand reaction and activation/reset spikes.
+`tests/browser_exertion.cjs` checks actual force tracking, directions, both hands and cleanup.
+`tests/browser_exertion_motion.cjs` checks the four walking styles and a complete ramp crossing.
+See `force_audit.json` for measured results: ten idle cases averaged less than 0.10 N error
+after settling; the public 5 N walking/slope trial averaged 0.71–0.93 N error, with no falls.
+Release movement keys for a steady gauge reading. These are individual trials, not a guarantee
+for every gait, force, or terrain configuration.
+The graph does not publish the training estimator's cached brace-credit lead; the displayed
+reaction uses arm spring displacement and damping only, with no synthetic brace-force credit.
+Force only: no torsional contact is implemented for the advanced moment dial.
 
 ## Conventions that will bite
 

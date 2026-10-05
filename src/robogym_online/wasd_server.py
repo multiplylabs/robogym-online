@@ -275,7 +275,7 @@ async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None
                 # The locomotion styles this generator offers, in selection order, so the client
                 # can present them without knowing what is behind the socket.
                 "styles": list(getattr(stream, "styles", ())),
-                "equipment": ["none", "dumbbells", "kettlebell", "barbell"] if hasattr(stream, "set_equipment") else [],
+                "equipment": ["none", "dumbbells", "kettlebell", "barbell", "exertion"] if hasattr(stream, "set_equipment") else [],
             }
         )
     )
