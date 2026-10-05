@@ -345,8 +345,17 @@ async def _main(
     print(f"loading the {generator} generator...")
     stream = _build_stream(contract, mjcf, seed, generator, camera_req, camera_rep)
     in_use: dict = {"client": None}
+    # No server-side keepalive pings. Through a Cloudflare tunnel the pong does not reliably come
+    # back from the browser, and the default 20 s timeout then closes a perfectly live session with
+    # "keepalive ping timeout" -- which the page sees as its reference simply stopping. Liveness is
+    # already evident: a steering client sends its pose every control step, and a dead one is
+    # displaced the moment the next client connects.
     async with websockets.serve(
-        lambda ws: _serve_client(ws, contract, stream, in_use), host, port, max_size=None
+        lambda ws: _serve_client(ws, contract, stream, in_use),
+        host,
+        port,
+        max_size=None,
+        ping_interval=None,
     ):
         print(f"reference stream on ws://{host}:{port}")
         await asyncio.Future()
