@@ -61,6 +61,17 @@ const out=process.env.BRACE_TEST_OUTPUT||'/tmp/brace-interactions';fs.mkdirSync(
   assert.equal(await page.locator('.brace-error-track, .brace-error-labels').count(),0);
   results.checks.push('Blue effective-force and amber measured-force arrows render; spring, moving gauge and lower error row are absent');
   await page.screenshot({path:`${out}/force-arrows.png`});
+  assert(await page.evaluate(()=>window.BraceStability.launch()));
+  assert.equal(await page.evaluate(()=>window.BraceStability.state.mass),.25);
+  assert((await page.evaluate(()=>Array.from(window.__BraceTest.m.body_mass).slice(-5))).every(v=>v===.25));
+  await page.waitForFunction(()=>window.BraceStability.state.phase!=='testing',null,{timeout:60000});
+  results.trials.push(await page.evaluate(()=>window.BraceStability.state));
+  await page.getByRole('button',{name:'Compensate with weights',exact:true}).click();
+  await page.waitForFunction(()=>!window.BraceExert.enabled);
+  assert(await page.evaluate(()=>window.BraceStability.launch()));
+  assert.equal(await page.evaluate(()=>window.BraceStability.state.mass),.75);
+  assert((await page.evaluate(()=>Array.from(window.__BraceTest.m.body_mass).slice(-5))).every(v=>v===.75));
+  results.checks.push('Actual projectile mass is 0.25 kg during exertion and restores to 0.75 kg otherwise');
   assert.deepEqual(results.errors,[]);console.log(JSON.stringify(results,null,2));
  } finally {fs.writeFileSync(`${out}/results.json`,JSON.stringify(results,null,2));await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

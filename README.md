@@ -364,7 +364,7 @@ measured force in newtons. An 8 N request can
 be reduced by reach, effort or balance limits. Measured force comes from the physical
 Kelvin-Voigt contact applied to the robot. The moving instrument and piston are removed.
 
-**Test stability** — The header button launches five 0.75 kg balls every 0.2 simulation seconds
+**Test stability** — The header button launches five balls every 0.2 simulation seconds (0.25 kg each in force exertion, 0.75 kg otherwise)
 within a one-second burst. One random launcher direction is chosen per burst, with slight spread;
 each ball targets the current torso at 4 m/s horizontal approach speed relative to the robot.
 Detached free bodies collide in MuJoCo and transfer momentum. The robot is observed during the

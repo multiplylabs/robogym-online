@@ -85,7 +85,17 @@ class GymEquipment {
   launchStability() {
     if (this.trial?.phase === 'testing' || !window.BraceGym?.ready) return false;
     this.parkStability();
-    this.trial={phase:'testing',shape:'sphere',mass:.75,speed:4,
+    const mass=window.BraceExert?.enabled ? .25 : .75;
+    const {mjModel:m,mjData:d,mujoco}=this.context;
+    for (const p of this.projectiles) {
+      const ratio=mass/m.body_mass[p.body];
+      m.body_mass[p.body]=mass;
+      for (let axis=0;axis<3;axis++) m.body_inertia[p.body*3+axis]*=ratio;
+    }
+    // Recompute MuJoCo constants without disturbing the robot's live pose or velocity.
+    const qpos=new Float64Array(d.qpos),qvel=new Float64Array(d.qvel);
+    mujoco.mj_setConst(m,d); d.qpos.set(qpos); d.qvel.set(qvel); mujoco.mj_forward(m,d);
+    this.trial={phase:'testing',shape:'sphere',mass,speed:4,
       count:this.projectiles.length,launchDuration:1,interval:.2,observationSeconds:5,
       angle:Math.random()*2*Math.PI,start:Number(this.context.mjData.time),
       launched:0,hitCount:0,hit:false,fallen:false,hitIds:[],launchTimes:[]};
