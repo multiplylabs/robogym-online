@@ -62,63 +62,6 @@ export interface HandSpringConfig {
   gauge?: boolean;
 }
 
-/**
- * A canvas-backed sprite showing the gauge's two numbers.
- *
- * In the scene rather than the control panel: the panel has no read-only widget, and a reading
- * pinned to the hand it describes is easier to follow than one in a list — especially with two
- * hands. Redrawn only when the text changes, so the per-frame cost is a comparison.
- */
-class ForceLabel {
-  private readonly canvas = document.createElement('canvas');
-  private readonly texture: THREE.CanvasTexture;
-  readonly sprite: THREE.Sprite;
-  private last = '';
-
-  constructor() {
-    this.canvas.width = 256;
-    this.canvas.height = 112;
-    this.texture = new THREE.CanvasTexture(this.canvas);
-    this.sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: this.texture, transparent: true, depthWrite: false }),
-    );
-    this.sprite.scale.set(0.40, 0.175, 1);
-    this.sprite.visible = false;
-  }
-
-  set(commanded: number, exerted: number): void {
-    const text = `cmd ${commanded.toFixed(1)} N   exert ${exerted.toFixed(1)} N`;
-    if (text !== this.last) {
-      const ctx = this.canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        ctx.fillStyle = 'rgba(245, 250, 255, 0.94)';
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        // Two lines: at a glance the pair is a comparison, and one line ran them together.
-        ctx.font = 'bold 30px system-ui, sans-serif';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#306db8';
-        ctx.fillText(`Effective ${commanded.toFixed(1)} N`, 12, 32);
-        ctx.fillStyle = '#9a5b13';
-        ctx.fillText(`Actual ${exerted.toFixed(1)} N`, 12, 78);
-        this.texture.needsUpdate = true;
-      }
-      this.last = text;
-    }
-    this.sprite.visible = true;
-  }
-
-  hide(): void {
-    this.sprite.visible = false;
-  }
-
-  dispose(): void {
-    this.sprite.parent?.remove(this.sprite);
-    this.texture.dispose();
-    this.sprite.material.dispose();
-  }
-}
-
 /** Shaft + head, unit length along +Y with its base at the origin. */
 function makeArrow(color: number): THREE.Group {
   const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, depthWrite: false });
@@ -194,8 +137,6 @@ export class HandSpringContact {
   readonly measured: Float32Array;
   private readonly commandedArrows: THREE.Group[] = [];
   private readonly exertedArrows: THREE.Group[] = [];
-  private readonly labels: ForceLabel[] = [];
-  private readonly instruments: THREE.Group[] = [];
 
   constructor(
     private readonly config: HandSpringConfig,
@@ -218,18 +159,6 @@ export class HandSpringContact {
         parent.add(commanded, exerted);
         this.commandedArrows.push(commanded);
         this.exertedArrows.push(exerted);
-        const label = new ForceLabel();
-        parent.add(label.sprite);
-        this.labels.push(label);
-        const instrument = new THREE.Group(); instrument.name = `hand-force-gauge-${i}`;
-        const shell = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.20,20), new THREE.MeshStandardMaterial({color:0xa5b9ca,metalness:.15,roughness:.75}));
-        shell.position.y=.15;
-        const piston = new THREE.Mesh(new THREE.CylinderGeometry(.011,.011,.14,12), new THREE.MeshStandardMaterial({color:0xcbd9e7,metalness:.7,roughness:.25}));
-        piston.name='gauge-piston'; piston.position.y=.025;
-        const pad = new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.025,20), new THREE.MeshStandardMaterial({color:0xf0f6fc,roughness:.45}));
-        pad.position.y=-.045;
-        instrument.add(shell,piston,pad); instrument.visible=false;
-        parent.add(instrument); this.instruments.push(instrument);
       }
     }
   }
@@ -261,8 +190,6 @@ export class HandSpringContact {
     if (!kv || !axisRef || !axisLocal || !refHand || !refAnchor) {
       this.measured.fill(0);
       for (const a of [...this.commandedArrows, ...this.exertedArrows]) a.visible = false;
-      for (const l of this.labels) l.hide();
-      for (const g of this.instruments) g.visible=false;
       return;
     }
 
@@ -297,7 +224,6 @@ export class HandSpringContact {
         if (this.commandedArrows[t]) {
           this.commandedArrows[t].visible = false;
           this.exertedArrows[t].visible = false;
-          this.labels[t].hide(); this.instruments[t].visible=false;
         }
         continue;
       }
@@ -340,20 +266,6 @@ export class HandSpringContact {
           force * nRobot[1] * ARROW_M_PER_N,
           force * nRobot[2] * ARROW_M_PER_N,
         ]);
-        // The commanded magnitude is the post-cap one the policy observes, not the raw dial, so
-        // the two numbers are directly comparable: what was asked for against what is being felt.
-        this.labels[t].set(cmdMag, force);
-        const instrument=this.instruments[t];
-        const station=hand.map((v,i)=>v-nRobot[i]*rawLead);
-        instrument.position.copy(mjcToThreeCoordinate(station));
-        const end=mjcToThreeCoordinate(station.map((v,i)=>v+nRobot[i]));
-        instrument.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),end.sub(instrument.position).normalize());
-        const compression=Math.max(-.06,Math.min(.10,rawLead));
-        instrument.children[1].position.y=.025+compression;
-        instrument.children[2].position.y=-.045+compression;
-        instrument.visible=true;
-        const above = mjcToThreeCoordinate([hand[0], hand[1], hand[2] + 0.16]);
-        this.labels[t].sprite.position.copy(above);
       }
     }
     window.dispatchEvent(new CustomEvent('brace:force-reading', {detail:{

@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   let selected = 'none', capable = false, statusText = 'Connecting to the gym…', phase = 'empty';
-  let widget;
+  let widget, activeSocket;
   window.BraceExert = {enabled:false};
   const catalog = {
     dumbbells: {label:'Dumbbells', weight:'1 kg each', detail:'One in each hand · 2 kg total', icon:'<path d="M9 18h30M13 12v12M19 9v18M29 9v18M35 12v12"/>'},
@@ -44,14 +44,16 @@
         if (typeof event.data !== 'string') return;
         let message; try { message = JSON.parse(event.data); } catch { return; }
         if (message.type !== 'hello' || !Array.isArray(message.styles)) return;
-        this.isGym = true;
+        this.isGym = true; activeSocket = this;
         capable = Object.keys(catalog).every(n => message.equipment?.includes(n));
+        phase = selected === 'none' ? 'empty' : 'carrying';
+        if (selected !== 'none') statusText = `Connected · ${catalog[selected].label} equipped.`;
         if (selected === 'none') statusText = capable ? 'Empty hands. Choose a weight to begin.' : 'This generator does not support equipment yet.';
         repaint();
       });
       this.addEventListener('close', () => {
-        if (!this.isGym) return;
-        capable = false; window.BraceGym.lastContext = undefined; window.braceClearForces?.(); window.BraceExert.enabled = false; window.BraceGym.remove(); window.BraceGym.status('Generator disconnected. Reconnect before equipping.', 'error');
+        if (!this.isGym || activeSocket !== this) return;
+        capable = false; window.BraceGym.status('Reconnecting to the generator… your equipment stays in place.', 'connecting');
       });
     }
     send(data) {

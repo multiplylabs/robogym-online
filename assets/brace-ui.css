@@ -160,3 +160,9 @@ body { font-family:Barlow,Arial,sans-serif!important; color:var(--brace-ink); }
 
 .brace-reference-view {font-size:11px;color:var(--brace-muted);display:flex;gap:6px;align-items:center}.brace-reference-view select {font:inherit;padding:5px;border:1px solid #d5e0e8;border-radius:5px;background:#f7fafc;color:#36556e}
 @media(max-width:600px){.brace-reference-view {position:fixed;top:72px;left:10px;padding:6px;background:#ffffffed;border-radius:6px}}
+
+.brace-stability-status { position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:20;background:#f5f9fd;color:#31516c;padding:7px 14px;border:1px solid #c9dcec;border-radius:9px;font-size:12px;pointer-events:none; }
+.brace-stability-status:empty { display:none; }
+.brace-stability-status[data-phase="failed"] { color:#a53333; }
+#brace-stability-test:disabled { opacity:.55;cursor:default; }
+@media(max-width:650px) { .brace-stability-status {top:112px;} }

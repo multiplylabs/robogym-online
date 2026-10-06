@@ -110,6 +110,15 @@ INTRA_OP_THREADS = 8
 class MotionBricksOnnxStream(MotionBricksStream):
     """MotionBricks behind an ONNX session, with the command layer inherited unchanged."""
 
+    def __init__(self, contract, mjcf, motionbricks_root, seed=None, device="cpu", mode="walk", *, shared_model=None):
+        self._session_args = (contract, mjcf, motionbricks_root, seed, device, mode)
+        self._shared_model = shared_model
+        super().__init__(*self._session_args)
+
+    def fork_session(self):
+        """Independent motion, kinematics and carry state, sharing only the stateless graph."""
+        return type(self)(*self._session_args, shared_model=self)
+
     @staticmethod
     def _assert_joint_order(root: Path, joint_names: list[str]) -> None:
         """Same guarantee as the Python backend, against whichever tree was pointed at.
@@ -130,6 +139,14 @@ class MotionBricksOnnxStream(MotionBricksStream):
         print(f"note: no G1 skeleton beside {root}; joint order not verified")
 
     def _setup_model(self, root: Path, seed: int | None, device: str) -> None:
+        if self._shared_model is not None:
+            self._session = self._shared_model._session
+            self._input_types = self._shared_model._input_types
+            self._seed = 0 if seed is None else int(seed)
+            self._modes = list(ONNX_MODES)
+            self._horizon_dt = 0.0
+            self._shared_model = None
+            return
         import onnxruntime as ort
 
         path = root if root.suffix == ".onnx" else root / PLANNER_RELATIVE

@@ -76,7 +76,7 @@ policy client-side therefore means running that solver client-side too.
   unexportable operation, a damped-least-squares `solve`, becomes Jacobi-preconditioned conjugate
   gradient; measured against the original, that costs 0.19% of the published goal.
 - **The contact is real.** Exertion is not a passive arm lead. A Kelvin-Voigt contact is anchored at
-  the reference hand, the reaction loads the whole body, and the gauge reads the force that implies —
+  the reference hand, the reaction loads the whole body, and the force display reads the force that implies —
   the same quantity the training reward measured.
 - **The observation assembly is already in the policy graph.** The exported pipeline traces its
   observation builders in, so its 25 inputs are raw context fields rather than a flattened vector.
@@ -358,12 +358,30 @@ so the brace applies one combined effort cone that bounds both, and a hand alrea
 less moment left to give. Watch `force_cmd_eff` and `torque_cmd_eff` fall together as either dial
 climbs — that is the cone, not a bug.
 
-**The gauge** — Exert shows a blue spring-loaded instrument at each active hand, with a moving
-pad and piston. The panel repeats target (blue), measured reaction (amber), and signed error in
-newtons. Target is the effective post-cap command; an 8 N request can be reduced by reach,
-effort or balance limits. Measured force comes from the Kelvin-Voigt contact applied to the robot,
-not the command or a display animation. The instrument is a visual representation of that virtual
-contact, following the reference station; it is not an independently colliding world object.
+**Force arrows** — Exert draws a blue arrow for the effective post-cap target and an amber
+arrow for the measured reaction at each active hand. The panel shows requested, effective,
+measured and signed error in newtons; error is measured minus effective. An 8 N request can
+be reduced by reach, effort or balance limits. Measured force comes from the physical
+Kelvin-Voigt contact applied to the robot. The moving instrument and piston are removed.
+
+**Test stability** — The header button launches a random 0.75 kg box or sphere towards the
+robot at 4 m/s from a random direction. These detached free bodies collide in MuJoCo and
+transfer momentum; mouse pulling is disabled. After five simulation seconds the result is
+recovered, failed (any observed fall), or inconclusive (no confirmed impact). Objects are
+reused and collisions are disabled while parked. The observation slot reader excludes these
+detached bodies from robot tensors, preserving the training input layout.
+
+**Generator sessions** — The ONNX generator shares its stateless loaded graph while each
+browser has separate motion history, heading, style, carry overlay and kinematics. Opening
+another tab no longer displaces existing users. The browser retries interrupted connections
+with exponential backoff and retains equipped mass. A session token resumes the same
+reference buffer while its session is retained, for up to five minutes. At most 32 sessions
+are retained; the oldest idle session can be reclaimed earlier when that limit is reached. This isolation applies to the public ONNX backend; the legacy Python
+and camera backends retain their existing exclusive-client behavior.
+
+For an end-to-end local check, run `node tests/browser_interactions.cjs` with `NODE_PATH`
+pointing to mjswan's node_modules, a local page on port 8080 and the ONNX generator on
+port 8766. `BRACE_TEST_URL` can override the destination.
 
 Selecting Exert eases the upper-body reference into a fixed torso-relative IK pose over 1.5 seconds,
 without altering raw planner context or leg references. Torque-limited arm servos hold the pose;
@@ -387,7 +405,7 @@ checks the training equations, signed forces, inactive-hand reaction and activat
 `tests/browser_exertion_motion.cjs` checks the four walking styles and a complete ramp crossing.
 See `force_audit.json` for measured results: ten idle cases averaged less than 0.10 N error
 after settling; the public 5 N walking/slope trial averaged 0.71–0.93 N error, with no falls.
-Release movement keys for a steady gauge reading. These are individual trials, not a guarantee
+Release movement keys for a steady force reading. These are individual trials, not a guarantee
 for every gait, force, or terrain configuration.
 The graph does not publish the training estimator's cached brace-credit lead; the displayed
 reaction uses arm spring displacement and damping only, with no synthetic brace-force credit.
@@ -436,7 +454,7 @@ reference fields, structured policy inputs, a pose ghost, an operator wrench and
 contact, and the ORT-Web session fallback. They live on a fork, pinned in `pyproject.toml`, and each
 is tracked for a pull request back upstream.
 
-The live gauge distinguishes requested dial force from effective (feasible) force F*.
+The live force display distinguishes requested dial force from effective (feasible) force F*.
 Its signed instantaneous error is measured minus effective, consistent with the paper's
 feasible-target convention; the centered bar shows under/over and its current range.
 This live reading is distinct from the paper's completed-motion average-force metric.

@@ -51,6 +51,7 @@ _SLOPE_PARK_Z = -80.0
 # Compiled after the robot, so these are the model's trailing bodies and every robot body keeps the
 # index the policy's observations read it at. `check_contract` asserts exactly that.
 SLOPE_BODY_NAMES = ("slope_ascent", "slope_plateau", "slope_descent")
+STABILITY_BODY_NAMES = ("stability_box", "stability_sphere")
 
 
 def load_contract(onnx_dir: Path) -> dict:
@@ -62,8 +63,11 @@ def load_contract(onnx_dir: Path) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def build_spec(mjcf: Path, physics_dt: float) -> mujoco.MjSpec:
+def build_spec(mjcf: Path, physics_dt: float, *, stability_objects: bool = False) -> mujoco.MjSpec:
     """The robot MJCF plus the environment it needs to stand in and be looked at.
+
+    ``stability_objects`` adds detached browser projectiles; the robot-only tracing entity
+    and generator kinematics leave them out.
 
     The training MJCF is scene-less -- it declares foot/floor contact pairs but no ``floor``
     geom, which the harness injects -- so a bare compile fails. The floor, lighting and visual
@@ -76,6 +80,8 @@ def build_spec(mjcf: Path, physics_dt: float) -> mujoco.MjSpec:
     from robogym_online.equipment import add_equipment
 
     add_equipment(spec)
+    if stability_objects:
+        _add_stability_objects(spec)
     # The contract's physics rate, not the MJCF's: `decimation = control_dt / physics_dt` has to
     # come out at the value the policy was trained with.
     spec.option.timestep = physics_dt
@@ -200,3 +206,16 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
     # keeps the shadow map's resolution on the robot instead of spread over the whole plane.
     spec.stat.center = [0.0, 0.0, 0.8]
     spec.stat.extent = 1.6
+
+
+def _add_stability_objects(spec: mujoco.MjSpec) -> None:
+    """Reusable physical projectiles, appended after all robot bodies and joints."""
+    for name, shape, size in (
+        ("box", mujoco.mjtGeom.mjGEOM_BOX, [.10, .10, .10]),
+        ("sphere", mujoco.mjtGeom.mjGEOM_SPHERE, [.12, 0, 0]),
+    ):
+        body = spec.worldbody.add_body(name=f"stability_{name}", pos=[0, 0, -30])
+        body.add_freejoint(name=f"stability_{name}_free")
+        body.add_geom(name=f"stability_{name}", type=shape, size=size, mass=.75,
+                      rgba=[.32, .53, .74, 1], contype=0, conaffinity=0, condim=3,
+                      friction=[.6, .005, .0001])

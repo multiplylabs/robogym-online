@@ -58,7 +58,67 @@ class GymEquipment {
       floor.material.emissive.setRGB(0,0,0);
       floor.material.needsUpdate = true;
     }
+    this.setupStability(bn, gn, joints);
     this.apply('none'); return true;
+  }
+  setupStability(bn, gn, joints) {
+    const m = this.context.mjModel;
+    this.projectiles = ['box','sphere'].map(shape => {
+      const joint = joints.indexOf(`stability_${shape}_free`);
+      return {shape, body:bn.indexOf(`stability_${shape}`), geom:gn.indexOf(`stability_${shape}`),
+        qadr:m.jnt_qposadr[joint], vadr:m.jnt_dofadr[joint]};
+    });
+    this.feet=['left_ankle_roll_link','right_ankle_roll_link'].map(n=>bn.indexOf(n));
+    this.robotBodies = new Set(bn.flatMap((n,i) => i > 0 && !n.startsWith('stability_') && !n.startsWith('slope_') ? [i] : []));
+    window.BraceStability = {launch:() => this.launchStability(), get state() { return this.read(); }, read:() => this.trial ? {...this.trial, object:undefined} : {phase:'ready'}};
+    this.parkStability();
+  }
+  parkStability() {
+    const {mjData:d,mjModel:m} = this.context;
+    for (const p of this.projectiles ?? []) {
+      m.geom_contype[p.geom]=0; m.geom_conaffinity[p.geom]=0; m.body_contype[p.body]=0; m.body_conaffinity[p.body]=0;
+      d.qpos.set([0,0,-30,1,0,0,0],p.qadr); d.qvel.fill(0,p.vadr,p.vadr+6);
+      this.context.bodies[p.body].visible = false;
+    }
+  }
+  launchStability() {
+    if (this.trial?.phase === 'testing' || !window.BraceGym?.ready) return false;
+    const {mjData:d,mjModel:m,mujoco} = this.context;
+    this.parkStability();
+    const p=this.projectiles[Math.random()<.5 ? 0 : 1], angle=Math.random()*2*Math.PI;
+    const distance=1.6, speed=4, flight=distance/speed;
+    const target=Array.from(d.xpos.subarray(this.torso*3,this.torso*3+3));
+    target[2]+=.13;
+    const direction=[Math.cos(angle),Math.sin(angle)];
+    const velocity=[-speed*direction[0]+d.qvel[0],-speed*direction[1]+d.qvel[1],-m.opt.gravity[2]*flight/2];
+    const position=[target[0]+distance*direction[0],target[1]+distance*direction[1],target[2]];
+    m.geom_contype[p.geom]=1; m.geom_conaffinity[p.geom]=1; m.body_contype[p.body]=1; m.body_conaffinity[p.body]=1;
+    d.qpos.set([...position,1,0,0,0],p.qadr); d.qvel.set([...velocity,0,0,0],p.vadr);
+    mujoco.mj_forward(m,d); this.context.bodies[p.body].visible=true;
+    this.trial={phase:'testing',shape:p.shape,mass:.75,speed,angle,start:Number(d.time),hit:false,fallen:false,object:p};
+    this.stabilityEvent(); return true;
+  }
+  stabilityEvent() {
+    const {object,...state} = this.trial;
+    window.dispatchEvent(new CustomEvent('brace:stability',{detail:state}));
+  }
+  updateStability() {
+    const trial=this.trial;
+    if (!trial || trial.phase !== 'testing') { this.parkStability(); return; }
+    const {mjModel:m,mjData:d}=this.context;
+    for (let i=0;i<d.ncon;i++) {
+      const c=d.contact.get(i), g1=c.geom1, g2=c.geom2;
+      if (c.efc_address>=0 && ((g1===trial.object.geom && this.robotBodies.has(m.geom_bodyid[g2])) || (g2===trial.object.geom && this.robotBodies.has(m.geom_bodyid[g1])))) trial.hit=true;
+    }
+    const q=d.qpos.subarray(3,7), tilt=1-2*(q[1]*q[1]+q[2]*q[2]);
+    const pelvisZ=d.qpos[2];
+    // Relative height remains meaningful on the ramp; remember every fall during the trial.
+    const ground=Math.min(...this.feet.map(b=>d.xpos[b*3+2]));
+    if (pelvisZ-ground<.38 || tilt<.5) trial.fallen=true;
+    if (Number(d.time)-trial.start>=5) {
+      trial.phase=trial.fallen ? 'failed' : trial.hit ? 'recovered' : 'missed';
+      this.parkStability(); this.stabilityEvent();
+    }
   }
   apply(name) {
     const {mujoco, mjModel: m, mjData: d} = this.context;
@@ -191,6 +251,7 @@ class GymEquipment {
   }
   update(dt) {
     if (!this.resolved && !this.resolve()) return;
+    this.updateStability();
     this.referenceView();
     // Reference ghosts tint every shape, including initially transparent payload geoms.
     // Equipment belongs only to the physical robot, so hide those cloned shapes.
@@ -221,6 +282,7 @@ class GymEquipment {
     }
   }
   reset() {
+    this.trial = null; this.parkStability?.();
     if (this.resolved) { this.apply('none'); this.restoreArms(); }
     this.desired = 'none'; this.elapsed = 0; this.readyFor = 0;
     if (window.BraceGym) window.BraceGym.lastContext=undefined;

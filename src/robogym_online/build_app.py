@@ -52,6 +52,7 @@ from scene import (  # noqa: E402
     DEFAULT_MOTION,
     DEFAULT_ONNX_DIR,
     SLOPE_BODY_NAMES,
+    STABILITY_BODY_NAMES,
     build_spec,
     load_contract,
 )
@@ -118,7 +119,8 @@ def check_contract(model: onnx.ModelProto, contract: dict, mj_model: mujoco.MjMo
     ]
     # The scene's own props compile after the robot, so the expectation is the contract's bodies
     # *then* those -- which is what keeps every robot body at the index its observations read.
-    if model_bodies != body_names + list(SLOPE_BODY_NAMES):
+    expected = body_names + list(SLOPE_BODY_NAMES)
+    if model_bodies not in (expected, expected + list(STABILITY_BODY_NAMES)):
         raise ValueError(
             "MJCF body order does not match the contract's `body_names`.\n"
             f"  model: {model_bodies}\n  yaml:  {body_names}"
@@ -683,7 +685,7 @@ def build(
     physics_dt = float(contract["timing"]["physics_dt"])
     future_steps = [int(s) for s in contract["motion"]["future_step_indices"]]
 
-    spec = build_spec(mjcf, physics_dt)
+    spec = build_spec(mjcf, physics_dt, stability_objects=True)
     check_contract(model, contract, spec.compile())
     if half_weights:
         halve_weights(model)
@@ -1132,13 +1134,21 @@ def browser_contact_source():
     core = Path(mjswan.__file__).parent / "template/src/core"
     source = HERE.parent.parent / "assets"
     targets = [core / "engine" / name for name in ("handSpringContact.ts", "externalWrench.ts")]
-    targets += [core / "command" / name for name in ("TrackingCommand.ts", "referenceFrame.ts")]
+    targets += [core / "command" / name for name in ("TrackingCommand.ts", "referenceFrame.ts", "liveMotion.ts")]
+    targets += [core / "onnx/slotReader.ts"]
     originals = {target: target.read_bytes() if target.exists() else None for target in targets}
+    runtime = core / "engine/runtime.ts"
+    runtime_original = runtime.read_bytes()
     try:
+        disabled_drag = runtime_original.decode().replace("draggableBodyIds: this.dynamicBodyIds", "draggableBodyIds: new Set<number>()").replace("setDraggableBodyIds(this.dynamicBodyIds)", "setDraggableBodyIds(new Set<number>())")
+        if disabled_drag == runtime_original.decode():
+            raise RuntimeError("Viewer drag hook changed; cannot disable robot pulling")
+        runtime.write_text(disabled_drag)
         for target in originals:
             target.write_bytes((source / target.name).read_bytes())
         yield
     finally:
+        runtime.write_bytes(runtime_original)
         for target, original in originals.items():
             target.write_bytes(original) if original is not None else target.unlink()
 

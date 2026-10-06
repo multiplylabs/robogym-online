@@ -38,6 +38,9 @@ import asyncio
 import json
 import math
 import os
+import time
+import uuid
+from urllib.parse import parse_qs, urlsplit
 import struct
 from pathlib import Path
 
@@ -237,55 +240,79 @@ def _apply_walk_speed(stream, style: str) -> None:
 
 
 async def _serve_client(websocket, contract: dict, stream, in_use: dict) -> None:
-    """Serve one client off the shared generator, displacing whoever held it.
-
-    One at a time: the generator carries a session's worth of state -- its own motion so far, the
-    heading, the correction -- and there is one robot to drive. Loading a second copy is not the
-    answer either, at a couple of minutes and several gigabytes.
-
-    The newest client wins, rather than being refused. Refusing looks like a broken demo from the
-    outside: the page keeps playing its bundled clip and ignores the keyboard, with nothing to say
-    why. And the holder is not always a browser -- an editor forwarding the port, or a tab left open
-    on another desktop, is enough to lock out the tab actually being used.
-    """
-    previous = in_use.get("client")
-    if previous is not None:
-        print("displacing the previous client")
-        try:
+    """Keep independent ONNX browser sessions; reconnects resume their existing reference."""
+    session = None
+    fresh = True
+    if hasattr(stream, "fork_session"):
+        now = time.monotonic()
+        sessions = in_use.setdefault("sessions", {})
+        for key, entry in list(sessions.items()):
+            if entry["client"] is None and now - entry["seen"] > 300:
+                del sessions[key]
+        request = getattr(websocket, "request", None)
+        path = getattr(request, "path", getattr(websocket, "path", "/"))
+        token = parse_qs(urlsplit(path).query).get("session", [None])[0]
+        token = token if token and len(token) <= 128 else uuid.uuid4().hex
+        session = sessions.get(token)
+        if session is None:
+            if len(sessions) >= 32:
+                idle = [(entry["seen"], key) for key, entry in sessions.items() if entry["client"] is None]
+                if idle:
+                    del sessions[min(idle)[1]]
+                else:
+                    await websocket.close(code=1013, reason="Generator busy; retry shortly")
+                    return
+            session = sessions[token] = {"stream": stream.fork_session(), "client": None, "seen": now, "lock": asyncio.Lock()}
+        else:
+            fresh = False
+        previous = session["client"]
+        if previous is not None:
             await previous.close()
-        except Exception:  # noqa: BLE001 - a client already gone is exactly what we wanted
-            pass
-    in_use["client"] = websocket
-    stream.reset()
+        session["client"] = websocket
+        stream = session["stream"]
+    else:
+        previous = in_use.get("client")
+        if previous is not None:
+            await previous.close()
+        in_use["client"] = websocket
+    if fresh:
+        stream.reset()
     # The style is generator state, so a new session would otherwise inherit whatever the previous
     # one was left on -- a run, say -- while the page shows its first entry as selected. Start
     # every session on the first offered style; the client re-selects from there.
     styles = tuple(getattr(stream, "styles", ()))
-    if styles and hasattr(stream, "set_style"):
+    if fresh and styles and hasattr(stream, "set_style"):
         stream.set_style(styles[0])
         _apply_walk_speed(stream, styles[0])
-    await websocket.send(
-        json.dumps(
-            {
-                "type": "hello",
-                "control_dt": stream.control_dt,
-                "n_dofs": len(contract["joint_names"]),
-                "body_names": list(contract["body_names"]),
-                "fields": [[name, list(shape)] for name, shape in FIELDS],
-                # The locomotion styles this generator offers, in selection order, so the client
-                # can present them without knowing what is behind the socket.
-                "styles": list(getattr(stream, "styles", ())),
-                "equipment": ["none", "dumbbells", "kettlebell", "barbell", "exertion"] if hasattr(stream, "set_equipment") else [],
-            }
-        )
-    )
-    print(f"client connected: {websocket.remote_address}")
     try:
-        await _pump(websocket, stream)
+        await websocket.send(
+            json.dumps(
+                {
+                    "type": "hello",
+                    "control_dt": stream.control_dt,
+                    "n_dofs": len(contract["joint_names"]),
+                    "body_names": list(contract["body_names"]),
+                    "fields": [[name, list(shape)] for name, shape in FIELDS],
+                    # The locomotion styles this generator offers, in selection order, so the client
+                    # can present them without knowing what is behind the socket.
+                    "styles": list(getattr(stream, "styles", ())),
+                    "equipment": ["none", "dumbbells", "kettlebell", "barbell", "exertion"] if hasattr(stream, "set_equipment") else [],
+                }
+            )
+        )
+        print(f"client connected: {websocket.remote_address}")
+        if session is not None:
+            async with session["lock"]:
+                await _pump(websocket, stream)
+        else:
+            await _pump(websocket, stream)
     finally:
         # Only clear the slot if it is still ours: a displaced client's cleanup must not evict the
         # client that displaced it.
-        if in_use.get("client") is websocket:
+        if session is not None and session["client"] is websocket:
+            session["client"] = None
+            session["seen"] = time.monotonic()
+        elif in_use.get("client") is websocket:
             in_use["client"] = None
         print("client disconnected")
 
@@ -360,8 +387,8 @@ async def _main(
     # No server-side keepalive pings. Through a Cloudflare tunnel the pong does not reliably come
     # back from the browser, and the default 20 s timeout then closes a perfectly live session with
     # "keepalive ping timeout" -- which the page sees as its reference simply stopping. Liveness is
-    # already evident: a steering client sends its pose every control step, and a dead one is
-    # displaced the moment the next client connects.
+    # already evident: a steering client sends its pose every control step. ONNX clients have
+    # independent state, and disconnected sessions are retained briefly for reconnection.
     async with websockets.serve(
         lambda ws: _serve_client(ws, contract, stream, in_use),
         host,
