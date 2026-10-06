@@ -178,11 +178,15 @@ class GymEquipment {
     const refAnchor = reference?.children.find(o => o.name === anchorName);
     if (!refAnchor) return;
     reference.position.set(0,0,0);
-    if (settings.mode !== 'world') reference.position.copy(actual.position).sub(refAnchor.position);
+    // Follow horizontal travel only; the raw reference keeps its flat-ground height.
+    if (settings.mode !== 'world') {
+      reference.position.copy(actual.position).sub(refAnchor.position);
+      reference.position.y = 0;
+    }
     if (braced) {
       braced.position.set(0,0,0);
       const anchor = this.context.readOnnxSlot?.({command:'brace',field:'ref_anchor_pos'});
-      if (anchor && settings.mode !== 'world') braced.position.set(actual.position.x-anchor[0],actual.position.y-anchor[2],actual.position.z+anchor[1]);
+      if (anchor && settings.mode !== 'world') braced.position.set(actual.position.x-anchor[0],0,actual.position.z+anchor[1]);
       // In world view, map the policy's canonical XY origin back to the source frame.
       if (anchor && settings.mode === 'world') braced.position.set(refAnchor.position.x-anchor[0],0,refAnchor.position.z+anchor[1]);
     }
