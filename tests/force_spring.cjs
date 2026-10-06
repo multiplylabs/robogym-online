@@ -1,0 +1,23 @@
+// Compression must follow physical hand motion while leaving contact forces unchanged.
+const assert=require('node:assert/strict'),fs=require('node:fs'),Module=require('node:module');
+const THREE=require('three');
+const source=fs.readFileSync('assets/handSpringContact.ts','utf8').replace("import { mjcToThreeCoordinate } from '../scene/coordinate';",'const mjcToThreeCoordinate=(v: ArrayLike<number>)=>new THREE.Vector3(v[0],v[2],-v[1]);');
+const loaded=new Module(`${process.env.NODE_PATH}/spring-test.cjs`);loaded.filename=loaded.id;loaded.paths=Module._nodeModulePaths(process.env.NODE_PATH);loaded._compile(require('esbuild').transformSync(source,{loader:'ts',format:'cjs'}).code,loaded.filename);
+global.window={dispatchEvent(){}};global.CustomEvent=class{};
+const parent=new THREE.Group(),bytes=Buffer.from('world\0torso\0left\0');
+const model={nbody:3,names:bytes,name_bodyadr:[0,6,12]};
+const state={endpoint_kv:[100],endpoint_cv:[2],push_axis_local:[1,0,0],push_axis_w:[1,0,0],ref_hand_pos:[0,0,0],ref_anchor_pos:[0,0,0],force_cmd_eff:[5,0,0]};
+const d={xpos:new Float64Array([0,0,0,0,0,0,.05,0,0]),xquat:new Float64Array([1,0,0,0,1,0,0,0,1,0,0,0]),xfrc_applied:new Float64Array(18),time:0};
+const cfg={command_name:'brace',anchor_body:'torso',targets:[{body:'left',hand:0}],max_lead:.15,smooth_beta:0,two_sided:true,damping:true,dt:.02,gauge:true};
+const contact=new loaded.exports.HandSpringContact(cfg,model,parent),spring=parent.getObjectByName('hand-contact-spring-0');
+const apply=()=>{d.xfrc_applied.fill(0);contact.apply(d,{getStateField:n=>state[n]??null});parent.updateMatrixWorld(true);};
+const close=(a,b)=>assert(Math.abs(a-b)<1e-5,`${a} != ${b}`);
+apply();close(spring.userData.displayCompression,.05);close(contact.measured[0],5);close(d.xfrc_applied[12],-5);
+const support=()=>spring.getObjectByName('contact-spring-support').getWorldPosition(new THREE.Vector3()).x;
+close(support(),.22);state.force_cmd_eff[0]=8;apply();close(spring.userData.displayCompression,.05);
+d.xpos[6]=.07;apply();close(spring.userData.displayCompression,.07);close(support(),.22);
+assert(contact.measured[0]>7,'Measured force includes damping as well as compression');
+d.xpos[3]+=1;d.xpos[6]+=1;apply();close(support(),1.22);close(spring.userData.displayCompression,.07);
+state.push_axis_local[0]=0;apply();assert.equal(spring.visible,false);close(d.xfrc_applied[12],0);
+state.push_axis_local[0]=1;apply();assert.equal(spring.visible,true);contact.reset();assert.equal(spring.visible,false);
+console.log('PASS spring follows physical displacement, retains its local support, ignores dial-only changes, and adds no force');

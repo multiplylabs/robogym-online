@@ -1,6 +1,6 @@
 // Local/public smoke test: concurrent users, reconnection, physical impacts and force arrows.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
-const url=process.env.BRACE_TEST_URL||'http://127.0.0.1:8080/?stream=ws%3A%2F%2F127.0.0.1%3A8766';
+const url=process.env.BRACE_TEST_URL||'http://127.0.0.1:8080/?stream=ws%3A%2F%2F127.0.0.1%3A8765';
 const out=process.env.BRACE_TEST_OUTPUT||'/tmp/brace-interactions';fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -33,28 +33,32 @@ const out=process.env.BRACE_TEST_OUTPUT||'/tmp/brace-interactions';fs.mkdirSync(
   await b.close();
   // Each trial gets a fresh standing robot; retain actual failures as failures.
   await a.close();
-  for(const shape of ['box','sphere']) {
+  for(const shape of ['burst-one','burst-two']) {
    const page=await open();
    await page.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'w'})));
    const start=await page.evaluate(()=>window.BraceGym.force().time);
    await page.waitForFunction(t=>window.BraceGym.force().time>t+2,start,{timeout:30000});
    await page.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keyup',{key:'w'})));
    await page.waitForFunction(t=>window.BraceGym.force().time>t+5,start,{timeout:30000});
-   const launched=await page.evaluate(shape=>{const original=Math.random;let call=0;Math.random=()=>call++===0?(shape==='box'?.25:.75):.12;try{return window.BraceStability.launch();}finally{Math.random=original;}},shape);
-   assert(launched);assert.equal(await page.evaluate(()=>window.BraceStability.state.shape),shape);
-   await page.waitForTimeout(100);await page.screenshot({path:`${out}/${shape}-impact.png`});
-   await page.waitForFunction(()=>window.BraceStability.state.phase!=='testing',null,{timeout:30000});
+   assert(await page.evaluate(()=>window.BraceStability.launch()));
+   await page.waitForFunction(()=>window.BraceStability.state.launched>=3,null,{timeout:30000});
+   await page.screenshot({path:`${out}/${shape}-impact.png`});
+   await page.waitForFunction(()=>window.BraceStability.state.phase!=='testing',null,{timeout:60000});
    const state=await page.evaluate(()=>window.BraceStability.state);results.trials.push(state);
-   assert(state.hit,`${shape} must hit the physical robot, not merely appear`);
-   assert(['recovered','failed'].includes(state.phase));
+   assert.equal(state.launched,5); assert.equal(state.count,5);
+   state.launchTimes.forEach((t,i)=>assert(Math.abs(t-i*.2)<.025, `Launch ${i} timing: ${t}`));
+   assert(state.hit, 'Burst must physically hit the robot');
+   assert(['recovered','partial','failed'].includes(state.phase));
+   if(state.fallen) assert.equal(state.phase,'failed');
    await page.screenshot({path:`${out}/${shape}-result.png`});await page.close();
   }
   const page=await open();await page.getByRole('button',{name:'Exert force',exact:true}).click();
   await page.getByRole('button',{name:'Apply 5 newtons',exact:true}).click();
   await page.waitForFunction(()=>Math.max(...window.BraceExert.reading.commanded.map(Math.abs))>1,null,{timeout:30000});
-  const visuals=await page.evaluate(()=>{const seen=[];window.__BraceTest.scene.traverse(o=>{if(/hand-force/.test(o.name))seen.push({name:o.name,visible:o.visible});});return seen;});
+  const visuals=await page.evaluate(()=>{const seen=[];window.__BraceTest.scene.traverse(o=>{if(/hand-force|hand-contact-spring/.test(o.name))seen.push({name:o.name,visible:o.visible,data:o.userData});});return seen;});
   assert(visuals.some(o=>o.name.includes('commanded')&&o.visible));assert(visuals.some(o=>o.name.includes('exerted')&&o.visible));assert(!visuals.some(o=>o.name.includes('gauge')));
-  results.checks.push('Blue effective-force and amber measured-force arrows render; moving gauge is absent');
+  assert(visuals.some(o=>o.name.includes('contact-spring')&&o.visible&&Number.isFinite(o.data.displayCompression)));
+  results.checks.push('Physical contact spring, blue effective-force and amber measured-force arrows render; moving gauge is absent');
   await page.screenshot({path:`${out}/force-arrows.png`});
   assert.deepEqual(results.errors,[]);console.log(JSON.stringify(results,null,2));
  } finally {fs.writeFileSync(`${out}/results.json`,JSON.stringify(results,null,2));await browser.close();}

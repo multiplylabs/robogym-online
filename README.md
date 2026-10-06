@@ -364,12 +364,22 @@ measured and signed error in newtons; error is measured minus effective. An 8 N 
 be reduced by reach, effort or balance limits. Measured force comes from the physical
 Kelvin-Voigt contact applied to the robot. The moving instrument and piston are removed.
 
-**Test stability** — The header button launches a random 0.75 kg box or sphere towards the
-robot at 4 m/s from a random direction. These detached free bodies collide in MuJoCo and
-transfer momentum; mouse pulling is disabled. After five simulation seconds the result is
-recovered, failed (any observed fall), or inconclusive (no confirmed impact). Objects are
-reused and collisions are disabled while parked. The observation slot reader excludes these
-detached bodies from robot tensors, preserving the training input layout.
+**Contact spring** — A pale blue coil and a small hand plate show the existing virtual contact.
+The spring shortens with the measured physical hand lead, not the requested force. The backing
+follows the torso-relative reference contact station. Compression is shown at actual scale,
+clamped only for extreme display lengths. Spring stiffness and damping determine the measured
+force, so compression alone does not represent the damper contribution. This is a read-only
+visualization; no extra contact force or world obstacle is added.
+
+**Test stability** — The header button launches five 0.75 kg balls every 0.2 simulation seconds
+within a one-second burst. One random launcher direction is chosen per burst, with slight spread;
+each ball targets the current torso at 4 m/s horizontal approach speed relative to the robot.
+Detached free bodies collide in MuJoCo and transfer momentum. The robot is observed during the
+burst and for five more simulation seconds. Any observed fall fails the test; full recovery,
+partial exposure and missed impacts are distinguished using per-ball contact counts. Reset
+cancels outstanding launches. Balls are reused and their collisions are disabled while parked.
+The observation slot reader excludes detached bodies from robot tensors, preserving training
+input shapes. Mouse pulling remains disabled.
 
 **Generator sessions** — The ONNX generator shares its stateless loaded graph while each
 browser has separate motion history, heading, style, carry overlay and kinematics. Opening

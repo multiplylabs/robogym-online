@@ -82,7 +82,7 @@
         row.innerHTML=`<strong>${h===0 ? 'Left' : 'Right'} hand</strong><small class="brace-requested">Requested ${req.toFixed(1)} N</small><div class="brace-gauge-values"><span>Effective <b>${cmd.toFixed(1)} N</b></span><span>Measured <b>${actual.toFixed(1)} N</b></span></div><div class="brace-gauge-track"><i style="width:${Math.min(100,Math.max(0,actual)/9*100)}%"></i><em style="left:${Math.min(100,cmd/9*100)}%"></em></div><div class="brace-error-track" role="img" aria-label="Measured minus effective force: ${error.toFixed(2)} newtons"><i style="left:${error<0 ? 50-offset : 50}%;width:${offset}%"></i><em></em></div><div class="brace-error-labels"><span>−${extent.toFixed(1)} N · Under</span><strong>Error ${error>=0 ? '+' : ''}${error.toFixed(2)} N</strong><span>Over · +${extent.toFixed(1)} N</span></div>`;
         target.append(row);
       }
-      widget.querySelector('.brace-gauge-note').textContent=target.children.length ? 'The target includes the checkpoint’s reach and balance limits. Arrow lengths compare target and measured force; the hands stay near their IK pose.' : 'Choose a force to begin. Readings come from the virtual contact, in newtons.';
+      widget.querySelector('.brace-gauge-note').textContent=target.children.length ? 'The target includes the checkpoint’s reach and balance limits. Spring compression shows physical contact displacement, not the requested force. Measured force includes damping; the hands stay near their IK pose.' : 'Choose a force to begin. Readings come from the virtual contact, in newtons.';
     });
     function maximum() {
       const section = controls(panel)[state.mode === 'exert' ? 'exert' : 'load'];

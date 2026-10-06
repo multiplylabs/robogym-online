@@ -67,6 +67,8 @@ jobs:
           export NODE_PATH="$(python -c 'import mjswan; from pathlib import Path; print(Path(mjswan.__file__).parent / "template/node_modules")')"
           node tests/contact_parity.cjs
           node tests/robot_slots.cjs
+          node tests/force_spring.cjs
+          node tests/stability_burst.cjs
 
       - uses: actions/upload-pages-artifact@v3
         with:

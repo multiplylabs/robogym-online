@@ -1,5 +1,5 @@
 /**
- * The virtual contact a force-exertion policy pushes against, and the gauge that reads it.
+ * The virtual contact a force-exertion policy pushes against, and its spring and force visuals.
  *
  * A policy trained to *produce* a hand force is trained against a Kelvin-Voigt contact anchored at
  * the reference hand: the hand leads along a push axis, the contact resists, and the reaction loads
@@ -60,6 +60,50 @@ export interface HandSpringConfig {
   damper_vel_ema_alpha?: number;
   /** Draw the commanded and exerted force at each hand. */
   gauge?: boolean;
+}
+
+/** Read-only view of the existing contact: compression comes from physical hand lead. */
+export class ContactSpringVisual {
+  readonly group = new THREE.Group();
+  private readonly coil: THREE.Mesh;
+  private readonly support: THREE.Mesh;
+  static readonly restLength = 0.22;
+
+  constructor(index: number, parent: THREE.Object3D) {
+    this.group.name = `hand-contact-spring-${index}`;
+    const points = Array.from({length:113}, (_,i) => {
+      const t=i/112, angle=t*Math.PI*14;
+      return new THREE.Vector3(.019*Math.cos(angle),t,.019*Math.sin(angle));
+    });
+    this.coil = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),112,.0028,6,false),
+      new THREE.MeshStandardMaterial({color:0x91adc4,roughness:.6,metalness:.15}));
+    this.coil.name='contact-spring-coil'; this.coil.position.y=.01;
+    const plate = new THREE.Mesh(new THREE.CylinderGeometry(.033,.033,.009,20),
+      new THREE.MeshStandardMaterial({color:0xdce7ef,roughness:.7}));
+    plate.name='contact-spring-hand-plate';
+    this.support = new THREE.Mesh(new THREE.BoxGeometry(.075,.012,.075),
+      new THREE.MeshStandardMaterial({color:0x8199ac,roughness:.75}));
+    this.support.name='contact-spring-support';
+    this.group.add(plate,this.coil,this.support); this.group.visible=false;
+    parent.add(this.group);
+  }
+
+  update(hand: number[], axis: number[], rawLead: number, elasticLead: number, force: number, stiffness: number): void {
+    const length=Math.max(.065,Math.min(.37,ContactSpringVisual.restLength-rawLead));
+    // Beside the palm rather than covering it. The support follows the torso-relative contact
+    // station: hand + axis*(restLength - rawLead), so it is not a fixed world obstacle.
+    const lateral = Math.hypot(axis[0],axis[1])>.01 ? [axis[1],-axis[0],0] : [1,0,0];
+    const scale=.04/Math.hypot(...lateral);
+    this.group.position.copy(mjcToThreeCoordinate(hand.map((v,i)=>v+scale*lateral[i])));
+    const direction=mjcToThreeCoordinate(axis).normalize();
+    this.group.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);
+    this.coil.scale.y=length-.02; this.support.position.y=length;
+    this.group.userData={rawLead,elasticLead,measuredForce:force,stiffness,
+      displayLength:length,displayCompression:ContactSpringVisual.restLength-length,
+      displayClamped:Math.abs(length-(ContactSpringVisual.restLength-rawLead))>1e-6};
+    this.group.visible=true;
+  }
 }
 
 /** Shaft + head, unit length along +Y with its base at the origin. */
@@ -137,6 +181,7 @@ export class HandSpringContact {
   readonly measured: Float32Array;
   private readonly commandedArrows: THREE.Group[] = [];
   private readonly exertedArrows: THREE.Group[] = [];
+  private readonly springs: ContactSpringVisual[] = [];
 
   constructor(
     private readonly config: HandSpringConfig,
@@ -159,6 +204,7 @@ export class HandSpringContact {
         parent.add(commanded, exerted);
         this.commandedArrows.push(commanded);
         this.exertedArrows.push(exerted);
+        this.springs.push(new ContactSpringVisual(i,parent));
       }
     }
   }
@@ -190,6 +236,7 @@ export class HandSpringContact {
     if (!kv || !axisRef || !axisLocal || !refHand || !refAnchor) {
       this.measured.fill(0);
       for (const a of [...this.commandedArrows, ...this.exertedArrows]) a.visible = false;
+      for (const spring of this.springs) spring.group.visible=false;
       return;
     }
 
@@ -224,6 +271,7 @@ export class HandSpringContact {
         if (this.commandedArrows[t]) {
           this.commandedArrows[t].visible = false;
           this.exertedArrows[t].visible = false;
+          this.springs[t].group.visible=false;
         }
         continue;
       }
@@ -257,6 +305,7 @@ export class HandSpringContact {
         mjData.xpos[bodyId * 3 + 2],
       ];
       if (this.commandedArrows[t]) {
+        this.springs[t].update(hand,nRobot,rawLead,p,force,kv[h]);
         const cmdW = read('force_cmd_eff');
         const cmdMag = cmdW ? Math.hypot(cmdW[h * 3], cmdW[h * 3 + 1], cmdW[h * 3 + 2]) : 0;
         const cmd = nRobot.map(v => v * cmdMag * ARROW_M_PER_N);
@@ -278,5 +327,6 @@ export class HandSpringContact {
     this.prevLead.fill(0);
     this.measured.fill(0);
     this.primed.fill(false); this.rate.fill(0);
+    for (const spring of this.springs) spring.group.visible=false;
   }
 }

@@ -51,7 +51,8 @@ _SLOPE_PARK_Z = -80.0
 # Compiled after the robot, so these are the model's trailing bodies and every robot body keeps the
 # index the policy's observations read it at. `check_contract` asserts exactly that.
 SLOPE_BODY_NAMES = ("slope_ascent", "slope_plateau", "slope_descent")
-STABILITY_BODY_NAMES = ("stability_box", "stability_sphere")
+STABILITY_BALL_COUNT = 5
+STABILITY_BODY_NAMES = tuple(f"stability_ball_{i}" for i in range(STABILITY_BALL_COUNT))
 
 
 def load_contract(onnx_dir: Path) -> dict:
@@ -210,12 +211,10 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
 
 def _add_stability_objects(spec: mujoco.MjSpec) -> None:
     """Reusable physical projectiles, appended after all robot bodies and joints."""
-    for name, shape, size in (
-        ("box", mujoco.mjtGeom.mjGEOM_BOX, [.10, .10, .10]),
-        ("sphere", mujoco.mjtGeom.mjGEOM_SPHERE, [.12, 0, 0]),
-    ):
-        body = spec.worldbody.add_body(name=f"stability_{name}", pos=[0, 0, -30])
-        body.add_freejoint(name=f"stability_{name}_free")
-        body.add_geom(name=f"stability_{name}", type=shape, size=size, mass=.75,
+    for name in STABILITY_BODY_NAMES:
+        body = spec.worldbody.add_body(name=name, pos=[0, 0, -30])
+        body.add_freejoint(name=f"{name}_free")
+        body.add_geom(name=name, type=mujoco.mjtGeom.mjGEOM_SPHERE,
+                      size=[.12, 0, 0], mass=.75,
                       rgba=[.32, .53, .74, 1], contype=0, conaffinity=0, condim=3,
                       friction=[.6, .005, .0001])

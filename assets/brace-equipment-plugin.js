@@ -63,14 +63,15 @@ class GymEquipment {
   }
   setupStability(bn, gn, joints) {
     const m = this.context.mjModel;
-    this.projectiles = ['box','sphere'].map(shape => {
-      const joint = joints.indexOf(`stability_${shape}_free`);
-      return {shape, body:bn.indexOf(`stability_${shape}`), geom:gn.indexOf(`stability_${shape}`),
-        qadr:m.jnt_qposadr[joint], vadr:m.jnt_dofadr[joint]};
+    this.projectiles = bn.flatMap((name, body) => {
+      if (!/^stability_ball_\d+$/.test(name)) return [];
+      const joint=joints.indexOf(`${name}_free`), geom=gn.indexOf(name);
+      return [{body,geom,qadr:m.jnt_qposadr[joint],vadr:m.jnt_dofadr[joint]}];
     });
+    if (this.projectiles.length!==5) throw new Error('Stability scene requires five physical balls.');
     this.feet=['left_ankle_roll_link','right_ankle_roll_link'].map(n=>bn.indexOf(n));
     this.robotBodies = new Set(bn.flatMap((n,i) => i > 0 && !n.startsWith('stability_') && !n.startsWith('slope_') ? [i] : []));
-    window.BraceStability = {launch:() => this.launchStability(), get state() { return this.read(); }, read:() => this.trial ? {...this.trial, object:undefined} : {phase:'ready'}};
+    window.BraceStability = {launch:() => this.launchStability(), get state() { return this.read(); }, read:() => this.trial ? {...this.trial,hitIds:undefined} : {phase:'ready'}};
     this.parkStability();
   }
   parkStability() {
@@ -83,42 +84,55 @@ class GymEquipment {
   }
   launchStability() {
     if (this.trial?.phase === 'testing' || !window.BraceGym?.ready) return false;
-    const {mjData:d,mjModel:m,mujoco} = this.context;
     this.parkStability();
-    const p=this.projectiles[Math.random()<.5 ? 0 : 1], angle=Math.random()*2*Math.PI;
-    const distance=1.6, speed=4, flight=distance/speed;
-    const target=Array.from(d.xpos.subarray(this.torso*3,this.torso*3+3));
-    target[2]+=.13;
+    this.trial={phase:'testing',shape:'sphere',mass:.75,speed:4,
+      count:this.projectiles.length,launchDuration:1,interval:.2,observationSeconds:5,
+      angle:Math.random()*2*Math.PI,start:Number(this.context.mjData.time),
+      launched:0,hitCount:0,hit:false,fallen:false,hitIds:[],launchTimes:[]};
+    this.fireStabilityBall(); return true;
+  }
+  fireStabilityBall() {
+    const {mjData:d,mjModel:m,mujoco}=this.context, trial=this.trial;
+    const p=this.projectiles[trial.launched];
+    // One launcher direction per burst, with a small spread; every shot aims at the current torso.
+    const angle=trial.angle+(Math.random()-.5)*.20;
+    const distance=1.6, speed=trial.speed, flight=distance/speed;
+    const target=Array.from(d.xpos.subarray(this.torso*3,this.torso*3+3)); target[2]+=.13;
     const direction=[Math.cos(angle),Math.sin(angle)];
-    const velocity=[-speed*direction[0]+d.qvel[0],-speed*direction[1]+d.qvel[1],-m.opt.gravity[2]*flight/2];
     const position=[target[0]+distance*direction[0],target[1]+distance*direction[1],target[2]];
+    const velocity=[-speed*direction[0]+d.qvel[0],-speed*direction[1]+d.qvel[1],-m.opt.gravity[2]*flight/2];
     m.geom_contype[p.geom]=1; m.geom_conaffinity[p.geom]=1; m.body_contype[p.body]=1; m.body_conaffinity[p.body]=1;
     d.qpos.set([...position,1,0,0,0],p.qadr); d.qvel.set([...velocity,0,0,0],p.vadr);
     mujoco.mj_forward(m,d); this.context.bodies[p.body].visible=true;
-    this.trial={phase:'testing',shape:p.shape,mass:.75,speed,angle,start:Number(d.time),hit:false,fallen:false,object:p};
-    this.stabilityEvent(); return true;
+    trial.launched++; trial.launchTimes.push(Number(d.time)-trial.start); this.stabilityEvent();
   }
   stabilityEvent() {
-    const {object,...state} = this.trial;
-    window.dispatchEvent(new CustomEvent('brace:stability',{detail:state}));
+    window.dispatchEvent(new CustomEvent('brace:stability',{detail:window.BraceStability.state}));
   }
   updateStability() {
     const trial=this.trial;
     if (!trial || trial.phase !== 'testing') { this.parkStability(); return; }
     const {mjModel:m,mjData:d}=this.context;
+    const elapsed=Number(d.time)-trial.start;
+    // Time comes from MuJoCo, not setTimeout: rendering stalls cannot lengthen the burst.
+    while (trial.launched<trial.count && elapsed+1e-7>=trial.launched*trial.interval) this.fireStabilityBall();
+    const previousHits=trial.hitCount;
     for (let i=0;i<d.ncon;i++) {
-      const c=d.contact.get(i), g1=c.geom1, g2=c.geom2;
-      if (c.efc_address>=0 && ((g1===trial.object.geom && this.robotBodies.has(m.geom_bodyid[g2])) || (g2===trial.object.geom && this.robotBodies.has(m.geom_bodyid[g1])))) trial.hit=true;
+      const c=d.contact.get(i); if (!c || c.efc_address<0) continue;
+      const g1=c.geom1,g2=c.geom2;
+      const shot=this.projectiles.slice(0,trial.launched).findIndex(p=>
+        (g1===p.geom && this.robotBodies.has(m.geom_bodyid[g2])) ||
+        (g2===p.geom && this.robotBodies.has(m.geom_bodyid[g1])));
+      if (shot>=0 && !trial.hitIds.includes(shot)) trial.hitIds.push(shot);
     }
+    trial.hitCount=trial.hitIds.length; trial.hit=trial.hitCount>0;
     const q=d.qpos.subarray(3,7), tilt=1-2*(q[1]*q[1]+q[2]*q[2]);
-    const pelvisZ=d.qpos[2];
-    // Relative height remains meaningful on the ramp; remember every fall during the trial.
     const ground=Math.min(...this.feet.map(b=>d.xpos[b*3+2]));
-    if (pelvisZ-ground<.38 || tilt<.5) trial.fallen=true;
-    if (Number(d.time)-trial.start>=5) {
-      trial.phase=trial.fallen ? 'failed' : trial.hit ? 'recovered' : 'missed';
+    if (d.qpos[2]-ground<.38 || tilt<.5) trial.fallen=true;
+    if (elapsed>=trial.launchDuration+trial.observationSeconds) {
+      trial.phase=trial.fallen ? 'failed' : trial.hitCount===trial.count ? 'recovered' : trial.hit ? 'partial' : 'missed';
       this.parkStability(); this.stabilityEvent();
-    }
+    } else if (previousHits!==trial.hitCount) this.stabilityEvent();
   }
   apply(name) {
     const {mujoco, mjModel: m, mjData: d} = this.context;
