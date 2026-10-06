@@ -168,7 +168,7 @@ class GymEquipment {
     return error;
   }
   referenceView() {
-    const settings = window.BraceReference ?? {mode:'body'};
+    const settings = {...window.BraceReference, mode:'body'};
     const actual = this.context.bodies[this.torso];
     if (!actual) return;
     const roots = (this.context.mujocoRoot ?? this.context.scene).children;
@@ -179,16 +179,12 @@ class GymEquipment {
     if (!refAnchor) return;
     reference.position.set(0,0,0);
     // Follow horizontal travel only; the raw reference keeps its flat-ground height.
-    if (settings.mode !== 'world') {
-      reference.position.copy(actual.position).sub(refAnchor.position);
-      reference.position.y = 0;
-    }
+    reference.position.copy(actual.position).sub(refAnchor.position);
+    reference.position.y = 0;
     if (braced) {
       braced.position.set(0,0,0);
       const anchor = this.context.readOnnxSlot?.({command:'brace',field:'ref_anchor_pos'});
-      if (anchor && settings.mode !== 'world') braced.position.set(actual.position.x-anchor[0],0,actual.position.z+anchor[1]);
-      // In world view, map the policy's canonical XY origin back to the source frame.
-      if (anchor && settings.mode === 'world') braced.position.set(refAnchor.position.x-anchor[0],0,refAnchor.position.z+anchor[1]);
+      if (anchor) braced.position.set(actual.position.x-anchor[0],0,actual.position.z+anchor[1]);
     }
     const positions = this.context.readOnnxSlot?.({command:'motion',field:'ref_body_pos_w'});
     window.BraceReference = {...settings, sourceAnchor:refAnchor.position.toArray(), displayAnchor:refAnchor.position.clone().add(reference.position).toArray(), robotAnchor:actual.position.toArray(), policyAnchorXY:positions ? Array.from(positions.subarray((this.torso-1)*3,(this.torso-1)*3+2)) : []};

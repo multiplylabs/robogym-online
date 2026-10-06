@@ -441,16 +441,18 @@ Its signed instantaneous error is measured minus effective, consistent with the 
 feasible-target convention; the centered bar shows under/over and its current range.
 This live reading is distinct from the paper's completed-motion average-force metric.
 
-The green reference defaults to a ground-aligned pose overlay: its anchor follows the
+The green reference is a ground-aligned pose overlay: its anchor follows the
 robot in horizontal XY only; its original flat-ground Z, joint motion and heading are retained.
 Climbing a ramp does not lift or tilt this reference. This view removes horizontal path offset
 while retaining the vertical difference between the robot and the flat-ground reference.
-The Reference selector's World trajectory view restores the original generator path.
+This is the only reference view. Because horizontal position is aligned to the robot,
+global/world position drift may not be clearly visible; this overlay compares poses,
+not world-path accuracy. The annotations explain this limitation.
 The red braced overlay uses the same unbraced anchor offset, preserving its brace displacement.
 Browser policy and brace position fields share a canonical XY origin at the first sampled
 reference anchor; reference heights, rotations, velocities and raw generator frames remain
 unchanged. `test_reference_frame.py` verifies the deployed ONNX is invariant to a shared XY
-translation, and `browser_reference.cjs` checks alignment, world view, force tracking and reset.
+translation, and `browser_reference.cjs` checks alignment, annotations, force tracking and reset.
 
 `browser_reference_slope.cjs` checks that the displayed reference retains its source height
 through a ramp crossing, rather than inheriting the robot's terrain elevation.
