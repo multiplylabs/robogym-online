@@ -92,7 +92,9 @@ def main():
             detail += ". " + trial["review"]
         if trial.get("validity") == "interrupted":
             detail += ". Interrupted attempt; attribution to the policy is inconclusive"
-        links = [f"[trace](traces/{trial['id']}.json)"]
+        links = ([f"[trace](traces/{trial['id']}.json)"]
+                 if (args.directory / "traces" / f"{trial['id']}.json").exists()
+                 else ["Trace unavailable: browser was interrupted before capture"])
         for field in ["video", "screenshot"]:
             if trial.get(field):
                 links.append(f"[{field}]({trial[field]})")
@@ -129,9 +131,12 @@ def main():
                  if t.get("video") else "")
         fall = t.get("fall")
         detail = (json.dumps(fall, indent=2) if fall else t.get("error", "")) + "\n" + t.get("review", "")
+        trace_link = (f'<a href="traces/{esc(t["id"])}.json">Trace</a>'
+                      if (args.directory / "traces" / f"{t['id']}.json").exists()
+                      else '<span>Trace unavailable: browser interrupted before capture</span>')
         cards.append(f'<article class="{esc(t["status"])}" data-status="{esc(t["status"])}" data-validity="{esc(t.get("validity", "valid"))}"><h3>{esc(t["id"])}</h3>'
                      f'<p><strong>{esc(t["status"])}</strong> · {esc(t.get("validity", "valid"))}</p>{video}'
-                     f'<pre>{esc(detail)}</pre><a href="traces/{esc(t["id"])}.json">Trace</a></article>')
+                     f'<pre>{esc(detail)}</pre>{trace_link}</article>')
     method = "".join(f"<p><b>{esc(k)}:</b> {esc(v)}</p>" for k, v in report["method"].items())
     page = f'''<!doctype html><html lang="en"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{esc(title)}</title>
