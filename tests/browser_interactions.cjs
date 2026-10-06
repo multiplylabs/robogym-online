@@ -11,7 +11,7 @@ const out=process.env.BRACE_TEST_OUTPUT||'/tmp/brace-interactions';fs.mkdirSync(
    const Native=window.WebSocket;window.__testSockets=[];
    window.WebSocket=class extends Native {constructor(...args){super(...args);window.__testSockets.push(this);}};
   });
-  await context.route('**/brace-equipment-plugin.js',async route=>{
+  await context.route('**/brace-equipment-plugin.js*',async route=>{
    const response=await route.fetch();const code=(await response.text()).replace("this.apply('none'); return true;","window.__BraceTest={m,d:this.context.mjData,scene:this.context.scene,bodies:this.context.bodies}; this.apply('none'); return true;");
    await route.fulfill({response,body:code});
   });

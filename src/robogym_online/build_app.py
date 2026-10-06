@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 from contextlib import contextmanager
 import json
+import hashlib
 import os
 import re
 import shutil
@@ -1169,6 +1170,10 @@ def install_stream_pointer(dist: Path, source: Path) -> None:
 def install_brace_ui(dist: Path, contract: dict | None = None, mjcf: Path = DEFAULT_MJCF) -> None:
     """Add the BRACE presentation without changing the simulator's native controls."""
     source = HERE.parent.parent / "assets"
+    version = hashlib.sha256(b"".join((source / name).read_bytes() for name in (
+        "brace-ui.css", "brace-ui.js", "brace-forces.js", "brace-gym.js",
+        "brace-equipment-plugin.js", "liveMotion.ts", "slotReader.ts",
+    )) + Path(__file__).read_bytes()).hexdigest()[:12]
     for page in (dist / "index.html", dist / "main" / "index.html"):
         if not page.is_file():
             continue
@@ -1185,13 +1190,20 @@ def install_brace_ui(dist: Path, contract: dict | None = None, mjcf: Path = DEFA
         else:
             html = html.replace("<head>", "<head>\n" + reference_default, 1)
         html = re.sub(r"<title>.*?</title>", "<title>BRACE · Interactive Demo</title>", html)
-        if 'src="brace-ui.js"' not in html:
-            html = html.replace("</head>", '<link rel="stylesheet" href="brace-ui.css">\n'
-                                '<script src="brace-ui.js" defer></script>\n</head>', 1)
-        if 'src="brace-forces.js"' not in html:
-            html = html.replace("</head>", '<script src="brace-forces.js" defer></script>\n</head>', 1)
-        if 'src="brace-gym.js"' not in html:
-            html = html.replace("</head>", '<script src="brace-gym.js" defer></script>\n</head>', 1)
+        # A new model and its controls must arrive together even in a previously cached tab.
+        html = re.sub(r'<link[^>]*href="brace-ui\.css(?:\?[^"]*)?"[^>]*>\s*|'
+                      r'<script[^>]*src="brace-(?:ui|forces|gym)\.js(?:\?[^"]*)?"[^>]*></script>\s*|'
+                      r'<script data-brace-asset-version>.*?</script>\s*', '', html, flags=re.DOTALL)
+        release = ('<script data-brace-asset-version>\n'
+                   f'{{const v="{version}",nativeFetch=window.fetch.bind(window);'
+                   'window.fetch=(input,init)=>{const u=new URL(input instanceof Request?input.url:String(input),document.baseURI);'
+                   'if(u.origin===location.origin && /\\/assets\\/.*\\.(json|mjz)$/.test(u.pathname)){'
+                   'u.searchParams.set("brace",v);return nativeFetch(input instanceof Request?new Request(u,input):u,init);}'
+                   'return nativeFetch(input,init);};}\n</script>\n')
+        tags = f'<link rel="stylesheet" href="brace-ui.css?v={version}">\n'
+        tags += ''.join(f'<script src="{name}?v={version}" defer></script>\n'
+                        for name in ("brace-ui.js", "brace-forces.js", "brace-gym.js"))
+        html = html.replace("</head>", release + tags + "</head>", 1)
         page.write_text(html)
     from robogym_online.equipment import EQUIPMENT, payload_properties, solve_carry_pose
 
@@ -1211,7 +1223,7 @@ def install_brace_ui(dist: Path, contract: dict | None = None, mjcf: Path = DEFA
         config = json.loads(config_path.read_text())
         if "projects" not in config:
             continue
-        config.update(uses_custom_js=True, plugins="assets/brace-equipment-plugin.js")
+        config.update(uses_custom_js=True, plugins=f"assets/brace-equipment-plugin.js?v={version}")
         config_path.write_text(json.dumps(config, indent=2))
         shutil.copy2(source / "brace-equipment-plugin.js", config_path.parent / "brace-equipment-plugin.js")
     for policy_path in dist.rglob("*.json"):
