@@ -51,8 +51,8 @@
           const expand = document.createElement('button');
           expand.type = 'button';
           expand.className = 'brace-disclosure';
-          expand.textContent = 'Forces & interaction';
-          expand.setAttribute('aria-label', 'Forces & interaction');
+          expand.textContent = 'Advance Force Controls';
+          expand.setAttribute('aria-label', 'Advance Force Controls');
           expand.setAttribute('aria-expanded', 'false');
           expand.addEventListener('click', () => {
             const opened = panel.classList.toggle('brace-forces-open');

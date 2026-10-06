@@ -12,7 +12,7 @@ const assert = require('node:assert/strict');
     await page.locator('.brace-style[aria-label="Stealth"][aria-pressed="true"]').waitFor();
     await page.waitForFunction(()=>window.BraceGym?.ready,null,{timeout:90000});
     console.log('PASS new session starts in Stealth');
-    await page.getByRole('button', { name: 'Forces & interaction', exact: true }).click();
+    await page.getByRole('button', { name: 'Advance Force Controls', exact: true }).click();
     const widget = page.getByRole('region', { name: 'Quick force controls' });
     const status = widget.getByRole('status');
     const values = () => page.locator('.brace-force-section').evaluateAll(sections => Object.fromEntries(sections.map(s => [s.firstElementChild.textContent.trim(), { mode: s.querySelector('input[type=checkbox]')?.checked, values: [...s.querySelectorAll('[role=slider]')].map(e => Number(e.getAttribute('aria-valuenow'))) }])));

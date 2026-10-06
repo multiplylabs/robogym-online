@@ -144,11 +144,11 @@
       status.textContent = 'No force applied.';
       state.activeValue = 0;
       delete status.dataset.error;
-      disclosure.textContent = 'Forces & interaction';
+      disclosure.textContent = 'Advance Force Controls';
       presetGroup.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
     }
     window.addEventListener('brace:ready',repaint);
-    window.addEventListener('brace:gym-reset', () => { state.mode='compensate'; state.activeValue=0; disclosure.textContent='Forces & interaction'; status.textContent='No force applied.'; delete status.dataset.error; repaint(); });
+    window.addEventListener('brace:gym-reset', () => { state.mode='compensate'; state.activeValue=0; disclosure.textContent='Advance Force Controls'; status.textContent='No force applied.'; delete status.dataset.error; repaint(); });
     window.braceClearForces = async () => {
       while (state.busy) await frame();
       return run(clear);
@@ -179,7 +179,7 @@
         state.activeValue = value;
         status.textContent = `${action} ${value} N${hand.value === 'both' ? ' per hand' : ''} · ${hand.options[hand.selectedIndex].text} · ${direction.options[direction.selectedIndex].text}. Until cleared.`;
         delete status.dataset.error;
-        disclosure.textContent = `Forces & interaction · ${value} N`;
+        disclosure.textContent = `Advance Force Controls · ${value} N`;
       });
     }
     widget.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => run(async () => {
@@ -202,7 +202,7 @@
           status.textContent = active ? 'Individual axis forces active. Use Clear force to reset.' : 'No force applied.';
           state.activeValue = null;
           presetGroup.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
-          disclosure.textContent = active ? 'Forces & interaction · Active' : 'Forces & interaction';
+          disclosure.textContent = active ? 'Advance Force Controls · Active' : 'Advance Force Controls';
           delete status.dataset.error;
         }));
       });

@@ -38,7 +38,7 @@ const assert=require('node:assert/strict');
   await page.getByRole('button',{name:'Reset',exact:true}).click();
   await page.waitForFunction(()=>window.BraceGym.selected==='none' && window.BraceGym.physics().applied==='none');
   assert.deepEqual((await snapshot()).masses,[0,0]);console.log('PASS reset restores empty hands');
-  await page.getByRole('button',{name:'Forces & interaction',exact:true}).click();
+  await page.getByRole('button',{name:'Advance Force Controls',exact:true}).click();
   await page.getByRole('button',{name:'Apply 10 newtons',exact:true}).click();
   await page.locator('.brace-force-status').filter({hasText:'Compensating 10 N'}).waitFor();
   await equipment.locator('[data-equipment=dumbbells]').click();
