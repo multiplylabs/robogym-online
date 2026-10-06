@@ -122,6 +122,12 @@
         const kind = card.firstElementChild?.textContent;
         if (kind === 'steer') {
           card.classList.add('brace-steering');
+          if (!card.querySelector('.brace-steering-hint')) {
+            const hint=document.createElement('p');
+            hint.className='brace-steering-hint'; hint.id='brace-steering-hint';
+            hint.textContent='Press and hold to move';
+            card.append(hint);
+          }
           card.querySelectorAll('div:nth-child(2) > div > span').forEach(cap => {
             const key = cap.textContent.toLowerCase();
             const names = { w: 'Walk forward', s: 'Walk backward', a: 'Step left', d: 'Step right', q: 'Turn left', e: 'Turn right' };
@@ -129,6 +135,7 @@
             cap.dataset.braceReady = 'true';
             cap.setAttribute('role', 'button');
             cap.setAttribute('aria-label', names[key]);
+            cap.setAttribute('aria-describedby', 'brace-steering-hint');
             cap.title = `${names[key]} · hold to move`;
             cap.tabIndex = 0;
             const send = type => window.dispatchEvent(new KeyboardEvent(type, { key }));
