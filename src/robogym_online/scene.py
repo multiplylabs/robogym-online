@@ -101,7 +101,7 @@ def _add_slope(spec: mujoco.MjSpec) -> None:
             name=name,
             type=mujoco.mjtGeom.mjGEOM_BOX,
             size=[half_length, _SLOPE_HALF_WIDTH, _SLOPE_HALF_THICKNESS],
-            # A slightly stronger blue distinguishes the ramp from the pale checker floor.
+            # A stronger blue distinguishes the ramp from the white, blue-seamed floor.
             rgba=[0.62, 0.76, 0.92, 1.0],
             condim=3,
         )
@@ -127,17 +127,17 @@ def _add_scene_visuals(spec: mujoco.MjSpec) -> None:
     spec.add_texture(
         name="groundplane",
         type=mujoco.mjtTexture.mjTEXTURE_2D,
-        builtin=mujoco.mjtBuiltin.mjBUILTIN_CHECKER,
+        builtin=mujoco.mjtBuiltin.mjBUILTIN_FLAT,
         mark=mujoco.mjtMark.mjMARK_EDGE,
-        rgb1=[0.98, 0.99, 1.0],
-        rgb2=[0.70, 0.82, 0.95],
-        markrgb=[0.72, 0.82, 0.94],
-        width=300,
-        height=300,
+        rgb1=[0.985, 0.995, 1.0],
+        rgb2=[0.985, 0.995, 1.0],
+        markrgb=[0.69, 0.82, 0.94],
+        width=192,
+        height=192,
     )
     # `texrepeat` here is tiles across the WHOLE plane, not MuJoCo's per-unit-length reading:
     # the renderer applies it as a plain texture repeat on a sized plane and ignores
-    # `texuniform`. At 2 checker squares per tile, this puts a square at roughly 0.75 m.
+    # `texuniform`. One white tile with a thin blue seam spans 1.5 m; no alternating squares.
     ground = spec.add_material(
         name="groundplane",
         texrepeat=[_FLOOR_HALF_SIZE * 4.0 / 3.0] * 2,

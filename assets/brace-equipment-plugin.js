@@ -47,6 +47,17 @@ class GymEquipment {
       const rampQuat=mocap < 0 ? null : this.context.mjData.mocap_quat.subarray(mocap*4,mocap*4+4);
       return {rampAngleDeg:rampQuat ? Math.abs(2*Math.atan2(rampQuat[2],rampQuat[0])*180/Math.PI) : null, time:Number(this.context.mjData.time), raw:Array.from(this.context.readOnnxSlot?.({command:'exert',field:'command'}) ?? []), commanded:read('force_cmd_eff'), kv:read('endpoint_kv'), cv:read('endpoint_cv'), axis:read('push_axis_local'), refHand:read('ref_hand_pos'), refAnchor:read('ref_anchor_pos'), anchorDelta:read('xpriv_anchor_pos_delta'), reaction:this.hands.map(b => Array.from(this.context.mjData.xfrc_applied.subarray(b*6,b*6+3))), root:Array.from(this.context.mjData.qpos.subarray(0,3)), rootQuat:Array.from(this.context.mjData.qpos.subarray(3,7))};
     };
+    const surface = this.context.bodies[this.torso]?.children.find(o => o.isMesh && o.material?.color);
+    if (surface) this.context.scene.background = surface.material.color.clone().setHex(0xf0f6fc);
+    const floorId = gn.indexOf('floor');
+    const floor = this.context.bodies[m.geom_bodyid[floorId]]?.children.find(o => o.isMesh && o.material?.emissive);
+    if (floor) {
+      floor.material.toneMapped = false;
+      // Keep the white floor bright without clipping its blue seams and shadows.
+      floor.material.color.setRGB(.94,.965,.99);
+      floor.material.emissive.setRGB(0,0,0);
+      floor.material.needsUpdate = true;
+    }
     this.apply('none'); return true;
   }
   apply(name) {
