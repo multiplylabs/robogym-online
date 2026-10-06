@@ -68,7 +68,9 @@
       if (window.BraceExert) window.BraceExert.reading = event.detail;
       const now = performance.now(); if (now-lastGaugeUpdate < 100) return; lastGaugeUpdate = now;
       const {commanded,measured} = event.detail;
-      const requested = window.BraceGym?.force?.()?.raw ?? [];
+      const raw = window.BraceGym?.force?.()?.raw ?? [];
+      // The exert command is [task mode, left XYZ, right XYZ]. The mode is not a force.
+      const requested = raw.length === 7 ? raw.slice(1) : raw;
       const target = widget.querySelector('.brace-gauge-hands');
       target.replaceChildren();
       for (let h=0;h<2;h++) {

@@ -1,0 +1,816 @@
+{
+  "baseline": {
+    "status": "complete",
+    "url": "https://multiplylabs.github.io/robogym-online/",
+    "testedCommit": "f68d25e59403438d3336f0afeaed1c41129e588f",
+    "startedAt": "2026-10-06T01:06:57.626Z",
+    "finishedAt": "2026-10-06T02:18:44.474Z",
+    "attempts": 109,
+    "allAttemptOutcomes": {
+      "success": 93,
+      "fall": 3,
+      "error": 12,
+      "incomplete": 1
+    },
+    "connectedTrials": 96,
+    "connectedOutcomes": {
+      "success": 93,
+      "incomplete": 1,
+      "fall": 2
+    },
+    "connectedTransports": {
+      "public-tunnel": 92,
+      "isolated-generator": 4
+    },
+    "interruptedAttempts": 13,
+    "method": {
+      "instrumentation": "Read-only exposure of MuJoCo model/data in the published equipment plugin; no policy, generator, physics, or control parameters modified.",
+      "fall": "Pelvis clearance above local terrain <0.45 m, pelvis tilt >60 degrees, or torso/head/pelvis ground contact for >=0.10 simulated seconds. Non-finite physics is failure. Fall status is sticky and never cleared by recovery.",
+      "sampling": "Fall checks on every hand-spring control event; traces saved every 0.20 simulated seconds.",
+      "sessions": "Fresh browser page and generator session per trial. Generator RNG continues between sessions. Native ramp placement is redrawn 1, 2, or 3 times across repetitions, using the public 6\u201310 degree setting.",
+      "success": "No fall from ready-state configuration through scenario completion; intended commands/payload must be active. Slope runs must actually reach and descend the course. Survival is recorded separately from task completion.",
+      "durations": "Flat: 15 simulated seconds plus preparation. Slope: until crossing+2 seconds, at most 45 s (60 s for Slow walk). Transitions: 18 s plus preparation.",
+      "limitations": "Three observations per scenario are not a population reliability estimate. This tests the displayed wrench policy, default speeds, desktop Chromium/WASM, and native slope range; no unseen terrain, hardware, or higher loads.",
+      "interruptions": "Observed falls remain failed attempts. Trials interrupted by generator disconnection or test infrastructure are retained, distinguished from connected trials, and repeated to obtain three connected observations per scenario. Connected falls are never retried to improve the score.",
+      "transport": "Public browser app assets remain unchanged. Per-trial generatorURL/pageURL distinguish the shared public tunnel from an isolated loopback copy of the same ONNX generator, environment, model paths and defaults. The isolated copy is used to finish balance tests after repeated shared-client disconnections; it does not test tunnel/network reliability."
+    },
+    "cases": [
+      {
+        "id": "gait-stealth-flat",
+        "category": "Gait",
+        "style": "Stealth",
+        "terrain": "flat",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "gait-stealth-slope",
+        "category": "Gait",
+        "style": "Stealth",
+        "terrain": "slope",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759743,
+          8.388386730104683
+        ],
+        "exertionMaeN": null
+      },
+      {
+        "id": "gait-slow-walk-flat",
+        "category": "Gait",
+        "style": "Slow walk",
+        "terrain": "flat",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "gait-slow-walk-slope",
+        "category": "Gait",
+        "style": "Slow walk",
+        "terrain": "slope",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759743,
+          8.388386730104683
+        ],
+        "exertionMaeN": null
+      },
+      {
+        "id": "gait-object-carrying-flat",
+        "category": "Gait",
+        "style": "Object carrying",
+        "terrain": "flat",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "gait-object-carrying-slope",
+        "category": "Gait",
+        "style": "Object carrying",
+        "terrain": "slope",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759743,
+          8.388386730104683
+        ],
+        "exertionMaeN": null
+      },
+      {
+        "id": "gait-careful-flat",
+        "category": "Gait",
+        "style": "Careful",
+        "terrain": "flat",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "gait-careful-slope",
+        "category": "Gait",
+        "style": "Careful",
+        "terrain": "slope",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759745,
+          8.388386730104683
+        ],
+        "exertionMaeN": null
+      },
+      {
+        "id": "carry-dumbbells-flat",
+        "category": "Carrying",
+        "style": "Stealth",
+        "terrain": "flat",
+        "payload": "dumbbells",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "carry-dumbbells-slope",
+        "category": "Carrying",
+        "style": "Stealth",
+        "terrain": "slope",
+        "payload": "dumbbells",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759743,
+          8.388386730104683
+        ],
+        "exertionMaeN": null
+      },
+      {
+        "id": "carry-barbell-flat",
+        "category": "Carrying",
+        "style": "Stealth",
+        "terrain": "flat",
+        "payload": "barbell",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "carry-barbell-slope",
+        "category": "Carrying",
+        "style": "Stealth",
+        "terrain": "slope",
+        "payload": "barbell",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 4,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732552,
+          9.173628702759745,
+          8.388386730104685
+        ],
+        "exertionMaeN": null
+      },
+      {
+        "id": "carry-kettlebell-flat",
+        "category": "Carrying",
+        "style": "Stealth",
+        "terrain": "flat",
+        "payload": "kettlebell",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 5,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 2,
+          "isolated-generator": 1
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "carry-kettlebell-slope",
+        "category": "Carrying",
+        "style": "Stealth",
+        "terrain": "slope",
+        "payload": "kettlebell",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 9,
+        "allObservedFalls": 1,
+        "connectedTransports": {
+          "public-tunnel": 1,
+          "isolated-generator": 2
+        },
+        "rampAnglesDeg": [
+          9.173628702759745,
+          9.857137087732552,
+          8.388386730104685
+        ],
+        "exertionMaeN": null
+      },
+      {
+        "id": "exert-right-forward-2N-flat",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "X:1",
+          "value": 2
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.7134403004562088
+      },
+      {
+        "id": "exert-right-forward-2N-slope",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "slope",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "X:1",
+          "value": 2
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "incomplete": 1,
+          "success": 2
+        },
+        "attempts": 4,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759743,
+          8.388386730104683
+        ],
+        "exertionMaeN": 0.5139871664868584
+      },
+      {
+        "id": "exert-right-forward-5N-flat",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "X:1",
+          "value": 5
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.47087773187479215
+      },
+      {
+        "id": "exert-right-forward-5N-slope",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "slope",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "X:1",
+          "value": 5
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759745,
+          8.388386730104683
+        ],
+        "exertionMaeN": 0.4785443745081736
+      },
+      {
+        "id": "exert-right-forward-8N-flat",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "X:1",
+          "value": 8
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.5829144832225651
+      },
+      {
+        "id": "exert-right-forward-8N-slope",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "slope",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "X:1",
+          "value": 8
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [
+          9.857137087732553,
+          9.173628702759745,
+          8.388386730104683
+        ],
+        "exertionMaeN": 0.6286893503178935
+      },
+      {
+        "id": "exert-left-forward-5N-flat",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "exert",
+          "hand": "left",
+          "direction": "X:1",
+          "value": 5
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.48439530272033143
+      },
+      {
+        "id": "exert-both-forward-5N-flat",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "exert",
+          "hand": "both",
+          "direction": "X:1",
+          "value": 5
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.4696143989088894
+      },
+      {
+        "id": "exert-right-leftward-5N-flat",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "Y:1",
+          "value": 5
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 6,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 2,
+          "isolated-generator": 1
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.353683060669219
+      },
+      {
+        "id": "exert-right-downward-5N-flat",
+        "category": "Exertion",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "exert",
+          "hand": "right",
+          "direction": "Z:-1",
+          "value": 5
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 3.3360696881413694
+      },
+      {
+        "id": "compensate-right-forward-10N",
+        "category": "Compensation",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "compensate",
+          "hand": "right",
+          "direction": "X:1",
+          "value": 10
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "compensate-both-downward-20N",
+        "category": "Compensation",
+        "style": "Stealth",
+        "terrain": "flat",
+        "force": {
+          "mode": "compensate",
+          "hand": "both",
+          "direction": "Z:-1",
+          "value": 20
+        },
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "steer-backward",
+        "category": "Steering",
+        "style": "Stealth",
+        "terrain": "flat",
+        "motion": "backward",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "steer-left-strafe",
+        "category": "Steering",
+        "style": "Stealth",
+        "terrain": "flat",
+        "motion": "left",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "steer-forward-turn",
+        "category": "Steering",
+        "style": "Stealth",
+        "terrain": "flat",
+        "motion": "turn",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "transition-stop-start-style-switch",
+        "category": "Transition",
+        "style": "Stealth",
+        "terrain": "flat",
+        "transition": "stop-start-style-switch",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "transition-equip-while-walking",
+        "category": "Transition",
+        "style": "Stealth",
+        "terrain": "flat",
+        "transition": "equip-while-walking",
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": null
+      },
+      {
+        "id": "transition-stop-then-push",
+        "category": "Transition",
+        "style": "Stealth",
+        "terrain": "flat",
+        "transition": "stop-then-push",
+        "validTrials": 3,
+        "outcomes": {
+          "fall": 2,
+          "success": 1
+        },
+        "attempts": 3,
+        "allObservedFalls": 2,
+        "connectedTransports": {
+          "public-tunnel": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 2.0093271701532553
+      }
+    ]
+  },
+  "transitionFollowups": {
+    "status": "complete",
+    "url": "https://multiplylabs.github.io/robogym-online/",
+    "testedCommit": "f68d25e59403438d3336f0afeaed1c41129e588f",
+    "startedAt": "2026-10-06T02:19:04.064Z",
+    "finishedAt": "2026-10-06T02:25:21.354Z",
+    "attempts": 9,
+    "allAttemptOutcomes": {
+      "success": 9
+    },
+    "connectedTrials": 9,
+    "connectedOutcomes": {
+      "success": 9
+    },
+    "connectedTransports": {
+      "isolated-generator": 9
+    },
+    "interruptedAttempts": 0,
+    "method": {
+      "instrumentation": "Read-only exposure of MuJoCo model/data in the published equipment plugin; no policy, generator, physics, or control parameters modified.",
+      "fall": "Pelvis clearance above local terrain <0.45 m, pelvis tilt >60 degrees, or torso/head/pelvis ground contact for >=0.10 simulated seconds. Non-finite physics is failure. Fall status is sticky and never cleared by recovery.",
+      "sampling": "Fall checks on every hand-spring control event; traces saved every 0.20 simulated seconds.",
+      "sessions": "Fresh browser page and generator session per trial. Generator RNG continues between sessions. Native ramp placement is redrawn 1, 2, or 3 times across repetitions, using the public 6\u201310 degree setting.",
+      "success": "No fall from ready-state configuration through scenario completion; intended commands/payload must be active. Slope runs must actually reach and descend the course. Survival is recorded separately from task completion.",
+      "durations": "Follow-ups: walk for 5 simulated seconds, stop, wait 3 or 5 seconds, then exert 5 N. The ramped-force variant starts at 2 N and increases to 5 N after 2 seconds. Observe for a total of 25 movement seconds plus setup; same frozen public app and control parameters.",
+      "limitations": "Three observations per scenario are not a population reliability estimate. This tests the displayed wrench policy, default speeds, desktop Chromium/WASM, and native slope range; no unseen terrain, hardware, or higher loads.",
+      "transport": "Public browser app assets remain unchanged. Per-trial generatorURL/pageURL distinguish the shared public tunnel from an isolated loopback copy of the same ONNX generator, environment, model paths and defaults. The isolated copy is used to finish balance tests after repeated shared-client disconnections; it does not test tunnel/network reliability."
+    },
+    "cases": [
+      {
+        "id": "followup-settle-3s-5N-push",
+        "category": "Transition follow-up",
+        "style": "Stealth",
+        "terrain": "flat",
+        "transition": "settled-push",
+        "settleSeconds": 3,
+        "rampForce": false,
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "isolated-generator": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.09790820545145885
+      },
+      {
+        "id": "followup-settle-5s-5N-push",
+        "category": "Transition follow-up",
+        "style": "Stealth",
+        "terrain": "flat",
+        "transition": "settled-push",
+        "settleSeconds": 5,
+        "rampForce": false,
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "isolated-generator": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.09796916437823876
+      },
+      {
+        "id": "followup-settle-3s-2-to-5N-push",
+        "category": "Transition follow-up",
+        "style": "Stealth",
+        "terrain": "flat",
+        "transition": "settled-push",
+        "settleSeconds": 3,
+        "rampForce": true,
+        "validTrials": 3,
+        "outcomes": {
+          "success": 3
+        },
+        "attempts": 3,
+        "allObservedFalls": 0,
+        "connectedTransports": {
+          "isolated-generator": 3
+        },
+        "rampAnglesDeg": [],
+        "exertionMaeN": 0.21651854554055663
+      }
+    ]
+  },
+  "observedFindings": {
+    "abruptStopThenPush": "1/3 success; two connected falls.",
+    "settlingPause": "3 s and 5 s pauses each passed 3/3, with 25 s total movement-phase observation. A 2-to-5 N step after a 3 s pause also passed 3/3. Follow-ups used an isolated same-configuration generator via dedicated secure tunnel.",
+    "downwardForce": "3/3 fall-free trials, but 3.34 N mean absolute tracking error relative to effective 5 N; fluctuations rather than a constant shortfall.",
+    "availability": "The shared generator displaces earlier clients; interruptions are not counted as successes. One interrupted kettlebell ramp attempt visibly fell.",
+    "gaugeDisplay": "Mode-prefix and last-component indexing corrected after the benchmark; effective-force audit metrics and policy inputs were already indexed correctly."
+  },
+  "validation": {
+    "forceGaugeBrowserCasesPassed": 5,
+    "simulatorContractTestsPassed": 12
+  },
+  "limitations": "Small sample and short rollouts. All loaded and force cases use Stealth. No claim of hardware robustness, precise force control in every direction, or failure-free public availability."
+}
