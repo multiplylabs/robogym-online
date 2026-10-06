@@ -57,8 +57,9 @@ const out=process.env.BRACE_TEST_OUTPUT||'/tmp/brace-interactions';fs.mkdirSync(
   await page.waitForFunction(()=>Math.max(...window.BraceExert.reading.commanded.map(Math.abs))>1,null,{timeout:30000});
   const visuals=await page.evaluate(()=>{const seen=[];window.__BraceTest.scene.traverse(o=>{if(/hand-force|hand-contact-spring/.test(o.name))seen.push({name:o.name,visible:o.visible,data:o.userData});});return seen;});
   assert(visuals.some(o=>o.name.includes('commanded')&&o.visible));assert(visuals.some(o=>o.name.includes('exerted')&&o.visible));assert(!visuals.some(o=>o.name.includes('gauge')));
-  assert(visuals.some(o=>o.name.includes('contact-spring')&&o.visible&&Number.isFinite(o.data.displayCompression)));
-  results.checks.push('Physical contact spring, blue effective-force and amber measured-force arrows render; moving gauge is absent');
+  assert(!visuals.some(o=>o.name.includes('contact-spring')));
+  assert.equal(await page.locator('.brace-error-track, .brace-error-labels').count(),0);
+  results.checks.push('Blue effective-force and amber measured-force arrows render; spring, moving gauge and lower error row are absent');
   await page.screenshot({path:`${out}/force-arrows.png`});
   assert.deepEqual(results.errors,[]);console.log(JSON.stringify(results,null,2));
  } finally {fs.writeFileSync(`${out}/results.json`,JSON.stringify(results,null,2));await browser.close();}

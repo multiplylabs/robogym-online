@@ -360,16 +360,9 @@ climbs — that is the cone, not a bug.
 
 **Force arrows** — Exert draws a blue arrow for the effective post-cap target and an amber
 arrow for the measured reaction at each active hand. The panel shows requested, effective,
-measured and signed error in newtons; error is measured minus effective. An 8 N request can
+measured force in newtons. An 8 N request can
 be reduced by reach, effort or balance limits. Measured force comes from the physical
 Kelvin-Voigt contact applied to the robot. The moving instrument and piston are removed.
-
-**Contact spring** — A pale blue coil and a small hand plate show the existing virtual contact.
-The spring shortens with the measured physical hand lead, not the requested force. The backing
-follows the torso-relative reference contact station. Compression is shown at actual scale,
-clamped only for extreme display lengths. Spring stiffness and damping determine the measured
-force, so compression alone does not represent the damper contribution. This is a read-only
-visualization; no extra contact force or world obstacle is added.
 
 **Test stability** — The header button launches five 0.75 kg balls every 0.2 simulation seconds
 within a one-second burst. One random launcher direction is chosen per burst, with slight spread;
@@ -465,9 +458,9 @@ contact, and the ORT-Web session fallback. They live on a fork, pinned in `pypro
 is tracked for a pull request back upstream.
 
 The live force display distinguishes requested dial force from effective (feasible) force F*.
-Its signed instantaneous error is measured minus effective, consistent with the paper's
-feasible-target convention; the centered bar shows under/over and its current range.
-This live reading is distinct from the paper's completed-motion average-force metric.
+The single comparison bar shows measured reaction against the effective target.
+The live error row and its under/over bar are removed. These instantaneous force readings
+are distinct from the paper's completed-motion average-force metric.
 
 The green reference is a ground-aligned pose overlay: its anchor follows the
 robot in horizontal XY only; its original flat-ground Z, joint motion and heading are retained.
