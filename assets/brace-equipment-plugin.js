@@ -85,17 +85,24 @@ class GymEquipment {
   launchStability() {
     if (this.trial?.phase === 'testing' || !window.BraceGym?.ready) return false;
     this.parkStability();
-    const mass=window.BraceExert?.enabled ? .25 : .75;
+    const exert=Boolean(window.BraceExert?.enabled);
+    const massRange=exert ? [.15,.40] : [.35,1.0], radiusRange=[.07,.14];
     const {mjModel:m,mjData:d,mujoco}=this.context;
-    for (const p of this.projectiles) {
-      const ratio=mass/m.body_mass[p.body];
+    const shots=this.projectiles.map((p,i)=>{
+      // Stratified ranges give every burst a mixture, rather than five similar random draws.
+      const mass=massRange[0]+(massRange[1]-massRange[0])*(i+Math.random())/5;
+      const radius=radiusRange[0]+(radiusRange[1]-radiusRange[0])*((i*3%5)+Math.random())/5;
       m.body_mass[p.body]=mass;
-      for (let axis=0;axis<3;axis++) m.body_inertia[p.body*3+axis]*=ratio;
-    }
+      for (let axis=0;axis<3;axis++) m.body_inertia[p.body*3+axis]=.4*mass*radius*radius;
+      m.geom_size[p.geom*3]=radius; m.geom_rbound[p.geom]=radius;
+      if (m.geom_aabb) for(let axis=3;axis<6;axis++) m.geom_aabb[p.geom*6+axis]=radius;
+      this.context.bodies[p.body].children?.forEach(mesh=>mesh.scale.setScalar(radius/.12));
+      return {mass,radius};
+    });
     // Recompute MuJoCo constants without disturbing the robot's live pose or velocity.
     const qpos=new Float64Array(d.qpos),qvel=new Float64Array(d.qvel);
     mujoco.mj_setConst(m,d); d.qpos.set(qpos); d.qvel.set(qvel); mujoco.mj_forward(m,d);
-    this.trial={phase:'testing',shape:'sphere',mass,speed:4,
+    this.trial={phase:'testing',shape:'sphere',shots,massRange,radiusRange,speed:4,
       count:this.projectiles.length,launchDuration:1,interval:.2,observationSeconds:5,
       angle:Math.random()*2*Math.PI,start:Number(this.context.mjData.time),
       launched:0,hitCount:0,hit:false,fallen:false,hitIds:[],launchTimes:[]};
@@ -238,6 +245,30 @@ class GymEquipment {
       });
     }
   }
+  updateFallGuard() {
+    const d=this.context.mjData, time=Number(d.time);
+    if(this.respawnPending || !window.BraceGym?.ready || time<1.5) return;
+    const q=d.qpos.subarray(3,7), up=1-2*(q[1]*q[1]+q[2]*q[2]);
+    const angle=Math.acos(Math.max(-1,Math.min(1,up)));
+    const clearance=d.qpos[2]-Math.min(...this.feet.map(b=>d.xpos[b*3+2]));
+    const previous=this.fallSample, dt=previous ? time-previous.time : 0;
+    const tipping=dt>0 && dt<.1 ? (angle-previous.angle)/dt : 0;
+    this.fallSample={time,angle};
+    const hard=!Number.isFinite(clearance+angle) || clearance<.38 || up<.5;
+    const predicted=(angle>.61 && tipping>1.0 && angle+tipping*.25>.96) ||
+      (clearance<.48 && d.qvel[2]<-.8 && clearance+d.qvel[2]*.20<.30);
+    if(!hard && !predicted) {this.fallRiskSince=null;return;}
+    this.fallRiskSince ??= time;
+    if(!hard && time-this.fallRiskSince<.12) return;
+    this.respawnPending=true;
+    const reason=hard ? 'fall' : 'imminent fall';
+    this.respawnReason=reason;
+    if(this.trial?.phase==='testing') {
+      this.trial.fallen=true;this.trial.phase='failed';this.trial.reason=reason;
+      this.parkStability();this.stabilityEvent();
+    }
+    window.dispatchEvent(new CustomEvent('brace:auto-respawn',{detail:{reason,testFailed:this.trial?.phase==='failed'}}));
+  }
   gripError(name) {
     const d = this.context.mjData, t = this.torso;
     const torso = Array.from(d.xmat.subarray(t*9,t*9+9)), origin = d.xpos.subarray(t*3,t*3+3);
@@ -275,6 +306,8 @@ class GymEquipment {
   }
   update(dt) {
     if (!this.resolved && !this.resolve()) return;
+    this.updateFallGuard();
+    if(this.respawnPending) return;
     this.updateStability();
     this.referenceView();
     // Reference ghosts tint every shape, including initially transparent payload geoms.
@@ -306,13 +339,19 @@ class GymEquipment {
     }
   }
   reset() {
-    this.trial = null; this.parkStability?.();
+    const autoReason=this.respawnPending ? this.respawnReason : null;
+    const failed=this.respawnPending && this.trial?.phase==='failed' ? this.trial : null;
+    if(failed) failed.respawned=true;
+    this.trial = failed; this.parkStability?.();
+    this.respawnPending=false;this.fallSample=null;this.fallRiskSince=null;
     if (this.resolved) { this.apply('none'); this.restoreArms(); }
     this.desired = 'none'; this.elapsed = 0; this.readyFor = 0;
     if (window.BraceGym) window.BraceGym.lastContext=undefined;
     window.BraceGym?.remove();
     if (window.BraceExert) window.BraceExert.enabled=false;
     window.dispatchEvent(new CustomEvent('brace:gym-reset'));
+    if(autoReason) window.dispatchEvent(new CustomEvent('brace:respawned',{detail:{reason:autoReason}}));
+    if(failed) this.stabilityEvent();
   }
   dispose() { if (this.resolved) { this.apply('none'); this.restoreArms(); } this.resolved = false; }
 }

@@ -364,11 +364,14 @@ measured force in newtons. An 8 N request can
 be reduced by reach, effort or balance limits. Measured force comes from the physical
 Kelvin-Voigt contact applied to the robot. The moving instrument and piston are removed.
 
-**Test stability** — The header button launches five balls every 0.2 simulation seconds (0.25 kg each in force exertion, 0.75 kg otherwise)
-within a one-second burst. One random launcher direction is chosen per burst, with slight spread;
+**Test stability** — The header button launches five spheres every 0.2 simulation seconds
+within a one-second burst. Radii vary from 0.07–0.14 m; masses vary from 0.15–0.40 kg in
+force exertion and 0.35–1.0 kg otherwise. One random launcher direction is chosen per burst, with slight spread;
 each ball targets the current torso at 4 m/s horizontal approach speed relative to the robot.
 Detached free bodies collide in MuJoCo and transfer momentum. The robot is observed during the
-burst and for five more simulation seconds. Any observed fall fails the test; full recovery,
+burst and for five more simulation seconds. Any observed fall or sustained imminent-fall
+prediction fails the test and automatically respawns the robot through the normal reset path;
+full recovery,
 partial exposure and missed impacts are distinguished using per-ball contact counts. Reset
 cancels outstanding launches. Balls are reused and their collisions are disabled while parked.
 The observation slot reader excludes detached bodies from robot tensors, preserving training
