@@ -249,17 +249,22 @@ class GymEquipment {
     const raw=Array.from(this.context.readOnnxSlot?.({command:'exert',field:'command'}) ?? []);
     const force=raw.length===7 ? raw.slice(1) : raw;
     const blocked=[];
+    const active=Boolean(window.BraceExert?.enabled && force.some(v=>Math.abs(v)>.05));
     if(window.BraceExert?.enabled) {
       if([force[0],force[3]].some(v=>v>.05)) blocked.push('s');
       if([force[0],force[3]].some(v=>v<-.05)) blocked.push('w');
       if([force[1],force[4]].some(v=>v>.05)) blocked.push('d');
       if([force[1],force[4]].some(v=>v<-.05)) blocked.push('a');
+      // Lateral pushes permit only slow aligned side steps; crossing travel and turns failed audits.
+      if([force[1],force[4]].some(v=>Math.abs(v)>.05)) {
+        for(const key of ['w','s','q','e']) if(!blocked.includes(key)) blocked.push(key);
+      }
     }
-    this.setSteeringLock(blocked);
+    this.setSteeringLock(blocked, active ? {turnLimit:6,offAxisSpeed:.18,turnSpeed:.30,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned:[force[0],force[3]].some(v=>v>.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05)} : null);
   }
-  setSteeringLock(blocked) {
-    if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked)) return;
-    window.BraceSteering={blockedKeys:blocked};
+  setSteeringLock(blocked, motion=null) {
+    if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked) && JSON.stringify(window.BraceSteering?.motion ?? null)===JSON.stringify(motion)) return;
+    window.BraceSteering={blockedKeys:blocked,motion};
     window.dispatchEvent(new CustomEvent('brace:steering-lock'));
   }
   updateFallGuard() {

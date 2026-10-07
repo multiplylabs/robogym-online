@@ -66,8 +66,9 @@ const DEFAULT_LEAD = 40;
 const DEFAULT_BLOCK = 25;
 
 /**
- * What each key contributes to the command, as (forward m/s, lateral m/s, turn deg/s) in the
- * robot's own frame. Contributions add, so W+A walks forward and left rather than one or the other.
+ * What each key contributes to the directional request, as (forward, lateral, turn deg/s) in the
+ * robot's own frame. The generator sets gait speed; speed_limit explicitly caps it during exertion.
+ * Contributions add, so W+A walks forward and left rather than one or the other.
  */
 const KEY_COMMANDS: Record<string, [number, number, number]> = {
   w: [0.8, 0.0, 0.0],
@@ -237,7 +238,7 @@ export class LiveMotionSource {
           if (this.styles.length) {
             socket.send(JSON.stringify({ type: 'style', name: this.styles[this.styleIndex] ?? this.styles[0] }));
           }
-          socket.send(JSON.stringify({type:'command',forward:this.command[0],lateral:this.command[1],turn:this.command[2]}));
+          socket.send(JSON.stringify({type:'command',forward:this.command[0],lateral:this.command[1],turn:this.command[2],speed_limit:this.commandSpeedLimit,movement_profile:this.sentMotionProfile!== 'null' && this.sentMotionProfile!=='' ? 'exertion' : null}));
           this.renderStyles();
           this.resolveReady?.();
           this.resolveReady = null;
@@ -556,12 +557,29 @@ export class LiveMotionSource {
       (window as Window & {BraceSteering?: {blockedKeys: string[]}}).BraceSteering?.blockedKeys ?? [];
   }
 
+  private sentMotionProfile = '';
+  private commandSpeedLimit: number | null = null;
+
   setCommand(forward: number, lateral: number, turn: number): void {
     const blocked=this.blockedKeys();
+    const motion=typeof window==='undefined' ? null :
+      (window as Window & {BraceSteering?: {motion?: {turnLimit:number,offAxisSpeed:number,turnSpeed:number,diagonalRatio:number,diagonalSpeed:number,crossSpeed:number,forwardAligned:boolean}}}).BraceSteering?.motion;
+    const profile=JSON.stringify(motion ?? null);
+    let speedLimit: number | null=null;
     // Turning keys include forward travel; keep the turn but suppress an opposing translation.
     if((forward<0 && blocked.includes('s')) || (forward>0 && blocked.includes('w'))) forward=0;
     if((lateral<0 && blocked.includes('d')) || (lateral>0 && blocked.includes('a'))) lateral=0;
+    if((turn>0 && blocked.includes('q')) || (turn<0 && blocked.includes('e'))) turn=0;
+    if(motion) {
+      turn=Math.max(-motion.turnLimit,Math.min(motion.turnLimit,turn));
+      if(forward>0 && lateral!==0) lateral=Math.sign(lateral)*Math.min(Math.abs(lateral),forward*motion.diagonalRatio);
+      if(forward<0 || (forward===0 && lateral!==0)) speedLimit=motion.offAxisSpeed;
+      else if(forward>0 && !motion.forwardAligned) speedLimit=motion.crossSpeed;
+      else if(lateral!==0) speedLimit=motion.diagonalSpeed;
+      else if(turn!==0) speedLimit=motion.turnSpeed;
+    }
     if (
+      profile === this.sentMotionProfile &&
       forward === this.command[0] &&
       lateral === this.command[1] &&
       turn === this.command[2]
@@ -569,8 +587,10 @@ export class LiveMotionSource {
       return; // Only changes are worth a message; keys repeat while held.
     }
     this.command = [forward, lateral, turn];
+    this.sentMotionProfile=profile;
+    this.commandSpeedLimit=speedLimit;
     if (this.connected) {
-      this.socket?.send(JSON.stringify({ type: 'command', forward, lateral, turn }));
+      this.socket?.send(JSON.stringify({ type: 'command', forward, lateral, turn, speed_limit:speedLimit, movement_profile:motion ? 'exertion' : null }));
     }
   }
 

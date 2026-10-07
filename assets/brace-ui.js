@@ -58,7 +58,9 @@
     document.querySelectorAll('[data-steering-key]').forEach(cap=>{
       const disabled=blocked.includes(cap.dataset.steeringKey);
       cap.setAttribute('aria-disabled',String(disabled));
-      cap.title=disabled ? 'Opposes active push' : `${cap.getAttribute('aria-label')} · hold to move`;
+      const pushing=Boolean(window.BraceSteering?.motion);
+      const key=cap.dataset.steeringKey;
+      cap.title=disabled ? 'Conflicts with active push' : pushing && ['q','e'].includes(key) ? 'Gentle turn while pushing · hold to move' : pushing && ['a','d','s'].includes(key) ? 'Slow step while pushing · hold to move' : `${cap.getAttribute('aria-label')} · hold to move`;
     });
   }
   window.addEventListener('brace:steering-lock',syncSteeringKeys);

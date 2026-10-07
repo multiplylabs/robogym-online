@@ -38,7 +38,10 @@
     // React may publish the command snapshot after another simulation frame.
     for (let attempt = 0; attempt < 60; attempt++) {
       await frame();
-      if (Math.abs(Number(element.getAttribute('aria-valuenow')) - value) < .001) break;
+      const actual=Number(element.getAttribute('aria-valuenow'));
+      if (Math.abs(actual - value) < .001) break;
+      // Correct track/thumbnail pixel rounding through the native accessible step handler.
+      element.dispatchEvent(new KeyboardEvent('keydown',{key:actual<value ? 'ArrowRight' : 'ArrowLeft',bubbles:true}));
     }
     if (Math.abs(Number(element.getAttribute('aria-valuenow')) - value) > .001) throw new Error('The force was not applied. Please try again.');
   }

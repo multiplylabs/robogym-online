@@ -482,8 +482,25 @@ translation, and `browser_reference.cjs` checks alignment, annotations, force tr
 through a ramp crossing, rather than inheriting the robot's terrain elevation.
 
 Steering keys opposing an active hand push are dimmed and disabled. Keyboard input is filtered
-as well; an already-held opposing key stops when the push is applied. Turning remains available,
-with any opposing translation suppressed. Clear force restores the keys.
+as well; an already-held opposing key stops when the push is applied. Forward pushes allow gentle turns and narrow diagonals; lateral pushes allow only slow aligned
+side steps, because crossing travel and turns failed repeated audits. Clear force restores the keys.
 
 The fall guard has a 0.75 s spawn grace, predicts tipping 0.35 s ahead and downward motion
 0.30 s ahead, and confirms predicted danger for 60 ms before respawning. Hard falls reset immediately.
+
+Exertion movement uses a 0.18 m/s planner target cap for side/back steps, 0.30 m/s for
+turns/diagonals, 6 deg/s yaw and approximately 20-degree diagonals. The generator limits travel
+direction changes to 30 deg/s and retains the slow gait/speed until both the requested and
+slewed travel direction are within 30 degrees of facing. Straight forward travel under a forward
+push retains its selected gait speed. These caps change movement commands, never force requests.
+
+`tests/audit_exertion_directions.cjs` audits fresh browser sessions and records falls/respawns as
+failures, blocked inputs separately, actual command packets, and unchanged force requests.
+Set `BRACE_TEST_URL`, `BRACE_AUDIT_OUTPUT`, and optionally `BRACE_AUDIT_CASES_FILE` to repeat
+matrices or timed direction changes. The 2026-10-07 audit reproduced lateral-push conflicts and
+a side-to-turn transition failure; raw attempts are retained under `reports/exertion-movement-2026-10-07`.
+
+Final local results: 17 executed trials passed without a fall/respawn (10–24 simulation
+seconds each), and 2 unsupported lateral-push command combinations were blocked separately.
+The baseline had 10 successes and 2 failures in 12 trials. Longer candidate audits also
+reproduced crossing-forward and side-to-turn failures; none are discarded from the reports.

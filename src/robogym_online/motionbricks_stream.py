@@ -416,8 +416,9 @@ class MotionBricksStream:
             self._speed_cmd = None
             return
         want = min(MAX_TARGET_SPEED, max(MIN_TARGET_SPEED, self._target_speed))
-        if self._off_axis_angle() > OFF_AXIS_SLOW_RAD:
-            want = min(want, MAX_OFF_AXIS_TARGET_SPEED)
+        guarded = getattr(self, '_browser_exertion_movement', False)
+        if self._off_axis_angle() > (math.radians(30) if guarded else OFF_AXIS_SLOW_RAD):
+            want = min(want, .18 if guarded else MAX_OFF_AXIS_TARGET_SPEED)
         if self._speed_cmd is None:
             self._speed_cmd = want
             return
@@ -463,7 +464,7 @@ class MotionBricksStream:
                 self._move_angle = target
             else:
                 error = (target - self._move_angle + math.pi) % (2.0 * math.pi) - math.pi
-                limit = math.radians(DIRECTION_SLEW_DEG_S) * self._frame_dt
+                limit = math.radians(30.0 if getattr(self, '_browser_exertion_movement', False) else DIRECTION_SLEW_DEG_S) * self._frame_dt
                 self._move_angle += max(-limit, min(limit, error))
         else:
             self._move_angle = facing_angle
@@ -515,7 +516,8 @@ class MotionBricksStream:
         if math.hypot(forward, lateral) <= IDLE_SPEED:
             return "idle"
         off_axis = self._off_axis_angle()
-        if off_axis > OFF_AXIS_SLOW_RAD and "slow_walk" in self._modes:
+        off_axis_limit = math.radians(30) if getattr(self, '_browser_exertion_movement', False) else OFF_AXIS_SLOW_RAD
+        if off_axis > off_axis_limit and "slow_walk" in self._modes:
             return "slow_walk"
         if self._walk_mode == "walk" and self._speed_cmd is not None and "slow_walk" in self._modes:
             # Two thresholds rather than one, so a speed sitting on the crossover does not flap the
