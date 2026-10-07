@@ -251,17 +251,25 @@ class GymEquipment {
     const blocked=[], reasons={};
     const block=(key,reason)=>{if(!blocked.includes(key)) blocked.push(key); reasons[key] ??= reason;};
     const active=Boolean(window.BraceExert?.enabled && force.some(v=>Math.abs(v)>.05));
+    const horizontal=Boolean(window.BraceExert?.enabled && [force[0],force[1],force[3],force[4]].some(v=>Math.abs(v ?? 0)>.05));
     if(window.BraceExert?.enabled) {
       if([force[0],force[3]].some(v=>v>.05)) block('s','Backward movement opposes the forward hand push. This direction is not physically plausible for the current push in this demo.');
       if([force[0],force[3]].some(v=>v<-.05)) block('w','Forward movement opposes the backward hand push. This direction is not physically plausible for the current push in this demo.');
       if([force[1],force[4]].some(v=>v>.05)) block('d','Rightward movement opposes the leftward hand push. This direction is not physically plausible for the current push in this demo.');
       if([force[1],force[4]].some(v=>v<-.05)) block('a','Leftward movement opposes the rightward hand push. This direction is not physically plausible for the current push in this demo.');
+      if([force[0],force[3]].some(v=>v<-.05)) block('s','Backward walking with a backward hand push caused falls even at the slow step setting. Change or clear the push before walking.');
+      // Keep horizontal exertion on one aligned travel axis; diagonal reversals fell in longer trials.
+      if([force[0],force[3]].some(v=>Math.abs(v ?? 0)>.05)) {
+        for(const key of ['a','d']) block(key,'Sideways and diagonal movement during a forward or backward hand push can cause a fall. Only aligned straight steps are supported while this push is active.');
+      }
+      // Short turn trials passed, but sustained horizontal-push turns are not reliable.
+      if(horizontal) for(const key of ['q','e']) block(key,'Turning while applying a horizontal hand push can cause a fall. Change or clear the push before turning.');
       // Lateral pushes permit only slow aligned side steps; crossing travel and turns failed audits.
       if([force[1],force[4]].some(v=>Math.abs(v)>.05)) {
         for(const key of ['w','s','q','e']) block(key,'Crossing or turning while pushing sideways caused falls in testing. Only aligned side steps are supported while this push is active.');
       }
     }
-    this.setSteeringLock(blocked, active ? {turnLimit:6,offAxisSpeed:.18,turnSpeed:.30,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned:[force[0],force[3]].some(v=>v>.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05)} : null, reasons);
+    this.setSteeringLock(blocked, active ? {turnLimit:horizontal ? 0 : 6,offAxisSpeed:.18,turnSpeed:.30,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned:[force[0],force[3]].some(v=>v>.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05)} : null, reasons);
   }
   setSteeringLock(blocked, motion=null, reasons={}) {
     if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked) && JSON.stringify(window.BraceSteering?.motion ?? null)===JSON.stringify(motion) && JSON.stringify(window.BraceSteering?.reasons ?? {})===JSON.stringify(reasons)) return;

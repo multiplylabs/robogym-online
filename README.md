@@ -482,14 +482,21 @@ translation, and `browser_reference.cjs` checks alignment, annotations, force tr
 through a ramp crossing, rather than inheriting the robot's terrain elevation.
 
 Steering keys opposing an active hand push are dimmed and disabled. Keyboard input is filtered
-as well; an already-held opposing key stops when the push is applied. Forward pushes allow gentle turns and narrow diagonals; lateral pushes allow only slow aligned
-side steps, because crossing travel and turns failed repeated audits. Clear force restores the keys.
+as well; an already-held opposing key stops when the push is applied. Horizontal pushes permit only supported straight travel aligned with the push: forward pushes
+disable S, A/D and Q/E; lateral pushes disable W/S and Q/E, as well as the opposing side key.
+Backward horizontal pushes disable all travel/turn keys: even aligned backward walking at the
+0.18 m/s cap failed after 22.78 s in the longer 8 N trial.
+Longer 8 N trials reproduced a right-hand forward-push turn failure after 27.34 s, a slope turn
+failure after 17.34 s, and a diagonal-reversal failure after 15.38 s. Clear force restores the keys.
+Hover/focus explanations describe the active restriction; held keys and direct command components
+are filtered as well. Mixed horizontal pushes can disable all translation when no axis is supported.
 
 The fall guard has a 0.75 s spawn grace, predicts tipping 0.35 s ahead and downward motion
 0.30 s ahead, and confirms predicted danger for 60 ms before respawning. Hard falls reset immediately.
 
 Exertion movement uses a 0.18 m/s planner target cap for side/back steps, 0.30 m/s for
-turns/diagonals, 6 deg/s yaw and approximately 20-degree diagonals. The generator limits travel
+turns/diagonals and 6 deg/s yaw for vertical-only pushes. Horizontal push yaw is capped at zero
+and cross-axis translations are blocked. The generator limits travel
 direction changes to 30 deg/s and retains the slow gait/speed until both the requested and
 slewed travel direction are within 30 degrees of facing. Straight forward travel under a forward
 push retains its selected gait speed. These caps change movement commands, never force requests.
@@ -500,7 +507,17 @@ Set `BRACE_TEST_URL`, `BRACE_AUDIT_OUTPUT`, and optionally `BRACE_AUDIT_CASES_FI
 matrices or timed direction changes. The 2026-10-07 audit reproduced lateral-push conflicts and
 a side-to-turn transition failure; raw attempts are retained under `reports/exertion-movement-2026-10-07`.
 
-Final local results: 17 executed trials passed without a fall/respawn (10–24 simulation
+The initial short-duration local audit had 17 executed trials pass without a fall/respawn (10–24 simulation
 seconds each), and 2 unsupported lateral-push command combinations were blocked separately.
 The baseline had 10 successes and 2 failures in 12 trials. Longer candidate audits also
 reproduced crossing-forward and side-to-turn failures; none are discarded from the reports.
+
+The follow-up extended audit is retained in `reports/exertion-long-turns-2026-10-07`.
+It supersedes the initial short-duration movement envelope. Turning and diagonal/cross-axis
+walking under horizontal pushes are disabled, rather than relying on a reduced yaw rate.
+The force command, effective-force computation and contact/controller physics are unchanged.
+
+Extended final checks: six permitted movement trials passed 40–45 simulation seconds without
+a fall/respawn; two unsupported turn/backward requests were verified blocked for 40–45 s.
+The earlier candidate backward-walking failure is retained separately. All sampled active
+force requests remained 8 N. These are empirical finite-duration checks, not a universal stability guarantee.
