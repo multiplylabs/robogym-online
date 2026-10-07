@@ -551,7 +551,16 @@ export class LiveMotionSource {
     });
   }
 
+  private blockedKeys(): string[] {
+    return typeof window==='undefined' ? [] :
+      (window as Window & {BraceSteering?: {blockedKeys: string[]}}).BraceSteering?.blockedKeys ?? [];
+  }
+
   setCommand(forward: number, lateral: number, turn: number): void {
+    const blocked=this.blockedKeys();
+    // Turning keys include forward travel; keep the turn but suppress an opposing translation.
+    if((forward<0 && blocked.includes('s')) || (forward>0 && blocked.includes('w'))) forward=0;
+    if((lateral<0 && blocked.includes('d')) || (lateral>0 && blocked.includes('a'))) lateral=0;
     if (
       forward === this.command[0] &&
       lateral === this.command[1] &&
@@ -574,6 +583,7 @@ export class LiveMotionSource {
     let lateral = 0;
     let turn = 0;
     for (const key of this.pressed) {
+      if(this.blockedKeys().includes(key)) continue;
       const contribution = KEY_COMMANDS[key];
       if (contribution) {
         forward += contribution[0];
@@ -605,6 +615,7 @@ export class LiveMotionSource {
       if (!(key in KEY_COMMANDS) || event.repeat) {
         return;
       }
+      if(this.blockedKeys().includes(key)) return;
       this.pressed.add(key);
       this.recomputeCommand();
       this.paintKeys();
@@ -624,6 +635,11 @@ export class LiveMotionSource {
       this.setFocused(false);
     };
     const focus = (): void => this.setFocused(true);
+    const lock=(): void => {
+      for(const key of this.blockedKeys()) this.pressed.delete(key);
+      this.recomputeCommand(); this.paintKeys();
+    };
+    target.addEventListener('brace:steering-lock', lock);
     target.addEventListener('keydown', down);
     target.addEventListener('keyup', up);
     target.addEventListener('blur', blur);
@@ -631,6 +647,7 @@ export class LiveMotionSource {
     this.renderKeys();
     this.setFocused(typeof document === 'undefined' || document.hasFocus());
     this.detachKeys = (): void => {
+      target.removeEventListener('brace:steering-lock', lock);
       target.removeEventListener('keydown', down);
       target.removeEventListener('keyup', up);
       target.removeEventListener('blur', blur);

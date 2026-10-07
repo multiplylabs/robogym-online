@@ -480,3 +480,10 @@ translation, and `browser_reference.cjs` checks alignment, annotations, force tr
 
 `browser_reference_slope.cjs` checks that the displayed reference retains its source height
 through a ramp crossing, rather than inheriting the robot's terrain elevation.
+
+Steering keys opposing an active hand push are dimmed and disabled. Keyboard input is filtered
+as well; an already-held opposing key stops when the push is applied. Turning remains available,
+with any opposing translation suppressed. Clear force restores the keys.
+
+The fall guard has a 0.75 s spawn grace, predicts tipping 0.35 s ahead and downward motion
+0.30 s ahead, and confirms predicted danger for 60 ms before respawning. Hard falls reset immediately.

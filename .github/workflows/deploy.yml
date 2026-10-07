@@ -69,6 +69,7 @@ jobs:
           node tests/robot_slots.cjs
           node tests/stability_burst.cjs
           node tests/fall_guard.cjs
+          node tests/steering_lock.cjs
 
       - uses: actions/upload-pages-artifact@v3
         with:

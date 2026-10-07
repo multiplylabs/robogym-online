@@ -168,3 +168,5 @@ body { font-family:Barlow,Arial,sans-serif!important; color:var(--brace-ink); }
 @media(max-width:650px) { .brace-stability-status {top:112px;} }
 
 .brace-steering-hint { margin:10px 0 0; color:var(--brace-blue); font-size:12px; font-weight:600; }
+
+.brace-steering span[aria-disabled="true"] { opacity:.32; cursor:not-allowed; text-decoration:line-through; }

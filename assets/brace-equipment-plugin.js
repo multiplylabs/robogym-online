@@ -245,21 +245,38 @@ class GymEquipment {
       });
     }
   }
+  updateSteeringLock() {
+    const raw=Array.from(this.context.readOnnxSlot?.({command:'exert',field:'command'}) ?? []);
+    const force=raw.length===7 ? raw.slice(1) : raw;
+    const blocked=[];
+    if(window.BraceExert?.enabled) {
+      if([force[0],force[3]].some(v=>v>.05)) blocked.push('s');
+      if([force[0],force[3]].some(v=>v<-.05)) blocked.push('w');
+      if([force[1],force[4]].some(v=>v>.05)) blocked.push('d');
+      if([force[1],force[4]].some(v=>v<-.05)) blocked.push('a');
+    }
+    this.setSteeringLock(blocked);
+  }
+  setSteeringLock(blocked) {
+    if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked)) return;
+    window.BraceSteering={blockedKeys:blocked};
+    window.dispatchEvent(new CustomEvent('brace:steering-lock'));
+  }
   updateFallGuard() {
     const d=this.context.mjData, time=Number(d.time);
-    if(this.respawnPending || !window.BraceGym?.ready || time<1.5) return;
+    if(this.respawnPending || !window.BraceGym?.ready || time<.75) return;
     const q=d.qpos.subarray(3,7), up=1-2*(q[1]*q[1]+q[2]*q[2]);
     const angle=Math.acos(Math.max(-1,Math.min(1,up)));
     const clearance=d.qpos[2]-Math.min(...this.feet.map(b=>d.xpos[b*3+2]));
     const previous=this.fallSample, dt=previous ? time-previous.time : 0;
     const tipping=dt>0 && dt<.1 ? (angle-previous.angle)/dt : 0;
     this.fallSample={time,angle};
-    const hard=!Number.isFinite(clearance+angle) || clearance<.38 || up<.5;
-    const predicted=(angle>.61 && tipping>1.0 && angle+tipping*.25>.96) ||
-      (clearance<.48 && d.qvel[2]<-.8 && clearance+d.qvel[2]*.20<.30);
+    const hard=!Number.isFinite(clearance+angle) || clearance<.40 || up<.65;
+    const predicted=(angle>.44 && tipping>.6 && angle+tipping*.35>.85) ||
+      (clearance<.60 && d.qvel[2]<-.6 && clearance+d.qvel[2]*.30<.35);
     if(!hard && !predicted) {this.fallRiskSince=null;return;}
     this.fallRiskSince ??= time;
-    if(!hard && time-this.fallRiskSince<.12) return;
+    if(!hard && time-this.fallRiskSince<.06) return;
     this.respawnPending=true;
     const reason=hard ? 'fall' : 'imminent fall';
     this.respawnReason=reason;
@@ -306,6 +323,7 @@ class GymEquipment {
   }
   update(dt) {
     if (!this.resolved && !this.resolve()) return;
+    this.updateSteeringLock();
     this.updateFallGuard();
     if(this.respawnPending) return;
     this.updateStability();
@@ -344,6 +362,7 @@ class GymEquipment {
     if(failed) failed.respawned=true;
     this.trial = failed; this.parkStability?.();
     this.respawnPending=false;this.fallSample=null;this.fallRiskSince=null;
+    this.setSteeringLock([]);
     if (this.resolved) { this.apply('none'); this.restoreArms(); }
     this.desired = 'none'; this.elapsed = 0; this.readyFor = 0;
     if (window.BraceGym) window.BraceGym.lastContext=undefined;

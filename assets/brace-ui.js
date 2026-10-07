@@ -53,6 +53,15 @@
     .then(r => r.ok ? r.json() : null)
     .then(value => { catalog = value; enhance(); }).catch(() => {});
   const panels = new WeakSet();
+  function syncSteeringKeys() {
+    const blocked=window.BraceSteering?.blockedKeys ?? [];
+    document.querySelectorAll('[data-steering-key]').forEach(cap=>{
+      const disabled=blocked.includes(cap.dataset.steeringKey);
+      cap.setAttribute('aria-disabled',String(disabled));
+      cap.title=disabled ? 'Opposes active push' : `${cap.getAttribute('aria-label')} · hold to move`;
+    });
+  }
+  window.addEventListener('brace:steering-lock',syncSteeringKeys);
   const labels = { slow_walk: 'Slow walk', stealth: 'Stealth', object_carrying: 'Object carrying', careful: 'Careful' };
   const notes = { slow_walk: 'Relaxed steps · 0.5 m/s target', stealth: 'Low, quiet gait · 0.8 m/s target', object_carrying: 'Arms held forward · 0.8 m/s target', careful: 'Deliberate steps · 0.8 m/s target' };
   function enhance() {
@@ -142,6 +151,7 @@
             const names = { w: 'Walk forward', s: 'Walk backward', a: 'Step left', d: 'Step right', q: 'Turn left', e: 'Turn right' };
             if (!names[key] || cap.dataset.braceReady) return;
             cap.dataset.braceReady = 'true';
+            cap.dataset.steeringKey=key;
             cap.setAttribute('role', 'button');
             cap.setAttribute('aria-label', names[key]);
             cap.setAttribute('aria-describedby', 'brace-steering-hint');
@@ -150,13 +160,14 @@
             const send = type => window.dispatchEvent(new KeyboardEvent(type, { key }));
             cap.addEventListener('pointerdown', event => {
               event.preventDefault();
+              if(cap.getAttribute('aria-disabled')==='true') return;
               cap.setPointerCapture(event.pointerId);
               send('keydown');
             });
             for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) cap.addEventListener(type, () => send('keyup'));
             cap.addEventListener('keydown', event => {
               if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) {
-                event.preventDefault(); event.stopPropagation(); send('keydown');
+                event.preventDefault(); event.stopPropagation(); if(cap.getAttribute('aria-disabled')!=='true') send('keydown');
               }
             });
             cap.addEventListener('keyup', event => {
@@ -193,7 +204,8 @@
   new MutationObserver(() => {
     if (scheduled) return;
     scheduled = true;
-    requestAnimationFrame(() => { scheduled = false; enhance(); });
+    requestAnimationFrame(() => { scheduled = false; enhance(); syncSteeringKeys(); });
   }).observe(document.body, { childList: true, subtree: true });
   enhance();
+  syncSteeringKeys();
 })();

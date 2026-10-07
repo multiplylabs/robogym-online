@@ -9,8 +9,8 @@ for(let i=0;i<30;i++)sample(2+i*.02,.35,.45);assert.equal(events.length,0);
 // A brief tipping impulse can recover without triggering a reset.
 sample(3,.72);sample(3.02,.76);sample(3.04,.70);assert.equal(events.length,0);
 // Sustained outward tipping predicts collapse while still above the hard-fall angle.
-for(let i=0;i<20&&!gym.respawnPending;i++)sample(4+i*.02,.72+i*.04);
-assert(gym.respawnPending);assert.equal(events.at(-1).detail.reason,'imminent fall');assert(gym.fallSample.angle<Math.acos(.5));const count=events.length;sample(5,1.5);assert.equal(events.length,count);
+for(let i=0;i<20&&!gym.respawnPending;i++)sample(4+i*.02,.48+i*.04);
+assert(gym.respawnPending);assert.equal(events.at(-1).detail.reason,'imminent fall');assert(gym.fallSample.angle<.75);const count=events.length;sample(5,1.5);assert.equal(events.length,count);
 // A failed stability trial survives automatic reset, but manual reset clears it.
 gym.trial={phase:'testing',fallen:false};gym.respawnPending=false;sample(6,1.3);assert.equal(gym.trial.phase,'failed');gym.reset();assert.equal(gym.trial.phase,'failed');gym.reset();assert.equal(gym.trial,null);
 // Startup grace avoids reset loops during spawn initialization.
