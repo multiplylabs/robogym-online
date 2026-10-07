@@ -4,7 +4,7 @@
   window.BraceReference = {mode:'body'};
   const header = document.createElement('header');
   header.className = 'brace-header';
-  header.innerHTML = `<h1><a class="brace-brand" href="https://multiplylabs.github.io/brace/" target="_blank" rel="noopener">BRACE<span>Interactive demo</span></a></h1><div class="brace-header-actions"><span class="brace-reference-view">Reference · Ground-aligned</span><button type="button" id="brace-stability-test" disabled>Test stability</button><button type="button" id="brace-help-toggle" aria-expanded="false" aria-controls="brace-guide">Annotations</button><a href="https://multiplylabs.github.io/brace/" target="_blank" rel="noopener">Research ↗</a></div>`;
+  header.innerHTML = `<h1><a class="brace-brand" href="https://multiplylabs.github.io/brace/" target="_blank" rel="noopener">BRACE<span>Interactive demo</span></a></h1><div class="brace-header-actions"><span class="brace-reference-view">Reference · Ground-aligned</span><button type="button" id="brace-help-toggle" aria-expanded="false" aria-controls="brace-guide">Annotations</button><a href="https://multiplylabs.github.io/brace/" target="_blank" rel="noopener">Research ↗</a></div>`;
   document.body.append(header);
   const guide = document.createElement('aside');
   guide.id = 'brace-guide';
@@ -13,12 +13,15 @@
   guide.setAttribute('aria-label', 'Scene annotations');
   guide.innerHTML = `<div class="brace-eyebrow">Scene Guide</div><h2>What You’re Seeing</h2><dl><dt><i class="brace-dot robot"></i>Solid robot</dt><dd>The simulated G1 responding to the controller.</dd><dt><i class="brace-dot reference"></i>Green reference</dt><dd>The selected MotionBricks motion with the active holding pose. The ground-aligned overlay follows horizontal travel and retains the original flat-ground height. It does not follow the robot up the ramp or copy its slope tilt. Heading and pose differences remain visible. Because the overlay follows the robot horizontally, global/world position drift may not be clearly visible in this view. Use it to compare poses, not to assess world-path accuracy. Uncheck “Show reference” to hide it.</dd><dt><i class="brace-dot braced"></i>Red braced motion</dt><dd>BRACE adjusts the reference to exert the requested hand force.</dd><dt>Force arrows</dt><dd>In Exert mode, blue marks the effective force target; amber shows the simulated reaction. The live tile compares these force values. After walking, release movement keys and wait 3–5 seconds before applying a push. Let the force settle for a steady reading.</dd><dt><i class="brace-dot left"></i><i class="brace-dot right"></i>Hand load arrows</dt><dd>Orange is the left hand; blue is the right. Direction and length show the applied load.</dd></dl><p><strong>Test stability.</strong> Launch five spheres with varied sizes and weights, one every 0.2 simulation seconds, in a one-second burst from a random direction. The horizontal approach speed is 4 m/s. Real collisions transfer momentum. The robot is observed throughout the burst and for five more simulation seconds. A fall or sustained signs of an imminent fall trigger an automatic respawn and fail the test; partial or missed impacts are reported separately. Mouse pulling is disabled.</p><p><strong>Try a slope.</strong> Enable “Slope ahead,” then hold W to walk across it. Release the key to stop.</p><p><strong>Pick up a weight.</strong> Choose dumbbells, a kettlebell or a barbell in the equipment gallery. To push, choose the visible “Exert force” action, and click a force preset or enter a custom value. Use Clear force to remove it.</p><p class="brace-note">Choose gym equipment to add physical mass and inertia. Shared weights use an ideal two-hand grip; fingers and dropping are not simulated.</p>`;
   document.body.append(guide);
-  const stability = header.querySelector('#brace-stability-test');
+  const stabilityCard=document.createElement('section');
+  stabilityCard.className='brace-stability-card';
+  stabilityCard.innerHTML='<button type="button" id="brace-stability-test" disabled>Test stability <span aria-hidden="true">↗</span></button><p>Launch a one-second burst of spheres at the robot.</p>';
+  const stability = stabilityCard.querySelector('#brace-stability-test');
   stability.setAttribute('title','Launch five balls over one simulation second. A fall is a failure.');
   stability.addEventListener('click',()=>window.BraceStability?.launch());
   const stabilityStatus=document.createElement('span');
   stabilityStatus.className='brace-stability-status'; stabilityStatus.setAttribute('role','status');
-  header.after(stabilityStatus);
+  stabilityCard.append(stabilityStatus);
   window.addEventListener('brace:stability',({detail:s})=>{
     stabilityStatus.textContent=s.phase==='testing' ? `Ball burst · ${s.launched}/${s.count} launched · ${s.hitCount} hit · testing…` : s.phase==='failed' ? (s.respawned ? 'Fall risk · stability test failed · robot respawned' : 'Fall risk · stability test failed') : s.phase==='recovered' ? `${s.hitCount}/${s.count} balls hit · recovered without a fall` : s.phase==='partial' ? `${s.hitCount}/${s.count} balls hit · no fall · partial exposure` : 'Balls missed · test inconclusive';
     stabilityStatus.dataset.phase=s.phase;
@@ -60,7 +63,11 @@
       cap.setAttribute('aria-disabled',String(disabled));
       const pushing=Boolean(window.BraceSteering?.motion);
       const key=cap.dataset.steeringKey;
-      cap.title=disabled ? 'Conflicts with active push' : pushing && ['q','e'].includes(key) ? 'Gentle turn while pushing · hold to move' : pushing && ['a','d','s'].includes(key) ? 'Slow step while pushing · hold to move' : `${cap.getAttribute('aria-label')} · hold to move`;
+      cap.title=disabled ? `Temporarily disabled: ${window.BraceSteering?.reasons?.[key] ?? 'This movement conflicts with the active hand push.'} Change or clear the push to re-enable this key.` : pushing && ['q','e'].includes(key) ? 'Gentle turn while pushing · hold to move' : pushing && ['a','d','s'].includes(key) ? 'Slow step while pushing · hold to move' : `${cap.getAttribute('aria-label')} · hold to move`;
+      if(cap.matches(':hover') || document.activeElement===cap) {
+        const hint=cap.closest('.brace-steering')?.querySelector('.brace-steering-tooltip');
+        if(hint && hint.textContent!==cap.title) hint.textContent=cap.title;
+      }
     });
   }
   window.addEventListener('brace:steering-lock',syncSteeringKeys);
@@ -79,6 +86,7 @@
         const content = panel.querySelector('.mantine-ScrollArea-content > div > div');
         if (content) {
           content.prepend(title);
+          title.after(stabilityCard);
           const expand = document.createElement('button');
           expand.type = 'button';
           expand.className = 'brace-disclosure';
@@ -146,7 +154,11 @@
             const hint=document.createElement('p');
             hint.className='brace-steering-hint'; hint.id='brace-steering-hint';
             hint.textContent='Press and hold to move';
+            hint.title='Some directions are temporarily disabled when they conflict with an active push, for example walking backward while pushing forward. Hover a key for its reason.';
             card.append(hint);
+            const tooltip=document.createElement('p');
+            tooltip.className='brace-steering-tooltip'; tooltip.id='brace-steering-tooltip'; tooltip.hidden=true; tooltip.setAttribute('role','tooltip');
+            card.append(tooltip);
           }
           card.querySelectorAll('div:nth-child(2) > div > span').forEach(cap => {
             const key = cap.textContent.toLowerCase();
@@ -156,10 +168,22 @@
             cap.dataset.steeringKey=key;
             cap.setAttribute('role', 'button');
             cap.setAttribute('aria-label', names[key]);
-            cap.setAttribute('aria-describedby', 'brace-steering-hint');
+            cap.setAttribute('aria-describedby', 'brace-steering-hint brace-steering-tooltip');
             cap.title = `${names[key]} · hold to move`;
             cap.tabIndex = 0;
             const send = type => window.dispatchEvent(new KeyboardEvent(type, { key }));
+            const showReason=()=>{
+              const hint=card.querySelector('.brace-steering-tooltip');
+              hint.textContent=cap.title;
+              hint.hidden=false;
+            };
+            const hideReason=()=>{
+              card.querySelector('.brace-steering-tooltip').hidden=true;
+            };
+            cap.addEventListener('pointerenter',showReason);
+            cap.addEventListener('pointerleave',hideReason);
+            cap.addEventListener('focus',showReason);
+            cap.addEventListener('blur',hideReason);
             cap.addEventListener('pointerdown', event => {
               event.preventDefault();
               if(cap.getAttribute('aria-disabled')==='true') return;

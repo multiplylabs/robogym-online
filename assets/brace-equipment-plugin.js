@@ -248,23 +248,24 @@ class GymEquipment {
   updateSteeringLock() {
     const raw=Array.from(this.context.readOnnxSlot?.({command:'exert',field:'command'}) ?? []);
     const force=raw.length===7 ? raw.slice(1) : raw;
-    const blocked=[];
+    const blocked=[], reasons={};
+    const block=(key,reason)=>{if(!blocked.includes(key)) blocked.push(key); reasons[key] ??= reason;};
     const active=Boolean(window.BraceExert?.enabled && force.some(v=>Math.abs(v)>.05));
     if(window.BraceExert?.enabled) {
-      if([force[0],force[3]].some(v=>v>.05)) blocked.push('s');
-      if([force[0],force[3]].some(v=>v<-.05)) blocked.push('w');
-      if([force[1],force[4]].some(v=>v>.05)) blocked.push('d');
-      if([force[1],force[4]].some(v=>v<-.05)) blocked.push('a');
+      if([force[0],force[3]].some(v=>v>.05)) block('s','Backward movement opposes the forward hand push. This direction is not physically plausible for the current push in this demo.');
+      if([force[0],force[3]].some(v=>v<-.05)) block('w','Forward movement opposes the backward hand push. This direction is not physically plausible for the current push in this demo.');
+      if([force[1],force[4]].some(v=>v>.05)) block('d','Rightward movement opposes the leftward hand push. This direction is not physically plausible for the current push in this demo.');
+      if([force[1],force[4]].some(v=>v<-.05)) block('a','Leftward movement opposes the rightward hand push. This direction is not physically plausible for the current push in this demo.');
       // Lateral pushes permit only slow aligned side steps; crossing travel and turns failed audits.
       if([force[1],force[4]].some(v=>Math.abs(v)>.05)) {
-        for(const key of ['w','s','q','e']) if(!blocked.includes(key)) blocked.push(key);
+        for(const key of ['w','s','q','e']) block(key,'Crossing or turning while pushing sideways caused falls in testing. Only aligned side steps are supported while this push is active.');
       }
     }
-    this.setSteeringLock(blocked, active ? {turnLimit:6,offAxisSpeed:.18,turnSpeed:.30,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned:[force[0],force[3]].some(v=>v>.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05)} : null);
+    this.setSteeringLock(blocked, active ? {turnLimit:6,offAxisSpeed:.18,turnSpeed:.30,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned:[force[0],force[3]].some(v=>v>.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05)} : null, reasons);
   }
-  setSteeringLock(blocked, motion=null) {
-    if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked) && JSON.stringify(window.BraceSteering?.motion ?? null)===JSON.stringify(motion)) return;
-    window.BraceSteering={blockedKeys:blocked,motion};
+  setSteeringLock(blocked, motion=null, reasons={}) {
+    if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked) && JSON.stringify(window.BraceSteering?.motion ?? null)===JSON.stringify(motion) && JSON.stringify(window.BraceSteering?.reasons ?? {})===JSON.stringify(reasons)) return;
+    window.BraceSteering={blockedKeys:blocked,motion,reasons};
     window.dispatchEvent(new CustomEvent('brace:steering-lock'));
   }
   updateFallGuard() {
