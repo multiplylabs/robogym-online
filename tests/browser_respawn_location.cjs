@@ -3,7 +3,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  const b=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const results=[],out=process.env.BRACE_RESPAWN_OUTPUT||'/tmp/brace-respawn-location';fs.mkdirSync(out,{recursive:true});
  try {
-  const c=await b.newContext({viewport:{width:1200,height:900},serviceWorkers:'block'});
+  const c=await b.newContext({viewport:{width:1200,height:900},serviceWorkers:process.env.BRACE_TEST_URL?.startsWith('https:')?'allow':'block'});
   await c.route('**/brace-equipment-plugin.js*',async r=>{const res=await r.fetch();await r.fulfill({response:res,body:(await res.text()).replace("this.apply('none'); return true;","window.__BraceTest={m,d:this.context.mjData,gym:this,mujoco:this.context.mujoco}; this.apply('none'); return true;")})});
   const p=await c.newPage(),errors=[];p.on('pageerror',e=>{errors.push(e.message);console.error('Page error:',e.message)});
   p.on('console',m=>{if(m.type()==='error')console.error('Browser:',m.text())});

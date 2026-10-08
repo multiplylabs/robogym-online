@@ -1,0 +1,14 @@
+{
+  "url": "https://multiplylabs.github.io/robogym-online/",
+  "appCommit": "7ebe48b9b3632160327c642a585ae2d53f0b57bd",
+  "run": 37721374221,
+  "outcome": "success",
+  "surfaces": [
+    "flat",
+    "slope_ascent",
+    "slope_plateau",
+    "slope_descent"
+  ],
+  "standingObservationSecondsPerRecovery": 5,
+  "manualReset": "verified separately"
+}
