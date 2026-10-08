@@ -46,6 +46,8 @@ row.requiredEnd=endTime;row.outcome=meta.resets.length?'failure':row.samples.at(
 if(row.outcome==='success' && config.keys.length && config.keys.every(k=>meta.blocked?.includes(k))) row.outcome='blocked';
 row.minUpright=Math.min(...row.samples.map(s=>1-2*(s.force.rootQuat[1]**2+s.force.rootQuat[2]**2)));row.minHeight=Math.min(...row.samples.map(s=>s.force.root[2]));row.displacement=row.samples.length?Math.hypot(row.samples.at(-1).force.root[0]-row.samples[0].force.root[0],row.samples.at(-1).force.root[1]-row.samples[0].force.root[1]):0;
 row.pathLength=0;row.referencePathLength=0;for(let i=1;i<row.samples.length;i++){const a=row.samples[i-1],b=row.samples[i];row.pathLength+=Math.hypot(b.force.root[0]-a.force.root[0],b.force.root[1]-a.force.root[1]);if(a.referenceSourceAnchor&&b.referenceSourceAnchor)row.referencePathLength+=Math.hypot(b.referenceSourceAnchor[0]-a.referenceSourceAnchor[0],b.referenceSourceAnchor[2]-a.referenceSourceAnchor[2]);}
+row.maxHeight=Math.max(...row.samples.map(s=>s.force.root[2]));
+if(config.requireRampCrossing && row.outcome==='success' && (row.maxHeight<1.1 || row.samples.at(-1).force.root[2]>.95 || row.samples.at(-1).force.root[0]-row.samples[0].force.root[0]<10))row.outcome='incomplete_ramp';
 if(config.requireRotation && row.outcome==='success' && Math.abs(row.headingChangeDeg)<350)row.outcome='incomplete_rotation';
 if(config.requireTurnDeg && row.outcome==='success' && row.headingChangeDeg*(config.keys.includes('q')?1:-1)<config.requireTurnDeg)row.outcome='incomplete_turn';
 if(config.minArcMeters && row.outcome==='success' && (row.pathLength<config.minArcMeters || row.referencePathLength<config.minArcMeters))row.outcome='incomplete_arc';

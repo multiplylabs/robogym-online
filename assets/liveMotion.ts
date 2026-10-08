@@ -579,7 +579,11 @@ export class LiveMotionSource {
       // Vertical-force turns are forward arcs, never a spin or backward/sideways turn.
       if(motion.verticalArc && turn!==0 && (forward<=0 || lateral!==0)) turn=0;
       if(forward>0 && lateral!==0) lateral=Math.sign(lateral)*Math.min(Math.abs(lateral),forward*motion.diagonalRatio);
-      if(motion.adaptive && turn!==0) speedLimit=forward<0 ? motion.offAxisSpeed : motion.turnSpeed;
+      if(motion.adaptive && turn!==0) {
+        // A ramp arc with a side component uses Slow walk, not the straight
+        // Careful gait. Keep its speed in that gait's tested diagonal range.
+        speedLimit=forward<=0 ? motion.offAxisSpeed : motion.slopeExertion && lateral!==0 ? motion.diagonalSpeed : motion.turnSpeed;
+      }
       else if(motion.verticalArc && forward>0 && lateral===0) speedLimit=motion.turnSpeed;
       else if(forward<0 || (forward===0 && lateral!==0)) speedLimit=motion.offAxisSpeed;
       else if(forward>0 && !motion.forwardAligned) speedLimit=motion.crossSpeed;

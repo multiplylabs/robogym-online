@@ -1167,6 +1167,17 @@ def browser_contact_source():
             "          await new Promise(resolve => setTimeout(resolve, 20));\n"
             "          continue;\n"
             "        }\n", 1)
+        sleep_hook = (
+            "      if (sleepTime > 0) {\n"
+            "        await new Promise((resolve) => setTimeout(resolve, sleepTime * 1000));\n"
+            "      }"
+        )
+        if disabled_drag.count(sleep_hook) != 1:
+            raise RuntimeError("Simulation pacing hook changed; cannot preserve browser task delivery")
+        disabled_drag = disabled_drag.replace(sleep_hook,
+            "      // Yield a browser task even when inference exceeds the frame budget.\n"
+            "      // Socket and keyboard callbacks need more than a resolved-promise microtask.\n"
+            "      await new Promise((resolve) => setTimeout(resolve, sleepTime * 1000));", 1)
         runtime.write_text(disabled_drag)
         for target in originals:
             target.write_bytes((source / target.name).read_bytes())
