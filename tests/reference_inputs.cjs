@@ -35,6 +35,20 @@ assert.deepEqual(Array.from(positions.slice(0,6)),[...tracking.refBodyPosW[5]].m
 // At the live frontier, missing lookahead holds a valid last pose instead of zero filling.
 tracking.refIdx=30;const held=tracking.getStateField('ref_joint_pos');
 for(let i=0;i<8;i++)assert.deepEqual(Array.from(held.slice(i*2,i*2+2)),[31,131]);
-console.log('PASS reference horizon offsets, body/joint order, matched position/velocity samples, quaternion normalization, shared XY origin and valid buffer-end holding');
+// A stalled stream must stop physics before those held samples can drive a walking policy.
+let requested=-1;
+tracking.liveSource={ensure:index=>{requested=index}};
+tracking.liveAdopted=true;
+tracking.syncLiveFrames=()=>{};
+tracking.frameAccumulator=.25;
+assert.equal(tracking.prepareStep(),false);
+assert.equal(requested,50);
+assert.equal(tracking.refIdx,30);
+assert.equal(tracking.frameAccumulator,.25);
+tracking.refLen=51;
+assert.equal(tracking.prepareStep(),true);
+tracking.liveSource=null;
+assert.equal(tracking.prepareStep(),true);
+console.log('PASS reference offsets/order, matched pose/velocity, normalization, XY origin, buffer-end holding and full-horizon simulation gate');
 
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -299,7 +299,7 @@ export class TrackingCommand implements CommandTerm {
   update(dt: number): void {
     if (this.liveSource) {
       if (!this.liveAdopted) {
-        if (this.liveSource.length > 0) {
+        if (this.liveSource.length > Math.max(0, ...this.timeSteps)) {
           this.adoptLiveFrames();
         }
       } else {
@@ -345,6 +345,26 @@ export class TrackingCommand implements CommandTerm {
       this.context.requestReset?.();
     }
     this.updateGhostPose();
+  }
+
+  /** Gate physics on a complete live policy horizon, without advancing its cursor.
+   * Holding a walking pose while physics continues is not a safe network fallback:
+   * velocities and future samples would describe a moving stride that has stopped.
+   */
+  prepareStep(): boolean {
+    if (!this.liveSource || !this.liveAdopted) return true;
+    this.syncLiveFrames();
+    const horizon = Math.max(0, ...this.timeSteps);
+    this.liveSource.ensure(this.refIdx + horizon);
+    const future = this.refLen - 1 - this.refIdx;
+    const ready = future >= horizon;
+    if (typeof window !== 'undefined') {
+      const host = window as Window & {BraceReferenceStream?: {cursor:number, future:number, horizon:number, waiting:boolean, waits:number}};
+      const previous = host.BraceReferenceStream;
+      host.BraceReferenceStream = {cursor:this.refIdx, future, horizon, waiting:!ready,
+        waits:(previous?.waits ?? 0) + (!ready && !previous?.waiting ? 1 : 0)};
+    }
+    return ready;
   }
 
   updateDebugVisuals(): void {

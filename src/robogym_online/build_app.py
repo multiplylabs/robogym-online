@@ -1158,6 +1158,15 @@ def browser_contact_source():
         disabled_drag = runtime_original.decode().replace("draggableBodyIds: this.dynamicBodyIds", "draggableBodyIds: new Set<number>()").replace("setDraggableBodyIds(this.dynamicBodyIds)", "setDraggableBodyIds(new Set<number>())")
         if disabled_drag == runtime_original.decode():
             raise RuntimeError("Viewer drag hook changed; cannot disable robot pulling")
+        loop_hook = '      if (this.mjModel && this.mjData) {\n'
+        if disabled_drag.count(loop_hook) != 1:
+            raise RuntimeError("Simulation loop hook changed; cannot gate the live reference horizon")
+        disabled_drag = disabled_drag.replace(loop_hook, loop_hook +
+            "        const motion = this.commandManager.getTerm('motion') as {prepareStep?: () => boolean} | undefined;\n"
+            "        if (motion?.prepareStep && !motion.prepareStep()) {\n"
+            "          await new Promise(resolve => setTimeout(resolve, 20));\n"
+            "          continue;\n"
+            "        }\n", 1)
         runtime.write_text(disabled_drag)
         for target in originals:
             target.write_bytes((source / target.name).read_bytes())
