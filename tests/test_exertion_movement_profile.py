@@ -26,6 +26,22 @@ class ExertionMovementTests(unittest.TestCase):
         self.assertLessEqual(abs(s._move_angle-previous),math.radians(30)*.02+1e-9)
         s._move_angle=s._heading
         self.assertEqual(s.current_mode(),'stealth')
+
+    def test_loaded_ramp_uses_native_careful_for_slow_walk_and_restores_selection(self):
+        s=self.stream(True)
+        s._move_angle=s._heading
+        s._modes.add('careful')
+        s._walk_mode='slow_walk'
+        s._browser_slope_exertion=True
+        self.assertEqual(s.current_mode(),'careful')
+        s._walk_mode='stealth'
+        self.assertEqual(s.current_mode(),'stealth')
+        s._walk_mode='slow_walk'
+        s._command=(0,0,0)
+        self.assertEqual(s.current_mode(),'idle')
+        s._command=(.8,0,0)
+        s._browser_slope_exertion=False
+        self.assertEqual(s.current_mode(),'slow_walk')
     def test_normal_walk_keeps_original_direction_rate_and_style(self):
         s=self.stream(False)
         self.assertEqual(s.current_mode(),'stealth')

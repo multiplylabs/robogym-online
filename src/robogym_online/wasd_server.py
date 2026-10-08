@@ -237,6 +237,8 @@ STYLE_SPEEDS_M_S = {
 def _apply_walk_speed(stream, style: str) -> None:
     if hasattr(stream, "set_target_speed"):
         speed = STYLE_SPEEDS_M_S.get(style, WALK_SPEED_M_S if style == "walk" else None)
+        if style == 'slow_walk' and getattr(stream, '_browser_slope_exertion', False):
+            speed = STYLE_SPEEDS_M_S['careful']
         limit = getattr(stream, "_browser_speed_limit", None)
         if limit is not None:
             speed = limit if speed is None else min(speed, limit)
@@ -326,8 +328,9 @@ async def _pump(websocket, stream) -> None:
     async for message in websocket:
         request = json.loads(message)  # a closed connection ends the iteration, not an error
         if request["type"] == "command":
-            stream._browser_exertion_movement = request.get('movement_profile') in ('exertion', 'exertion_vertical')
+            stream._browser_exertion_movement = request.get('movement_profile') in ('exertion', 'exertion_vertical', 'exertion_slope')
             stream._browser_vertical_exertion = request.get('movement_profile') == 'exertion_vertical'
+            stream._browser_slope_exertion = request.get('movement_profile') == 'exertion_slope'
             stream._browser_speed_limit = (max(.15, min(.8, float(request["speed_limit"])))
                                            if request.get("speed_limit") is not None else None)
             _apply_walk_speed(stream, getattr(stream, "style", "stealth"))

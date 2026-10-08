@@ -30,3 +30,25 @@ class SpeedLimitTests(unittest.IsolatedAsyncioTestCase):
         independent=Stream()
         _apply_walk_speed(independent,'stealth')
         self.assertEqual(independent.speed,.8)
+
+    async def test_loaded_slope_speed_restores_on_clear_and_does_not_replace_other_styles(self):
+        class Stream:
+            style='slow_walk'
+            def set_target_speed(self,speed):self.speed=speed
+            def set_command(self,*command):self.command=command
+            def set_style(self,style):self.style=style
+        stream=Stream()
+        observed=[]
+        class Socket:
+            async def __aiter__(self):
+                import json
+                for request in [
+                    {'type':'command','forward':.8,'lateral':0,'turn':0,'movement_profile':'exertion_slope'},
+                    {'type':'style','name':'stealth'},
+                    {'type':'style','name':'slow_walk'},
+                    {'type':'command','forward':.8,'lateral':0,'turn':0,'movement_profile':None},
+                ]:
+                    yield json.dumps(request)
+                    observed.append((stream.speed,stream._browser_slope_exertion))
+        await _pump(Socket(),stream)
+        self.assertEqual(observed,[(.8,True),(.8,True),(.8,True),(.5,False)])

@@ -18,6 +18,8 @@ class GymEquipment {
     const {mjModel: m, bodies} = this.context;
     if (!m || !bodies) return false;
     const bn = names(m, m.nbody, m.name_bodyadr);
+    const ascent = bn.indexOf('slope_ascent');
+    this.slopeMocap = ascent < 0 ? -1 : m.body_mocapid[ascent];
     const gn = names(m, m.ngeom, m.name_geomadr);
     const en = names(m, m.neq, m.name_eqadr);
     this.hands = ['left_rubber_hand', 'right_rubber_hand'].map(n => bn.indexOf(n));
@@ -254,10 +256,17 @@ class GymEquipment {
     const horizontal=Boolean(window.BraceExert?.enabled && [force[0],force[1],force[3],force[4]].some(v=>Math.abs(v ?? 0)>.05));
     const upward=active && !horizontal && [force[2],force[5]].some(v=>v>.05) && [force[2],force[5]].every(v=>(v ?? 0)>=-.05);
     const slope=Boolean(this.context.readOnnxSlot?.({command:'terrain',field:'command'})?.[0]);
+    const forwardAligned=[force[0],force[3]].some(v=>v>.05) && [force[0],force[3]].every(v=>(v ?? 0)>=-.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05);
+    const rampQuat=this.slopeMocap>=0 ? this.context.mjData.mocap_quat.subarray(this.slopeMocap*4,this.slopeMocap*4+4) : null;
+    const rampAngle=rampQuat ? Math.acos(Math.max(-1,Math.min(1,1-2*(rampQuat[1]**2+rampQuat[2]**2))))*180/Math.PI : 10;
+    const maxForward=Math.max(force[0] ?? 0,force[3] ?? 0);
+    const bothForward=force[0]>.05 && force[3]>.05;
+    const unsupportedRampPush=slope && forwardAligned && (maxForward>8.0001 || (maxForward>5.0001 && (rampAngle>8.001 || bothForward)));
     if(window.BraceExert?.enabled) {
       if(active && !horizontal) for(const key of ['s','a','d']) block(key,'Vertical hand pushes support straight forward walking; upward pushes also allow forward arcs on flat ground. Change or clear the push for sideways or backward movement.');
       if(active && !horizontal && !upward) for(const key of ['q','e']) block(key,'Downward or opposing vertical pushes do not have a supported arc-turn setting. Change or clear the push before turning.');
       if(upward && slope) for(const key of ['w','q','e']) block(key,'Walking or turning with an upward hand push on the ramp caused falls in testing. Disable the slope, or change or clear the push before moving.');
+      if(unsupportedRampPush) block('w','Forward walking with this hand push on the current ramp caused falls in testing. Clear the push or disable the slope before moving.');
       if([force[0],force[3]].some(v=>v>.05)) block('s','Backward movement opposes the forward hand push. This direction is not physically plausible for the current push in this demo.');
       if([force[0],force[3]].some(v=>v<-.05)) block('w','Forward movement opposes the backward hand push. This direction is not physically plausible for the current push in this demo.');
       if([force[1],force[4]].some(v=>v>.05)) block('d','Rightward movement opposes the leftward hand push. This direction is not physically plausible for the current push in this demo.');
@@ -274,7 +283,7 @@ class GymEquipment {
         for(const key of ['w','s','q','e']) block(key,'Crossing or turning while pushing sideways caused falls in testing. Only aligned side steps are supported while this push is active.');
       }
     }
-    this.setSteeringLock(blocked, active ? {turnLimit:upward && !slope ? 10 : 0,verticalArc:upward,offAxisSpeed:.18,turnSpeed:.50,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned:[force[0],force[3]].some(v=>v>.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05)} : null, reasons);
+    this.setSteeringLock(blocked, active ? {turnLimit:upward && !slope ? 10 : 0,verticalArc:upward,slopeExertion:slope && forwardAligned && !unsupportedRampPush,offAxisSpeed:.18,turnSpeed:.50,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned} : null, reasons);
   }
   setSteeringLock(blocked, motion=null, reasons={}) {
     if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked) && JSON.stringify(window.BraceSteering?.motion ?? null)===JSON.stringify(motion) && JSON.stringify(window.BraceSteering?.reasons ?? {})===JSON.stringify(reasons)) return;

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "blocked-slow-right-8N-10deg",
+    "style": "Slow walk",
+    "force": 8,
+    "angle": 10,
+    "expectBlocked": true,
+    "seconds": 20
+  },
+  {
+    "id": "blocked-stealth-right-8N-10deg",
+    "style": "Stealth",
+    "force": 8,
+    "angle": 10,
+    "expectBlocked": true,
+    "seconds": 20
+  },
+  {
+    "id": "blocked-slow-both-8N-6deg",
+    "style": "Slow walk",
+    "hand": "both",
+    "force": 8,
+    "angle": 6,
+    "expectBlocked": true,
+    "seconds": 20
+  }
+]

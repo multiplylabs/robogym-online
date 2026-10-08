@@ -1,0 +1,107 @@
+[
+  {
+    "id": "loaded-slow-right-5N-10deg-repeat0",
+    "style": "Slow walk",
+    "hand": "right",
+    "force": 5,
+    "angle": 10,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-right-5N-10deg-repeat1",
+    "style": "Slow walk",
+    "hand": "right",
+    "force": 5,
+    "angle": 10,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-left-5N-10deg-repeat0",
+    "style": "Slow walk",
+    "hand": "left",
+    "force": 5,
+    "angle": 10,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-left-5N-10deg-repeat1",
+    "style": "Slow walk",
+    "hand": "left",
+    "force": 5,
+    "angle": 10,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-both-5N-10deg-repeat0",
+    "style": "Slow walk",
+    "hand": "both",
+    "force": 5,
+    "angle": 10,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-both-5N-10deg-repeat1",
+    "style": "Slow walk",
+    "hand": "both",
+    "force": 5,
+    "angle": 10,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-right-8N-6deg-repeat0",
+    "style": "Slow walk",
+    "hand": "right",
+    "force": 8,
+    "angle": 6,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-right-8N-6deg-repeat1",
+    "style": "Slow walk",
+    "hand": "right",
+    "force": 8,
+    "angle": 6,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-right-8N-8deg-repeat0",
+    "style": "Slow walk",
+    "hand": "right",
+    "force": 8,
+    "angle": 8,
+    "seconds": 50
+  },
+  {
+    "id": "loaded-slow-right-8N-8deg-repeat1",
+    "style": "Slow walk",
+    "hand": "right",
+    "force": 8,
+    "angle": 8,
+    "seconds": 50
+  },
+  {
+    "id": "blocked-slow-right-8N-10deg",
+    "style": "Slow walk",
+    "force": 8,
+    "angle": 10,
+    "expectBlocked": true,
+    "seconds": 20
+  },
+  {
+    "id": "blocked-stealth-right-8N-10deg",
+    "style": "Stealth",
+    "force": 8,
+    "angle": 10,
+    "expectBlocked": true,
+    "seconds": 20
+  },
+  {
+    "id": "blocked-slow-both-8N-6deg",
+    "style": "Slow walk",
+    "hand": "both",
+    "force": 8,
+    "angle": 6,
+    "expectBlocked": true,
+    "seconds": 20
+  }
+]

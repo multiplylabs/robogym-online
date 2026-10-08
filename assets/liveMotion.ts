@@ -564,7 +564,7 @@ export class LiveMotionSource {
   setCommand(forward: number, lateral: number, turn: number): void {
     const blocked=this.blockedKeys();
     const motion=typeof window==='undefined' ? null :
-      (window as Window & {BraceSteering?: {motion?: {verticalArc?:boolean,turnLimit:number,offAxisSpeed:number,turnSpeed:number,diagonalRatio:number,diagonalSpeed:number,crossSpeed:number,forwardAligned:boolean}}}).BraceSteering?.motion;
+      (window as Window & {BraceSteering?: {motion?: {verticalArc?:boolean,slopeExertion?:boolean,turnLimit:number,offAxisSpeed:number,turnSpeed:number,diagonalRatio:number,diagonalSpeed:number,crossSpeed:number,forwardAligned:boolean}}}).BraceSteering?.motion;
     const profile=JSON.stringify(motion ?? null);
     let speedLimit: number | null=null;
     // Turning keys include forward travel; keep the turn but suppress an opposing translation.
@@ -593,7 +593,7 @@ export class LiveMotionSource {
     this.command = [forward, lateral, turn];
     this.sentMotionProfile=profile;
     this.commandSpeedLimit=speedLimit;
-    this.commandMovementProfile=motion ? (motion.verticalArc ? 'exertion_vertical' : 'exertion') : null;
+    this.commandMovementProfile=motion ? (motion.verticalArc ? 'exertion_vertical' : motion.slopeExertion ? 'exertion_slope' : 'exertion') : null;
     if (this.connected) {
       this.socket?.send(JSON.stringify({ type: 'command', forward, lateral, turn, speed_limit:speedLimit, movement_profile:this.commandMovementProfile }));
     }

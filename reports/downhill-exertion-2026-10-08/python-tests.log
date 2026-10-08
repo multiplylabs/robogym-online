@@ -1,0 +1,17 @@
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 33.869s
+
+OK
+client connected: new-user
+client disconnected
+client disconnected
+client connected: alice
+client connected: bob
+client disconnected
+client connected: alice
+client disconnected
+client disconnected
+style: slow_walk
+style: stealth
+style: slow_walk

@@ -550,3 +550,36 @@ fell after 20.2 s. With the corrected speed priority and Slow walk override, six
 hand selections. Force values, effective-force computation, frame conventions and contact physics
 were unchanged. The ramp failure attempts and blocked-input checks are retained separately in
 `reports/vertical-force-arcs-2026-10-07`; finite-duration results do not guarantee all conditions.
+
+
+Loaded downhill validation (2026-10-08): the live reference and brace inputs use the same
+nearest future sample and shared XY origin. The actor is intentionally terrain-blind and omits
+absolute target height; lifting or tilting its reference to the ramp would not fix this issue.
+`tests/reference_inputs.cjs` checks the actual browser reference window, quaternion values,
+position/velocity pairing and valid buffer-end holding. `test_reference_frame.py` also verifies
+common XY and Z translation invariance through the deployed ONNX.
+
+For forward exertion with the slope enabled, selecting Slow walk temporarily uses Careful at
+its native 0.8 m/s target. Clear force or disable the slope to restore the selected Slow walk
+style and 0.5 m/s target. This fallback applies to permitted forward travel, and is labeled next
+to the style controls. It never changes the requested force. Simply slowing the gait further
+was not reliable: 0.35 m/s Slow walk left the course, while 0.5/0.6 m/s Careful fell downhill.
+
+Loaded walking is restricted when trials found it unreliable: forward pushes above 5 N per
+hand block W on ramps above 8°, and when both hands push. Pushes above 8 N per hand block W
+on any ramp. The key dims and explains the restriction on hover; a held key stops immediately.
+Clearing force or disabling the slope restores movement. These thresholds are conservative
+movement permissions over the tested presets, not force caps or a universal stability guarantee.
+The current audit results, including unsuccessful attempts, are retained in
+`reports/downhill-exertion-2026-10-08`.
+
+Run the full-course browser audit sequentially against a dedicated generator (one browser per
+server); success requires remaining on the course, crossing ascent/plateau/descent, and standing
+for three further simulation seconds. Any fall or automatic respawn fails the attempt:
+
+```bash
+export NODE_PATH="$(python -c 'import mjswan; from pathlib import Path; print(Path(mjswan.__file__).parent / "template/node_modules")')"
+BRACE_TEST_URL='http://127.0.0.1:8080/?stream=ws%3A%2F%2F127.0.0.1%3A8765' \
+BRACE_SLOPE_CASES_FILE=reports/downhill-exertion-2026-10-08/final-cases.json \
+BRACE_SLOPE_OUTPUT=/tmp/brace-downhill-verification node tests/audit_downhill_exertion.cjs
+```

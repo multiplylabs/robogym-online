@@ -532,6 +532,8 @@ class MotionBricksStream:
         # stealth/carrying clips down to near-in-place steps while the heading advances.
         if getattr(self, '_browser_vertical_exertion', False) and forward > 0 and lateral == 0 and 'slow_walk' in self._modes:
             return 'slow_walk'
+        if getattr(self, '_browser_slope_exertion', False) and self._walk_mode == 'slow_walk' and forward > 0 and lateral == 0 and 'careful' in self._modes:
+            return 'careful'
         return self._walk_mode
 
     def tracking_error(self) -> float:

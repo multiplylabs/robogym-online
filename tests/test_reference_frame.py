@@ -24,9 +24,11 @@ class ReferenceFrameTests(unittest.TestCase):
                 if item.name == 'initial_noise':
                     a.fill(0)
                 feed[item.name] = a
-            shifted = {k: v.copy() for k, v in feed.items()}
-            for key in keys:
-                shifted[key][..., :2] += np.array([12.5, -8.25], np.float32)
-            for original, moved in zip(session.run(None, feed), session.run(None, shifted)):
-                self.assertTrue(np.isfinite(original).all())
-                np.testing.assert_allclose(original, moved, atol=2e-4, rtol=2e-4)
+            original_outputs = session.run(None, feed)
+            for offset in ([12.5, -8.25, 0], [0, 0, .5], [0, 0, -.5]):
+                shifted = {k: v.copy() for k, v in feed.items()}
+                for key in keys:
+                    shifted[key] += np.array(offset, np.float32)
+                for original, moved in zip(original_outputs, session.run(None, shifted)):
+                    self.assertTrue(np.isfinite(original).all())
+                    np.testing.assert_allclose(original, moved, atol=2e-4, rtol=2e-4)

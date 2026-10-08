@@ -1,0 +1,17 @@
+/home/seahorse/Humanoid2/robogym-online/.venv/lib/python3.12/site-packages/mjlab/scene/scene.py:66: UserWarning: Entity 'robot' has non-default <option> fields (timestep) that will not be propagated by MjSpec.attach(). Use MujocoCfg instead.
+  self._add_entities()
+WARNING: Attach conflict when attaching 'g1_29dof' to 'mjlab scene', policy is 'warning'
+timestep: parent has 0.002, child has 0.001, keeping parent value
+
+/home/seahorse/Humanoid2/robogym-online/.venv/lib/python3.12/site-packages/mjlab/sim/sim.py:252: UserWarning: Attach conflict when attaching 'g1_29dof' to 'mjlab scene', policy is 'warning'
+timestep: parent has 0.002, child has 0.001, keeping parent value
+  compiled = spec.compile()
+Building the mjswan application...
+✓ Reusing cached frontend build (dist/)
+  BRACE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1 Unitree G1
+✓ Saved mjswan application to: /home/seahorse/Humanoid2/robogym-online/dist
+  isolation worker -> /home/seahorse/Humanoid2/robogym-online/dist/isolation-worker.js
+  optimized brace_wrench.onnx: 54908 -> 12700 nodes
+  brace graph -> /home/seahorse/Humanoid2/robogym-online/dist/main/assets/unitree_g1/command/brace_wrench.onnx
+  stream pointer -> /home/seahorse/Humanoid2/robogym-online/dist/stream.json: {"url": "wss://thumbnail-prefix-wan-teach.trycloudflare.com"}
+built /home/seahorse/Humanoid2/robogym-online/dist

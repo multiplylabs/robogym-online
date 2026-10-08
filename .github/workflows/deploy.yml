@@ -70,6 +70,7 @@ jobs:
           node tests/stability_burst.cjs
           node tests/fall_guard.cjs
           node tests/respawn_surface.cjs
+          node tests/reference_inputs.cjs
           node tests/steering_lock.cjs
 
       - uses: actions/upload-pages-artifact@v3
