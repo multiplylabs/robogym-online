@@ -31,3 +31,20 @@ external.apply(d,{getUiValue:name=>({x:10,y:0,z:0,tx:3,ty:0,tz:0}[name])});
 contact.apply(d,brace);assert.equal(d.xfrc_applied[12],11);assert.equal(d.xfrc_applied[15],5);assert.equal(contact.measured[0],0);
 state.push_axis_local[0]=1;contact.apply(d,brace);assert(Math.abs(d.xfrc_applied[12]-(11-contact.measured[0]))<1e-5);assert.equal(d.xfrc_applied[15],5);
 console.log('PASS manual loads, mouse forces and torques survive inactive/active spring contact');
+
+// Different robot/reference headings and origins must not become apparent hand lead.
+const rotate=(yaw,v)=>[Math.cos(yaw)*v[0]-Math.sin(yaw)*v[1],Math.sin(yaw)*v[0]+Math.cos(yaw)*v[1],v[2]];
+function orientation(yaw,pitch,roll){const cy=Math.cos(yaw/2),sy=Math.sin(yaw/2),cp=Math.cos(pitch/2),sp=Math.sin(pitch/2),cr=Math.cos(roll/2),sr=Math.sin(roll/2);return [cr*cp*cy+sr*sp*sy,sr*cp*cy-cr*sp*sy,cr*sp*cy+sr*cp*sy,cr*cp*sy-sr*sp*cy]}
+for(const yaw of [0,Math.PI/2,Math.PI,-.7])for(const axis of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]){
+  const referenceYaw=-.9,anchor=[-12,5,.75],refAnchor=[1.2,-3,.8],handLocal=[.3,.1,-.2];
+  state.push_axis_local.set([...axis,...axis]);state.push_axis_w.set([...rotate(referenceYaw,axis),...rotate(referenceYaw,axis)]);
+  state.ref_anchor_pos.set(refAnchor);const r=rotate(referenceYaw,handLocal).map((v,i)=>v+refAnchor[i]);state.ref_hand_pos.set([...r,...r]);
+  d.xpos.set(anchor,3);d.xquat.set(orientation(yaw,.35,.2),4);
+  const hand=rotate(yaw,handLocal.map((v,i)=>v+.04*axis[i])).map((v,i)=>v+anchor[i]);d.xpos.set(hand,6);d.xpos.set(hand,9);
+  contact.reset();apply();const measured=contact.measured[0];assert(Math.abs(measured-spring(.04))<1e-4);
+  const n=rotate(yaw,axis);for(let i=0;i<3;i++)assert(Math.abs(d.xfrc_applied[12+i]+measured*n[i])<1e-6);
+  // Move only the robot's origin, keeping its local pose: no contact/damping change.
+  for(const b of [1,2,3])for(let i=0;i<3;i++)d.xpos[b*3+i]+=[9,-6,.4][i];
+  apply();assert(Math.abs(contact.measured[0]-measured)<1e-4);
+}
+console.log('PASS all signed axes rotate with torso yaw; independent reference yaw/world drift and torso tilt preserve local contact');

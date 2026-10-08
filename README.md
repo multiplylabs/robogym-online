@@ -521,3 +521,14 @@ Extended final checks: six permitted movement trials passed 40–45 simulation s
 a fall/respawn; two unsupported turn/backward requests were verified blocked for 40–45 s.
 The earlier candidate backward-walking failure is retained separately. All sampled active
 force requests remained 8 N. These are empirical finite-duration checks, not a universal stability guarantee.
+
+Force coordinate contract: force dials and policy `force_cmd_eff` are in the local **torso-heading
+(yaw-only) frame**, matching the saved training/inference configuration (`local_frame_lead=True`).
++X is forward, +Y is left, and +Z remains world up on a slope. The brace uses the reference torso
+heading for reference/world targets; physical contact and arm feedback use the actual robot torso
+heading. Each hand lead is measured relative to its own torso, so independent global drift does
+not become force. Exertion arrows point into the contact; MuJoCo receives the equal/opposite
+world-frame reaction. MuJoCo/stream quaternions are wxyz; the brace converts once to xyzw.
+`test_force_coordinates.py` checks all six signed axes at four headings through the exported
+ONNX, and `contact_parity.cjs` checks different robot/reference headings, origins and torso tilt.
+`browser_force_coordinates.cjs` verifies real 8 N local commands and world reactions after turning.
