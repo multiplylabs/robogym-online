@@ -16,7 +16,7 @@ W dims and explains the reason on hover. An already-held W stops when the restri
 
 ## Completed crossings within the final envelope
 
-Fresh Chromium sessions ran the actual MuJoCo-WASM simulation, deployed wrench ONNX and ONNX MotionBricks generator. Each success required staying on the course through ascent, plateau and descent, then stopping for three further simulation seconds. Any fall or automatic respawn failed the attempt; leaving the course was also unsuccessful.
+Fresh Chromium sessions ran the actual MuJoCo-WASM simulation, deployed wrench ONNX and ONNX MotionBricks generator. Each success required staying on the course through ascent, plateau and descent, then observing for three further simulation seconds after releasing W. Any fall or automatic respawn failed the attempt; leaving the course was also unsuccessful.
 
 | Selected style | Forward force | Ramp | Completed without a fall |
 | --- | --- | --- | --- |
@@ -27,7 +27,7 @@ Fresh Chromium sessions ran the actual MuJoCo-WASM simulation, deployed wrench O
 | Slow walk → Careful | Right hand, 8 N | 8° | 3/3 |
 | Slow walk → Careful | Right hand, 2 N | 10° | 1/1 |
 
-The last ten repeated crossings all passed, taking 21.5–24.1 simulation seconds including the final stop. Fresh sessions are repetitions with session timing variation, not a claim of exhaustive random-seed coverage. No test called a post-fall recovery a success.
+The last ten repeated crossings all passed, taking 21.5–24.1 simulation seconds including the observation after releasing W. Fresh sessions are repetitions with session timing variation, not a claim of exhaustive random-seed coverage. No test called a post-fall recovery a success.
 
 Three blocked-input checks also passed 20 simulation seconds each (single-hand 8 N at 10° for Slow walk and Stealth, and two-hand 8 N each at 6°). Commands stayed zero, the force requests remained unchanged, and XY drift stayed below 4 cm. Blocked checks are kept separate from crossing successes.
 
@@ -45,6 +45,17 @@ Three blocked-input checks also passed 20 simulation seconds each (single-hand 8
 
 All 23 Python simulator tests passed. Browser reference, steering-lock, contact-equation, robot-slot, sphere-burst, fall-guard and respawn-surface checks passed. The real browser control check verified gait labeling, stopping a held key, hover explanation, unchanged 8 N request, reconnect while blocked, and clear/slope-off restoration.
 
-Run `tests/audit_downhill_exertion.cjs` with `BRACE_SLOPE_CASES_FILE=reports/downhill-exertion-2026-10-08/final-cases.json`, `BRACE_SLOPE_OUTPUT`, and a `BRACE_TEST_URL` pointing to a dedicated generator. Run sequentially: a generator supports one active browser. `models.json` records the two ONNX hashes; `python-tests.log` and `browser-controls.log` retain contract-check results.
+Run `tests/audit_downhill_exertion.cjs` with `BRACE_SLOPE_CASES_FILE=reports/downhill-exertion-2026-10-08/final-cases.json`, `BRACE_SLOPE_OUTPUT`, and a `BRACE_TEST_URL` pointing to a dedicated generator. Run sequentially to avoid competing for generator compute. ONNX sessions have independent state. `models.json` records the two ONNX hashes; `python-tests.log` and `browser-controls.log` retain contract-check results.
 
 Finite trials do not guarantee stability for every terrain transition, custom force, timing, gait or impact. Higher loads were restricted by movement controls rather than reducing the force dial.
+
+
+## Published-page verification
+
+GitHub Pages deployment [37792517668](https://github.com/multiplylabs/robogym-online/actions/runs/37792517668) passed all build and simulator checks for commit `bac236a`. The published JavaScript was verified to contain the movement guard.
+
+The actual [public page](https://multiplylabs.github.io/robogym-online/) and generator tunnel completed two additional full-course trials: right-hand 5 N at 10° (24.56 simulation seconds) and right-hand 8 N at 8° (25.18 s), including three seconds observed after releasing W. No falls or respawns occurred, and force requests remained unchanged. The observation includes deceleration/settling, rather than enforcing zero robot velocity.
+
+Two further public blocked-input trials passed 20.1 seconds each: right-hand 8 N at 10°, and both hands at 8 N each on 6°. All movement packets stayed zero; force requests remained unchanged; XY drift stayed below 4 cm. The public browser control test also passed gait labeling, unsafe held-key stop, hover explanation, reconnect while blocked, and restoration after clearing force or disabling the slope.
+
+`raw/public.json.gz`, `public-controls.log`, `deployment.json` and the `public-*.png` screenshots retain these checks. Public results are separate from the 15 local permitted crossings and three local blocked-input checks.

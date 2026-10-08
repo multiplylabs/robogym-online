@@ -1,0 +1,33 @@
+[
+  {
+    "id": "public-slow-right-5N-10deg",
+    "style": "Slow walk",
+    "force": 5,
+    "angle": 10,
+    "seconds": 50
+  },
+  {
+    "id": "public-slow-right-8N-8deg",
+    "style": "Slow walk",
+    "force": 8,
+    "angle": 8,
+    "seconds": 50
+  },
+  {
+    "id": "public-blocked-slow-right-8N-10deg",
+    "style": "Slow walk",
+    "force": 8,
+    "angle": 10,
+    "expectBlocked": true,
+    "seconds": 20
+  },
+  {
+    "id": "public-blocked-slow-both-8N-6deg",
+    "style": "Slow walk",
+    "force": 8,
+    "hand": "both",
+    "angle": 6,
+    "expectBlocked": true,
+    "seconds": 20
+  }
+]

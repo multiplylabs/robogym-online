@@ -53,7 +53,7 @@
     "duration": 59.53999999994257,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "slow-0.4-10",
@@ -70,7 +70,7 @@
     "duration": 35.21999999999845,
     "errors": [],
     "falls": 1,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "slow-0.5-6",
@@ -87,7 +87,7 @@
     "duration": 45.959999999962804,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "slow-0.5-8",
@@ -104,7 +104,7 @@
     "duration": 43.179999999973774,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "slow-0.5-10",
@@ -121,7 +121,7 @@
     "duration": 31.020000000007975,
     "errors": [],
     "falls": 1,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "careful-0.5-10",
@@ -139,7 +139,7 @@
     "duration": 44.03999999997273,
     "errors": [],
     "falls": 1,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "careful-0.6-10",
@@ -157,7 +157,7 @@
     "duration": 27.10000000000949,
     "errors": [],
     "falls": 1,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "careful-0.8-10",
@@ -175,7 +175,7 @@
     "duration": 22.82000000001041,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-8N-6deg",
@@ -192,7 +192,7 @@
     "duration": 21.980000000010378,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-8N-8deg",
@@ -209,7 +209,7 @@
     "duration": 23.560000000011794,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-8N-10deg",
@@ -226,7 +226,7 @@
     "duration": 14.840000000000657,
     "errors": [],
     "falls": 1,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-left-8N-10deg",
@@ -244,7 +244,7 @@
     "duration": 24.260000000012543,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-both-8N-10deg",
@@ -262,7 +262,7 @@
     "duration": 9.299999999997972,
     "errors": [],
     "falls": 1,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-5N-10deg",
@@ -279,7 +279,7 @@
     "duration": 23.300000000011103,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-2N-10deg",
@@ -296,7 +296,7 @@
     "duration": 22.000000000009425,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-both-5N-10deg",
@@ -314,7 +314,7 @@
     "duration": 23.58000000001171,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "stealth-right-8N-10deg-0",
@@ -331,7 +331,7 @@
     "duration": 24.08000000001156,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "stealth-right-8N-10deg-1",
@@ -348,7 +348,7 @@
     "duration": 9.059999999998603,
     "errors": [],
     "falls": 1,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "stealth-right-8N-10deg-2",
@@ -365,7 +365,7 @@
     "duration": 25.920000000013648,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "neutral-reference-timing",
@@ -383,7 +383,7 @@
     "errors": [],
     "falls": 0,
     "goalReferenceDifferenceMax": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-5N-10deg-repeat0",
@@ -401,7 +401,7 @@
     "duration": 22.840000000010487,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-5N-10deg-repeat1",
@@ -419,7 +419,7 @@
     "duration": 21.520000000008892,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-left-5N-10deg-repeat0",
@@ -437,7 +437,7 @@
     "duration": 24.08000000001172,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-left-5N-10deg-repeat1",
@@ -455,7 +455,7 @@
     "duration": 23.24000000001094,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-both-5N-10deg-repeat0",
@@ -473,7 +473,7 @@
     "duration": 23.300000000011423,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-both-5N-10deg-repeat1",
@@ -491,7 +491,7 @@
     "duration": 22.640000000010634,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-8N-8deg-repeat0",
@@ -509,7 +509,7 @@
     "duration": 22.420000000010045,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-8N-8deg-repeat1",
@@ -527,7 +527,7 @@
     "duration": 22.740000000010827,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-8N-6deg-repeat0",
@@ -545,7 +545,7 @@
     "duration": 22.480000000010083,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "loaded-slow-right-8N-6deg-repeat1",
@@ -563,7 +563,7 @@
     "duration": 23.780000000009565,
     "errors": [],
     "falls": 0,
-    "courseCriterion": "full crossing plus three seconds stopped, no falls or leaving course"
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
   },
   {
     "id": "blocked-slow-right-8N-10deg",
@@ -619,5 +619,76 @@
     "errors": [],
     "falls": 0,
     "courseCriterion": "blocked W for 20 simulation seconds, unchanged force, no falls"
+  },
+  {
+    "id": "public-slow-right-5N-10deg",
+    "style": "Slow walk",
+    "force": 5,
+    "angle": 10,
+    "outcome": "success",
+    "duration": 24.560000000011986,
+    "minClearance": 0.716885158042335,
+    "maxTilt": 15.764492288455681,
+    "maxProgress": 9.25453635115204,
+    "requestedForcePreserved": true,
+    "maxDisplacement": 12.4047716201802,
+    "group": "public",
+    "errors": [],
+    "falls": 0,
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
+  },
+  {
+    "id": "public-slow-right-8N-8deg",
+    "style": "Slow walk",
+    "force": 8,
+    "angle": 8,
+    "outcome": "success",
+    "duration": 25.18000000001317,
+    "minClearance": 0.7122628351872112,
+    "maxTilt": 17.26119397251851,
+    "maxProgress": 9.247111457710202,
+    "requestedForcePreserved": true,
+    "maxDisplacement": 12.324057666999499,
+    "group": "public",
+    "errors": [],
+    "falls": 0,
+    "courseCriterion": "full crossing plus three seconds after releasing W, no falls or leaving course"
+  },
+  {
+    "id": "public-blocked-slow-right-8N-10deg",
+    "style": "Slow walk",
+    "force": 8,
+    "angle": 10,
+    "outcome": "blocked",
+    "duration": 20.10000000000714,
+    "minClearance": 0.7856221027717433,
+    "maxTilt": 7.121465142543616,
+    "maxProgress": -2.9838747400539902,
+    "requestedForcePreserved": true,
+    "maxDisplacement": 0.03193754113290572,
+    "expectBlocked": true,
+    "group": "public",
+    "errors": [],
+    "falls": 0,
+    "courseCriterion": "blocked W for 20 simulation seconds"
+  },
+  {
+    "id": "public-blocked-slow-both-8N-6deg",
+    "style": "Slow walk",
+    "hand": "both",
+    "force": 8,
+    "angle": 6,
+    "outcome": "blocked",
+    "duration": 20.100000000007228,
+    "minClearance": 0.7848403017675825,
+    "maxTilt": 7.7896065628078075,
+    "maxProgress": -2.979385663629943,
+    "requestedForcePreserved": true,
+    "maxDisplacement": 0.036537416524996175,
+    "expectBlocked": true,
+    "group": "public",
+    "errors": [],
+    "falls": 0,
+    "courseCriterion": "blocked W for 20 simulation seconds"
   }
 ]

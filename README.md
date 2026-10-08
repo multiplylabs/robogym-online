@@ -573,9 +573,9 @@ movement permissions over the tested presets, not force caps or a universal stab
 The current audit results, including unsuccessful attempts, are retained in
 `reports/downhill-exertion-2026-10-08`.
 
-Run the full-course browser audit sequentially against a dedicated generator (one browser per
-server); success requires remaining on the course, crossing ascent/plateau/descent, and standing
-for three further simulation seconds. Any fall or automatic respawn fails the attempt:
+Run the full-course browser audit sequentially against a dedicated generator to keep timing
+comparable. ONNX browser sessions otherwise have independent state. Success requires remaining
+on the course, crossing ascent/plateau/descent, and observing for three further simulation seconds after releasing W. Any fall or automatic respawn fails the attempt:
 
 ```bash
 export NODE_PATH="$(python -c 'import mjswan; from pathlib import Path; print(Path(mjswan.__file__).parent / "template/node_modules")')"

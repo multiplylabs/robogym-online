@@ -1,3 +1,4 @@
+// Run sequentially for comparable timing; ONNX browser sessions have independent state.
 const {chromium}=require('playwright'),fs=require('node:fs');
 const cases=JSON.parse(fs.readFileSync(process.env.BRACE_SLOPE_CASES_FILE,'utf8'));
 const out=process.env.BRACE_SLOPE_OUTPUT||'/tmp/brace-downhill';fs.mkdirSync(out,{recursive:true});
