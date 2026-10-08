@@ -14,6 +14,7 @@ terrain=0;gym.updateSteeringLock();source.setCommand(.4,0,20);assert.deepEqual(s
 raw.fill(0);raw[5]=8;gym.updateSteeringLock();assert.deepEqual(window.BraceSteering.blockedKeys,['d']);source.setCommand(.8,0,20);assert(source.getCommand()[0]>0&&source.getCommand()[2]>0);
 raw[5]=-8;gym.updateSteeringLock();assert.deepEqual(window.BraceSteering.blockedKeys,['a']);
 raw.fill(0);raw[6]=8;gym.updateSteeringLock();assert.deepEqual(window.BraceSteering.blockedKeys,[]);source.setCommand(.8,.2,20);assert(source.getCommand()[0]>0&&source.getCommand()[1]>0&&source.getCommand()[2]>0);
+source.setCommand(.8,0,0);assert.equal(messages.at(-1).speed_limit,.8);
 raw[6]=-8;gym.updateSteeringLock();assert.deepEqual(window.BraceSteering.blockedKeys,[]);
 raw.fill(0);raw[1]=8;raw[4]=-8;gym.updateSteeringLock();assert.deepEqual(window.BraceSteering.blockedKeys,['s','w']);source.setCommand(.4,0,20);assert.deepEqual(source.getCommand(),[0,0,1]);
 window.BraceExert.enabled=false;gym.updateSteeringLock();assert.deepEqual(window.BraceSteering.blockedKeys,[]);source.setCommand(.8,.45,20);assert.deepEqual(source.getCommand(),[.8,.45,20]);assert.equal(messages.at(-1).movement_profile,null);assert.equal(messages.at(-1).speed_limit,null);source.detachKeys();

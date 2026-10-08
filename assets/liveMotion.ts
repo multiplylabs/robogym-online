@@ -584,6 +584,7 @@ export class LiveMotionSource {
         // Careful gait. Keep its speed in that gait's tested diagonal range.
         speedLimit=forward<=0 ? motion.offAxisSpeed : motion.slopeExertion && lateral!==0 ? motion.diagonalSpeed : motion.turnSpeed;
       }
+      else if(motion.adaptive && motion.slopeExertion && forward>0 && lateral===0) speedLimit=motion.turnSpeed;
       else if(motion.verticalArc && forward>0 && lateral===0) speedLimit=motion.turnSpeed;
       else if(forward<0 || (forward===0 && lateral!==0)) speedLimit=motion.offAxisSpeed;
       else if(forward>0 && !motion.forwardAligned) speedLimit=motion.crossSpeed;
