@@ -1,0 +1,24 @@
+[
+  {
+    "id": "native-careful-slope-arc",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "w",
+      "q"
+    ],
+    "slope": true,
+    "seconds": 50
+  },
+  {
+    "id": "settled-backward-steps",
+    "direction": "X:-1",
+    "force": 5,
+    "hand": "right",
+    "keys": [
+      "s"
+    ],
+    "seconds": 60
+  }
+]

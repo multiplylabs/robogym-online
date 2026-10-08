@@ -1,0 +1,7 @@
+[
+ {"id":"strict-back-left8-slow","direction":"X:-1","hand":"left","force":8,"style":"Slow walk","keys":["s"],"seconds":66,"phases":[{"at":60,"keys":[]}]},
+ {"id":"strict-back-left8-arc","direction":"X:-1","hand":"left","force":8,"keys":["e"],"seconds":66,"requireTurnDeg":5,"phases":[{"at":60,"keys":[]}]},
+ {"id":"strict-back-right8-arc","direction":"X:-1","hand":"right","force":8,"keys":["q"],"seconds":66,"requireTurnDeg":5,"phases":[{"at":60,"keys":[]}]},
+ {"id":"strict-forward-full-rotation","direction":"X:1","hand":"both","force":8,"style":"Object carrying","keys":["w","q"],"seconds":96,"requireRotation":true,"minArcMeters":20,"phases":[{"at":90,"keys":[]}]},
+ {"id":"strict-forward-side-turns","direction":"X:1","hand":"both","force":8,"keys":["w","q","a"],"seconds":46,"phases":[{"at":20,"keys":["w","e","d"]},{"at":40,"keys":[]}]}
+]

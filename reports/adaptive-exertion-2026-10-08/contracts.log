@@ -1,0 +1,12 @@
+contact_parity: PASS training parity: raw-lead damping, EMA and equal/opposite physical reaction
+PASS independently activated hands produce no derivative spike
+PASS reset and signed two-sided contact
+PASS manual loads, mouse forces and torques survive inactive/active spring contact
+PASS all signed axes rotate with torso yaw; independent reference yaw/world drift and torso tilt preserve local contact
+robot_slots: PASS robot tensors retain robot and static scenery, excluding detached free bodies and their children
+stability_burst: PASS varied physical radii/masses and lighter exertion range; five timed balls, hit counts, partial exposure, sticky falls and reset cancellation
+fall_guard: PASS early tipping/downward prediction, transient recovery, slope/crouch tolerance, grace, one-shot respawn and failed-test preservation
+respawn_surface: PASS terrain top heights on yawed ascent/descent, plateau, edges and parked ramps
+reference_inputs: PASS reference horizon offsets, body/joint order, matched position/velocity samples, quaternion normalization, shared XY origin and valid buffer-end holding
+steering_lock: PASS only directly opposing keys blocked; turns, sides, vertical/ramp motion, backward arcs, held-key stop, direct commands and clear restoration
+exertion_envelope: PASS pre-brace force budgets, direction/raw preservation, delayed recovery, terrain/tilt adaptation, compensation bypass and immutable slot snapshots

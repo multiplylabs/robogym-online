@@ -310,6 +310,8 @@ class MotionBricksStream:
         self._slow_gait = False
         self._heading = 0.0
         self._move_angle = None
+        self._was_moving = False
+        self._browser_step_time = 0.0
         self._robot_xy = None
         self._robot_yaw = None
         self._robot_frame = None
@@ -410,8 +412,14 @@ class MotionBricksStream:
             signals["target_vel"] = torch.tensor([[float(self._speed_cmd)]])
         return signals
 
+    def _adaptive_step_pause(self) -> bool:
+        return (getattr(self, '_browser_adaptive_exertion', False) and self._command[0] < 0
+                and getattr(self, '_browser_step_time', 0.0) % 6.0 >= 1.0)
+
     def _advance_target_speed(self) -> None:
         """Step the sent speed one frame towards the requested one. See `MAX_TARGET_ACCEL`."""
+        self._browser_step_time = (getattr(self, '_browser_step_time', 0.0) + self._frame_dt
+                                   if getattr(self, '_browser_adaptive_exertion', False) and self._command[0] < 0 else 0.0)
         if self._target_speed is None:
             self._speed_cmd = None
             return
@@ -419,6 +427,16 @@ class MotionBricksStream:
         guarded = getattr(self, '_browser_exertion_movement', False)
         if self._off_axis_angle() > (math.radians(30) if guarded else OFF_AXIS_SLOW_RAD):
             want = min(want, .18 if guarded else MAX_OFF_AXIS_TARGET_SPEED)
+        if self._adaptive_step_pause() or (getattr(self, '_browser_adaptive_exertion', False)
+                                          and math.hypot(*self._command[:2]) <= IDLE_SPEED):
+            want = 0.0
+        if getattr(self, '_browser_adaptive_exertion', False):
+            # The ONNX planner commits a horizon using this one speed. Slewing it here
+            # can plan an entire side/back block above its cap, or a turning block
+            # near zero after a settling pause. Context conditions the continuous
+            # poses; give the planner the actual tested speed preset immediately.
+            self._speed_cmd = want
+            return
         if self._speed_cmd is None:
             self._speed_cmd = want
             return
@@ -433,6 +451,9 @@ class MotionBricksStream:
         """
         forward, lateral, turn = self._command
         speed = math.hypot(forward, lateral)
+        if self._adaptive_step_pause():
+            speed = 0.0
+            turn = 0.0
 
         # Facing and travel are separate quantities, and only the turn keys move the facing. This is
         # what makes "go back" and "step sideways" expressible at all: deriving the facing from the
@@ -460,14 +481,15 @@ class MotionBricksStream:
         # between one frame and the next, which is enough to put the robot on the floor.
         if speed > IDLE_SPEED:
             target = facing_angle + math.atan2(lateral, forward)
-            if self._move_angle is None:
+            if self._move_angle is None or (getattr(self, '_browser_adaptive_exertion', False) and not getattr(self, '_was_moving', False)):
                 self._move_angle = target
             else:
                 error = (target - self._move_angle + math.pi) % (2.0 * math.pi) - math.pi
                 limit = math.radians(30.0 if getattr(self, '_browser_exertion_movement', False) else DIRECTION_SLEW_DEG_S) * self._frame_dt
                 self._move_angle += max(-limit, min(limit, error))
-        else:
+        elif not self._adaptive_step_pause():
             self._move_angle = facing_angle
+        self._was_moving = speed > IDLE_SPEED
 
         return (
             np.array([math.cos(facing_angle), math.sin(facing_angle), 0.0]),
@@ -513,7 +535,7 @@ class MotionBricksStream:
         drop to the slow walk whatever style is selected.
         """
         forward, lateral, _ = self._command
-        if math.hypot(forward, lateral) <= IDLE_SPEED:
+        if math.hypot(forward, lateral) <= IDLE_SPEED or self._adaptive_step_pause():
             return "idle"
         off_axis = self._off_axis_angle()
         off_axis_limit = math.radians(30) if getattr(self, '_browser_exertion_movement', False) else OFF_AXIS_SLOW_RAD
@@ -528,11 +550,15 @@ class MotionBricksStream:
             )
             if self._slow_gait:
                 return "slow_walk"
+        if getattr(self, '_browser_adaptive_exertion', False) and getattr(self, '_browser_slope_exertion', False) and forward > 0 and lateral == 0 and 'careful' in self._modes:
+            return 'careful'
         # Slow locomotion produces a moving arc at moderate speed, rather than squeezing
         # stealth/carrying clips down to near-in-place steps while the heading advances.
+        if getattr(self, '_browser_adaptive_exertion', False) and (abs(self._command[2]) > .01 or (self._target_speed is not None and self._target_speed <= .5)) and 'slow_walk' in self._modes:
+            return 'slow_walk'
         if getattr(self, '_browser_vertical_exertion', False) and forward > 0 and lateral == 0 and 'slow_walk' in self._modes:
             return 'slow_walk'
-        if getattr(self, '_browser_slope_exertion', False) and self._walk_mode == 'slow_walk' and forward > 0 and lateral == 0 and 'careful' in self._modes:
+        if getattr(self, '_browser_slope_exertion', False) and (self._walk_mode == 'slow_walk' or getattr(self, '_browser_adaptive_exertion', False)) and forward > 0 and lateral == 0 and 'careful' in self._modes:
             return 'careful'
         return self._walk_mode
 

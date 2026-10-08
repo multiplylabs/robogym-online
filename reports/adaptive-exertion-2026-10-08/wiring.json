@@ -1,0 +1,26 @@
+{
+  "commands_order": [
+    "motion",
+    "hand_force",
+    "terrain",
+    "exert",
+    "exertion_envelope",
+    "brace",
+    "gym_equipment"
+  ],
+  "brace_dial": [
+    {
+      "command": "exertion_envelope",
+      "field": "command",
+      "input": "dial",
+      "shape": [
+        1,
+        7
+      ]
+    }
+  ],
+  "actor_force_inputs": [
+    "task_mode_force_cmd_eff",
+    "task_mode_torque_cmd_eff"
+  ]
+}

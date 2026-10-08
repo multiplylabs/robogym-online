@@ -1,0 +1,5 @@
+[
+ {"id":"backward-left8-straight","direction":"X:-1","hand":"left","force":8,"style":"Slow walk","keys":["s"],"seconds":66,"phases":[{"at":60,"keys":[]}]},
+ {"id":"backward-left8-arc-point2","direction":"X:-1","hand":"left","force":8,"turnDeg":0.2,"keys":["e"],"seconds":66,"phases":[{"at":60,"keys":[]}]},
+ {"id":"backward-right8-arc-point2","direction":"X:-1","hand":"right","force":8,"turnDeg":0.2,"keys":["q"],"seconds":66,"phases":[{"at":60,"keys":[]}]}
+]

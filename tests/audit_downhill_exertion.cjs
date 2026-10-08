@@ -49,7 +49,7 @@ const out=process.env.BRACE_SLOPE_OUTPUT||'/tmp/brace-downhill';fs.mkdirSync(out
      if(s.falls){row.outcome='failure';break;}
      if(config.expectBlocked&&s.force.time>=t+(config.seconds||20)){row.outcome=s.blockedKeys.includes('w')?'blocked':'failure';break;}
      if(Math.abs(s.side)>course.width-.15&&s.along>0&&s.along<end){row.outcome='left_course';break;}
-     if(s.along>end+.5&&exit===null){exit=s.force.time;await page.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keyup',{key:'w'})));}
+     if(s.along>end+.5&&exit===null){exit=await page.evaluate(()=>{window.dispatchEvent(new KeyboardEvent('keyup',{key:'w'}));return window.BraceGym.force().time});row.releaseTime=exit;}
      if(exit!==null&&s.force.time>=exit+3){row.outcome='success';break;}
      if(s.force.time>=t+(config.seconds||65)){row.outcome='timeout';break;}
     }

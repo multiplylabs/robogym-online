@@ -564,19 +564,23 @@ export class LiveMotionSource {
   setCommand(forward: number, lateral: number, turn: number): void {
     const blocked=this.blockedKeys();
     const motion=typeof window==='undefined' ? null :
-      (window as Window & {BraceSteering?: {motion?: {verticalArc?:boolean,slopeExertion?:boolean,turnLimit:number,offAxisSpeed:number,turnSpeed:number,diagonalRatio:number,diagonalSpeed:number,crossSpeed:number,forwardAligned:boolean}}}).BraceSteering?.motion;
+      (window as Window & {BraceSteering?: {motion?: {adaptive?:boolean,verticalArc?:boolean,slopeExertion?:boolean,turnLimit:number,offAxisSpeed:number,turnSpeed:number,diagonalRatio:number,diagonalSpeed:number,crossSpeed:number,forwardAligned:boolean}}}).BraceSteering?.motion;
     const profile=JSON.stringify(motion ?? null);
     let speedLimit: number | null=null;
+    // Turn keys travel along a backward arc when forward travel opposes the push.
+    if(motion?.adaptive && turn!==0 && forward>0 && blocked.includes('w') && !blocked.includes('s')) forward=-forward;
     // Turning keys include forward travel; keep the turn but suppress an opposing translation.
     if((forward<0 && blocked.includes('s')) || (forward>0 && blocked.includes('w'))) forward=0;
     if((lateral<0 && blocked.includes('d')) || (lateral>0 && blocked.includes('a'))) lateral=0;
     if((turn>0 && blocked.includes('q')) || (turn<0 && blocked.includes('e'))) turn=0;
     if(motion) {
-      turn=Math.max(-motion.turnLimit,Math.min(motion.turnLimit,turn));
+      const turnLimit=motion.adaptive && forward<0 ? Math.min(2,motion.turnLimit) : motion.turnLimit;
+      turn=Math.max(-turnLimit,Math.min(turnLimit,turn));
       // Vertical-force turns are forward arcs, never a spin or backward/sideways turn.
       if(motion.verticalArc && turn!==0 && (forward<=0 || lateral!==0)) turn=0;
       if(forward>0 && lateral!==0) lateral=Math.sign(lateral)*Math.min(Math.abs(lateral),forward*motion.diagonalRatio);
-      if(motion.verticalArc && forward>0 && lateral===0) speedLimit=motion.turnSpeed;
+      if(motion.adaptive && turn!==0) speedLimit=forward<0 ? motion.offAxisSpeed : motion.turnSpeed;
+      else if(motion.verticalArc && forward>0 && lateral===0) speedLimit=motion.turnSpeed;
       else if(forward<0 || (forward===0 && lateral!==0)) speedLimit=motion.offAxisSpeed;
       else if(forward>0 && !motion.forwardAligned) speedLimit=motion.crossSpeed;
       else if(lateral!==0) speedLimit=motion.diagonalSpeed;
@@ -591,9 +595,12 @@ export class LiveMotionSource {
       return; // Only changes are worth a message; keys repeat while held.
     }
     this.command = [forward, lateral, turn];
+    const steering=typeof window==='undefined' ? null : (window as Window & {BraceSteering?: {command?:[number,number,number]}}).BraceSteering;
+    if(steering) steering.command=[forward,lateral,turn];
+    if(typeof window!=='undefined') window.dispatchEvent(new CustomEvent('brace:movement-profile'));
     this.sentMotionProfile=profile;
     this.commandSpeedLimit=speedLimit;
-    this.commandMovementProfile=motion ? (motion.verticalArc ? 'exertion_vertical' : motion.slopeExertion ? 'exertion_slope' : 'exertion') : null;
+    this.commandMovementProfile=motion ? (motion.adaptive ? (motion.slopeExertion ? 'exertion_slope_adaptive' : 'exertion_adaptive') : motion.verticalArc ? 'exertion_vertical' : motion.slopeExertion ? 'exertion_slope' : 'exertion') : null;
     if (this.connected) {
       this.socket?.send(JSON.stringify({ type: 'command', forward, lateral, turn, speed_limit:speedLimit, movement_profile:this.commandMovementProfile }));
     }

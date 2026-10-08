@@ -1,0 +1,4 @@
+[
+ {"id":"backward-push-left8-side-arc","direction":"X:-1","hand":"left","force":8,"backwardRestCap":1,"backwardSideArc":true,"keys":["e"],"seconds":66,"requireTurnDeg":20,"phases":[{"at":60,"keys":[]}]},
+ {"id":"backward-push-right8-side-arc","direction":"X:-1","hand":"right","force":8,"backwardRestCap":1,"backwardSideArc":true,"keys":["q"],"seconds":66,"requireTurnDeg":20,"phases":[{"at":60,"keys":[]}]}
+]

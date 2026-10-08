@@ -1246,6 +1246,16 @@ def install_brace_ui(dist: Path, contract: dict | None = None, mjcf: Path = DEFA
             continue
         policy = json.loads(policy_path.read_text())
         if "commands" in policy and "in_keys" in policy:
+            if "brace" in policy["commands"] and "exert" in policy["commands"]:
+                ordered = {}
+                for name, command in policy["commands"].items():
+                    if name == "brace":
+                        ordered["exertion_envelope"] = {"name": "ExertionEnvelope"}
+                        for slot in command.get("input_slots", []):
+                            if slot.get("input") == "dial":
+                                slot["command"] = "exertion_envelope"
+                    ordered[name] = command
+                policy["commands"] = ordered
             policy["commands"]["gym_equipment"] = {"name": "GymEquipment", "catalog": catalog}
             policy_path.write_text(json.dumps(policy, indent=2))
 

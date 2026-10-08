@@ -1,0 +1,1 @@
+[{"id":"forward-turn-side-combinations","direction":"X:1","hand":"both","force":8,"style":"Stealth","keys":["w","q"],"seconds":76,"phases":[{"at":20,"keys":["w","q","a"]},{"at":40,"keys":["w","e","d"]},{"at":60,"keys":[]}]}]

@@ -253,41 +253,20 @@ class GymEquipment {
     const blocked=[], reasons={};
     const block=(key,reason)=>{if(!blocked.includes(key)) blocked.push(key); reasons[key] ??= reason;};
     const active=Boolean(window.BraceExert?.enabled && force.some(v=>Math.abs(v)>.05));
-    const horizontal=Boolean(window.BraceExert?.enabled && [force[0],force[1],force[3],force[4]].some(v=>Math.abs(v ?? 0)>.05));
-    const upward=active && !horizontal && [force[2],force[5]].some(v=>v>.05) && [force[2],force[5]].every(v=>(v ?? 0)>=-.05);
     const slope=Boolean(this.context.readOnnxSlot?.({command:'terrain',field:'command'})?.[0]);
     const forwardAligned=[force[0],force[3]].some(v=>v>.05) && [force[0],force[3]].every(v=>(v ?? 0)>=-.05) && [force[1],force[2],force[4],force[5]].every(v=>Math.abs(v ?? 0)<=.05);
-    const rampQuat=this.slopeMocap>=0 ? this.context.mjData.mocap_quat.subarray(this.slopeMocap*4,this.slopeMocap*4+4) : null;
-    const rampAngle=rampQuat ? Math.acos(Math.max(-1,Math.min(1,1-2*(rampQuat[1]**2+rampQuat[2]**2))))*180/Math.PI : 10;
-    const maxForward=Math.max(force[0] ?? 0,force[3] ?? 0);
-    const bothForward=force[0]>.05 && force[3]>.05;
-    const unsupportedRampPush=slope && forwardAligned && (maxForward>8.0001 || (maxForward>5.0001 && (rampAngle>8.001 || bothForward)));
-    if(window.BraceExert?.enabled) {
-      if(active && !horizontal) for(const key of ['s','a','d']) block(key,'Vertical hand pushes support straight forward walking; upward pushes also allow forward arcs on flat ground. Change or clear the push for sideways or backward movement.');
-      if(active && !horizontal && !upward) for(const key of ['q','e']) block(key,'Downward or opposing vertical pushes do not have a supported arc-turn setting. Change or clear the push before turning.');
-      if(upward && slope) for(const key of ['w','q','e']) block(key,'Walking or turning with an upward hand push on the ramp caused falls in testing. Disable the slope, or change or clear the push before moving.');
-      if(unsupportedRampPush) block('w','Forward walking with this hand push on the current ramp caused falls in testing. Clear the push or disable the slope before moving.');
-      if([force[0],force[3]].some(v=>v>.05)) block('s','Backward movement opposes the forward hand push. This direction is not physically plausible for the current push in this demo.');
-      if([force[0],force[3]].some(v=>v<-.05)) block('w','Forward movement opposes the backward hand push. This direction is not physically plausible for the current push in this demo.');
-      if([force[1],force[4]].some(v=>v>.05)) block('d','Rightward movement opposes the leftward hand push. This direction is not physically plausible for the current push in this demo.');
-      if([force[1],force[4]].some(v=>v<-.05)) block('a','Leftward movement opposes the rightward hand push. This direction is not physically plausible for the current push in this demo.');
-      if([force[0],force[3]].some(v=>v<-.05)) block('s','Backward walking with a backward hand push caused falls even at the slow step setting. Change or clear the push before walking.');
-      // Keep horizontal exertion on one aligned travel axis; diagonal reversals fell in longer trials.
-      if([force[0],force[3]].some(v=>Math.abs(v ?? 0)>.05)) {
-        for(const key of ['a','d']) block(key,'Sideways and diagonal movement during a forward or backward hand push can cause a fall. Only aligned straight steps are supported while this push is active.');
-      }
-      // Short turn trials passed, but sustained horizontal-push turns are not reliable.
-      if(horizontal) for(const key of ['q','e']) block(key,'Turning while applying a horizontal hand push can cause a fall. Change or clear the push before turning.');
-      // Lateral pushes permit only slow aligned side steps; crossing travel and turns failed audits.
-      if([force[1],force[4]].some(v=>Math.abs(v)>.05)) {
-        for(const key of ['w','s','q','e']) block(key,'Crossing or turning while pushing sideways caused falls in testing. Only aligned side steps are supported while this push is active.');
-      }
+    if(active) {
+      if([force[0],force[3]].some(v=>v>.05)) block('s','Backward movement directly opposes the forward hand push. Change or clear the push to walk backward.');
+      if([force[0],force[3]].some(v=>v<-.05)) block('w','Forward movement directly opposes the backward hand push. Change or clear the push to walk forward.');
+      if([force[1],force[4]].some(v=>v>.05)) block('d','Rightward movement directly opposes the leftward hand push. Change or clear the push to walk right.');
+      if([force[1],force[4]].some(v=>v<-.05)) block('a','Leftward movement directly opposes the rightward hand push. Change or clear the push to walk left.');
     }
-    this.setSteeringLock(blocked, active ? {turnLimit:upward && !slope ? 10 : 0,verticalArc:upward,slopeExertion:slope && forwardAligned && !unsupportedRampPush,offAxisSpeed:.18,turnSpeed:.50,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned} : null, reasons);
+    this.setSteeringLock(blocked, active ? {adaptive:true,turnLimit:slope ? 1 : 5,slopeExertion:slope,offAxisSpeed:.18,turnSpeed:slope ? .8 : .50,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned} : null, reasons);
   }
+
   setSteeringLock(blocked, motion=null, reasons={}) {
     if(JSON.stringify(window.BraceSteering?.blockedKeys ?? [])===JSON.stringify(blocked) && JSON.stringify(window.BraceSteering?.motion ?? null)===JSON.stringify(motion) && JSON.stringify(window.BraceSteering?.reasons ?? {})===JSON.stringify(reasons)) return;
-    window.BraceSteering={blockedKeys:blocked,motion,reasons};
+    window.BraceSteering={blockedKeys:blocked,motion,reasons,command:window.BraceSteering?.command ?? [0,0,0]};
     window.dispatchEvent(new CustomEvent('brace:steering-lock'));
   }
   updateFallGuard() {
@@ -404,4 +383,39 @@ class GymEquipment {
   }
   dispose() { if (this.resolved) { this.apply('none'); this.restoreArms(); } this.resolved = false; }
 }
-export const commands = {GymEquipment};
+// Adapt the dial BEFORE BRACE computes its pose and effective force. Never edit policy outputs.
+class ExertionEnvelope {
+  constructor(_name,_config,context) {this.context=context;this.scale=1;this.dial=new Float32Array(7);this.holdUntil=0;this.heldCap=Infinity;}
+  getCommand() {return this.dial;}
+  getStateField(field) {return field==='command' ? this.dial.slice() : null;}
+  getUiConfig() {return null;}
+  reset() {this.scale=1;this.holdUntil=0;this.heldCap=Infinity;this.update(0);}
+  update(dt) {
+    const raw=this.context.readOnnxSlot?.({command:'exert',field:'command'});
+    if(!raw) return;
+    this.dial=Float32Array.from(raw);
+    if(raw[0]<=.5) {this.scale=1;this.holdUntil=0;this.heldCap=Infinity;window.BraceExertionEnvelope={scale:1,cap:null,moving:false};return;}
+    const [f,l,t]=window.BraceSteering?.command ?? [0,0,0];
+    const slope=Boolean(this.context.readOnnxSlot?.({command:'terrain',field:'command'})?.[0]);
+    const moving=Math.hypot(f,l)>.01 || Math.abs(t)>.01;
+    const turning=Math.abs(t)>.01;
+    const cross=f<-.01 || Math.abs(l)>.01 || !window.BraceSteering?.motion?.forwardAligned;
+    let cap=!moving ? Infinity : slope ? (cross||turning ? 1.5 : 5) : cross ? 2 : turning ? 3 : Infinity;
+    // Settle the backward-push stance at the same budget used for its first step.
+    if([raw[1],raw[4]].some(v=>v<-.05)) cap=Math.min(cap,1);
+    if(f<-.01) cap=Math.min(cap,1);
+    const now=Number(this.context.mjData?.time ?? 0);
+    if(moving && Number.isFinite(cap)) {this.heldCap=now<this.holdUntil ? Math.min(this.heldCap,cap) : cap;this.holdUntil=now+1.6;}
+    if(now<this.holdUntil) cap=Math.min(cap,this.heldCap);
+    const q=this.context.mjData?.qpos?.subarray(3,7);
+    const tilt=q ? Math.acos(Math.max(-1,Math.min(1,1-2*(q[1]**2+q[2]**2)))) : 0;
+    if(tilt>.30 && moving) cap=Math.min(cap,Math.max(.25,2*(1-(tilt-.30)/.20)));
+    const maximum=Math.max(Math.hypot(...raw.slice(1,4)),Math.hypot(...raw.slice(4,7)));
+    const want=raw[0]>.5 && maximum>.01 ? Math.min(1,cap/maximum) : 1;
+    const tau=want<this.scale ? .12 : 1;
+    this.scale+= (want-this.scale)*(dt>0 ? 1-Math.exp(-dt/tau) : 1);
+    for(let i=1;i<this.dial.length;i++) this.dial[i]*=this.scale;
+    window.BraceExertionEnvelope={scale:this.scale,cap:Number.isFinite(cap)?cap:null,moving,turning,slope};
+  }
+}
+export const commands = {GymEquipment,ExertionEnvelope};

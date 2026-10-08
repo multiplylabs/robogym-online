@@ -1,0 +1,3 @@
+browser_steering: PASS keyboard/pointer opposite blocking; forward+turn and sides enabled; backward arc; hover explanation; clear restores steering
+browser_slope_profile: PASS only opposite key disabled; forward/slope/arc/side commands enabled; raw 8 N versus adapted target; reconnect and clear restoration
+browser_upward_arc: PASS upward moving arc, side/back controls, reconnect profile, broad ramp arc and clear restore

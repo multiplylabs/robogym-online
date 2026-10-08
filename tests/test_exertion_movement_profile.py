@@ -67,3 +67,68 @@ class ExertionMovementTests(unittest.TestCase):
         s._browser_vertical_exertion=False
         s._command=(.4,0,20)
         self.assertEqual(s.current_mode(),'stealth')
+
+    def test_adaptive_ramp_arcs_use_native_careful_and_backward_steps_settle(self):
+        s=self.stream(True)
+        s._move_angle=s._heading
+        s._modes.add('careful')
+        s._browser_adaptive_exertion=True
+        s._browser_slope_exertion=True
+        s._command=(.8,0,1)
+        s._target_speed=.8
+        self.assertEqual(s.current_mode(),'careful')
+        s._browser_slope_exertion=False
+        s._target_speed=.5
+        self.assertEqual(s.current_mode(),'slow_walk')
+        s._command=(-.4,0,0)
+        s._target_speed=.18
+        s._browser_step_time=3
+        self.assertEqual(s.current_mode(),'idle')
+        s._speed_cmd=.18
+        for _ in range(30):s._advance_target_speed()
+        self.assertAlmostEqual(s._speed_cmd,0)
+        self.assertEqual(s.current_mode(),'idle')
+        s._browser_step_time=6
+        self.assertEqual(s.current_mode(),'slow_walk')
+        s._browser_adaptive_exertion=False
+        self.assertFalse(s._adaptive_step_pause())
+
+    def test_adaptive_planning_uses_the_preset_on_the_first_frame(self):
+        s=self.stream(True)
+        s._browser_adaptive_exertion=True
+        s._command=(-.4,0,1)
+        s._target_speed=.18
+        s._speed_cmd=.8
+        s._advance_target_speed()
+        self.assertAlmostEqual(s._speed_cmd,.18)
+        s._browser_step_time=3
+        s._advance_target_speed()
+        self.assertEqual(s._speed_cmd,0)
+        s._browser_step_time=6
+        s._advance_target_speed()
+        self.assertAlmostEqual(s._speed_cmd,.18)
+        s._command=(.4,0,5)
+        s._move_angle=s._heading
+        s._target_speed=.5
+        s._advance_target_speed()
+        self.assertAlmostEqual(s._speed_cmd,.5)
+        s._browser_adaptive_exertion=False
+        s._target_speed=.8
+        s._advance_target_speed()
+        self.assertGreater(s._speed_cmd,.5)
+        self.assertLess(s._speed_cmd,.8)
+
+    def test_adaptive_release_targets_zero_speed_and_backward_settles_after_one_second(self):
+        s=self.stream(True)
+        s._browser_adaptive_exertion=True
+        s._command=(-.4,0,1)
+        s._target_speed=.18
+        s._browser_step_time=1.1
+        s._advance_target_speed()
+        self.assertEqual(s.current_mode(),'idle')
+        self.assertEqual(s._speed_cmd,0)
+        s._command=(0,0,0)
+        s._target_speed=.8
+        s._advance_target_speed()
+        self.assertEqual(s._speed_cmd,0)
+        self.assertEqual(s.current_mode(),'idle')

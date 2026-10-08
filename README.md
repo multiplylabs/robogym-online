@@ -481,15 +481,10 @@ translation, and `browser_reference.cjs` checks alignment, annotations, force tr
 `browser_reference_slope.cjs` checks that the displayed reference retains its source height
 through a ramp crossing, rather than inheriting the robot's terrain elevation.
 
-Steering keys opposing an active hand push are dimmed and disabled. Keyboard input is filtered
-as well; an already-held opposing key stops when the push is applied. Horizontal pushes permit only supported straight travel aligned with the push: forward pushes
-disable S, A/D and Q/E; lateral pushes disable W/S and Q/E, as well as the opposing side key.
-Backward horizontal pushes disable all travel/turn keys: even aligned backward walking at the
-0.18 m/s cap failed after 22.78 s in the longer 8 N trial.
-Longer 8 N trials reproduced a right-hand forward-push turn failure after 27.34 s, a slope turn
-failure after 17.34 s, and a diagonal-reversal failure after 15.38 s. Clear force restores the keys.
-Hover/focus explanations describe the active restriction; held keys and direct command components
-are filtered as well. Mixed horizontal pushes can disable all translation when no axis is supported.
+Steering keys directly opposing an active hand push are dimmed and disabled. Keyboard input is
+filtered as well; an already-held opposing key stops when the push is applied. Turns and sideways
+travel remain available with automatic gait, arc and effective-force settings described below.
+Hover/focus explanations describe the active restriction. Clear force restores ordinary steering.
 
 The fall guard has a 0.75 s spawn grace, predicts tipping 0.35 s ahead and downward motion
 0.30 s ahead, and confirms predicted danger for 60 ms before respawning. Hard falls reset immediately. Automatic recovery keeps the fall XY location and existing ramp
@@ -499,7 +494,8 @@ The green reference retains its flat-ground height. The explicit Reset button st
 new episode using the reference and places a fresh ramp. `browser_respawn_location.cjs` checks
 flat ground, ascent, plateau and descent, plus five seconds without another fall per recovery.
 
-Exertion movement uses a 0.18 m/s planner target cap for supported side steps. Upward-only
+Historical movement settings (2026-10-07, superseded by the adaptive settings below): exertion
+movement used a 0.18 m/s planner target cap for supported side steps. Upward-only
 pushes temporarily use Slow walk at a 0.50 m/s target with forward arc turns capped at
 10 deg/s. Backward and sideways inputs are disabled for vertical pushes; downward or opposing
 vertical pushes also disable turning. Upward pushes disable all movement when the slope is
@@ -521,10 +517,10 @@ seconds each), and 2 unsupported lateral-push command combinations were blocked 
 The baseline had 10 successes and 2 failures in 12 trials. Longer candidate audits also
 reproduced crossing-forward and side-to-turn failures; none are discarded from the reports.
 
-The follow-up extended audit is retained in `reports/exertion-long-turns-2026-10-07`.
-It supersedes the initial short-duration movement envelope. Turning and diagonal/cross-axis
-walking under horizontal pushes are disabled, rather than relying on a reduced yaw rate.
-The force command, effective-force computation and contact/controller physics are unchanged.
+The historical extended audit is retained in `reports/exertion-long-turns-2026-10-07`.
+It superseded the initial short-duration movement envelope and led to blanket horizontal turn
+and cross-axis restrictions. Those restrictions are now superseded by the adaptive settings
+below; the earlier failures remain part of the evidence.
 
 Extended final checks: six permitted movement trials passed 40–45 simulation seconds without
 a fall/respawn; two unsupported turn/backward requests were verified blocked for 40–45 s.
@@ -559,19 +555,40 @@ absolute target height; lifting or tilting its reference to the ramp would not f
 position/velocity pairing and valid buffer-end holding. `test_reference_frame.py` also verifies
 common XY and Z translation invariance through the deployed ONNX.
 
-For forward exertion with the slope enabled, selecting Slow walk temporarily uses Careful at
-its native 0.8 m/s target. Clear force or disable the slope to restore the selected Slow walk
-style and 0.5 m/s target. This fallback applies to permitted forward travel, and is labeled next
-to the style controls. It never changes the requested force. Simply slowing the gait further
-was not reliable: 0.35 m/s Slow walk left the course, while 0.5/0.6 m/s Careful fell downhill.
+The 2026-10-08 follow-up replaces the blanket turn, sideways and loaded-ramp locks with automatic
+movement settings. Only a horizontal movement directly opposing either active hand's push is
+blocked (forward +X blocks S; backward −X blocks W; +Y blocks D; −Y blocks A). Vertical pushes
+have no opposing horizontal movement key. Q/E stay enabled, including while W is held.
 
-Loaded walking is restricted when trials found it unreliable: forward pushes above 5 N per
-hand block W on ramps above 8°, and when both hands push. Pushes above 8 N per hand block W
-on any ramp. The key dims and explains the restriction on hover; a held key stops immediately.
-Clearing force or disabling the slope restores movement. These thresholds are conservative
-movement permissions over the tested presets, not force caps or a universal stability guarantee.
-The current audit results, including unsuccessful attempts, are retained in
-`reports/downhill-exertion-2026-10-08`.
+Exertion arcs use Slow walk at 0.5 m/s with a 5°/s yaw cap on flat ground (nominal radius 5.7 m).
+With the slope enabled, forward travel and broad arcs use native Careful at 0.8 m/s with a
+1°/s yaw cap (nominal radius 45.8 m). Side/back steps use Slow walk at 0.18 m/s; backward
+travel alternates one second stepping and five seconds settling. Backward arcs use 2°/s on flat
+ground and 1°/s with the ramp enabled.
+Diagonals limit lateral/forward ratio to 0.364 and use a 0.30 m/s target. The selected style
+returns when exertion clears. These values are automatic; users choose force and movement.
+Adaptive exertion gives each new ONNX horizon the current speed preset immediately, including
+zero while idle and during backward settling. Reusing a slewed speed from the previous gait can generate a whole
+side/back horizon above its cap or a turning horizon near zero. Reference poses still come from
+the generator's context; ordinary steering retains its existing speed smoothing.
+
+A pre-brace `ExertionEnvelope` retains the requested dial and scales the solver input when
+movement needs a smaller target: flat arcs 3 N per hand, side/cross/diagonal movement 2 N,
+backward pushes 1 N including their initial standing stance, forward ramp travel 5 N, and ramp
+arcs/cross steps 1.5 N. Reductions have
+a 0.12 s time constant; recovery has 1 s and a 1.6 s settling hold. Rising torso tilt further
+reduces the budget. BRACE still applies its existing reach, effort and support-polygon limits;
+its published effective force drives the policy, arm feedback, physical contact and blue arrow.
+The requested value remains visible; no force is invented by changing the measured value.
+No new wrist moment is added, and the ONNX policy/brace weights are unchanged.
+
+`tests/exertion_envelope.cjs` verifies input scaling before BRACE, sign/raw preservation,
+settling/recovery, terrain/tilt handling and compensation bypass. `tests/steering_lock.cjs`
+checks only directly opposing keys are blocked, with wide arcs, backward arcs and clear restoration.
+Follow-up movement trials are retained in `reports/adaptive-exertion-2026-10-08`.
+
+The earlier downhill audit and its unsuccessful attempts remain in
+`reports/downhill-exertion-2026-10-08`; its blocked-ramp envelope is superseded by the follow-up.
 
 Run the full-course browser audit sequentially against a dedicated generator to keep timing
 comparable. ONNX browser sessions otherwise have independent state. Success requires remaining
@@ -580,6 +597,6 @@ on the course, crossing ascent/plateau/descent, and observing for three further 
 ```bash
 export NODE_PATH="$(python -c 'import mjswan; from pathlib import Path; print(Path(mjswan.__file__).parent / "template/node_modules")')"
 BRACE_TEST_URL='http://127.0.0.1:8080/?stream=ws%3A%2F%2F127.0.0.1%3A8765' \
-BRACE_SLOPE_CASES_FILE=reports/downhill-exertion-2026-10-08/final-cases.json \
+BRACE_SLOPE_CASES_FILE=reports/adaptive-exertion-2026-10-08/downhill/cases.json \
 BRACE_SLOPE_OUTPUT=/tmp/brace-downhill-verification node tests/audit_downhill_exertion.cjs
 ```

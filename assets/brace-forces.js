@@ -84,7 +84,7 @@
         row.innerHTML=`<strong>${h===0 ? 'Left' : 'Right'} hand</strong><small class="brace-requested">Requested ${req.toFixed(1)} N</small><div class="brace-gauge-values"><span>Effective <b>${cmd.toFixed(1)} N</b></span><span>Measured <b>${actual.toFixed(1)} N</b></span></div><div class="brace-gauge-track"><i style="width:${Math.min(100,Math.max(0,actual)/9*100)}%"></i><em style="left:${Math.min(100,cmd/9*100)}%"></em></div>`;
         target.append(row);
       }
-      widget.querySelector('.brace-gauge-note').textContent=target.children.length ? 'The target includes the checkpoint’s reach and balance limits. Measured force comes from the virtual contact; the hands stay near their IK pose.' : 'Choose a force to begin. Readings come from the virtual contact, in newtons.';
+      widget.querySelector('.brace-gauge-note').textContent=target.children.length ? 'The effective target adapts automatically to movement and balance, then applies the checkpoint’s reach and effort limits. Your requested force stays unchanged. Measured force comes from the virtual contact; the hands stay near their IK pose.' : 'Choose a force to begin. Readings come from the virtual contact, in newtons.';
     });
     function maximum() {
       const section = controls(panel)[state.mode === 'exert' ? 'exert' : 'load'];

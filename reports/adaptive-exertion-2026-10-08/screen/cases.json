@@ -1,0 +1,118 @@
+[
+  {
+    "id": "adaptive-arc-left",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "right",
+    "keys": [
+      "q"
+    ],
+    "seconds": 45
+  },
+  {
+    "id": "adaptive-arc-right",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "right",
+    "keys": [
+      "e"
+    ],
+    "seconds": 45
+  },
+  {
+    "id": "adaptive-side-left",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "a"
+    ],
+    "seconds": 45
+  },
+  {
+    "id": "adaptive-side-right",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "d"
+    ],
+    "seconds": 45
+  },
+  {
+    "id": "adaptive-diagonal-reversals",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "w",
+      "a"
+    ],
+    "phases": [
+      {
+        "at": 10,
+        "keys": [
+          "w",
+          "d"
+        ]
+      },
+      {
+        "at": 20,
+        "keys": [
+          "w",
+          "a"
+        ]
+      },
+      {
+        "at": 30,
+        "keys": [
+          "w",
+          "d"
+        ]
+      }
+    ],
+    "seconds": 40
+  },
+  {
+    "id": "adaptive-slope-arc",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "w",
+      "q"
+    ],
+    "slope": true,
+    "seconds": 40
+  },
+  {
+    "id": "adaptive-upward-arc",
+    "direction": "Z:1",
+    "force": 8,
+    "hand": "right",
+    "keys": [
+      "q"
+    ],
+    "seconds": 45
+  },
+  {
+    "id": "adaptive-backward",
+    "direction": "X:-1",
+    "force": 5,
+    "hand": "right",
+    "keys": [
+      "s"
+    ],
+    "seconds": 45
+  },
+  {
+    "id": "adaptive-side-push-forward",
+    "direction": "Y:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "w"
+    ],
+    "seconds": 45
+  }
+]

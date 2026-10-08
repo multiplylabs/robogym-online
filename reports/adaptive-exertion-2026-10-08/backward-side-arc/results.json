@@ -1,0 +1,249 @@
+[
+  {
+    "id": "backward-push-left8-side-arc",
+    "direction": "X:-1",
+    "hand": "left",
+    "force": 8,
+    "backwardRestCap": 1,
+    "backwardSideArc": true,
+    "keys": [
+      "e"
+    ],
+    "seconds": 66,
+    "requireTurnDeg": 20,
+    "phases": [
+      {
+        "at": 60,
+        "keys": []
+      }
+    ],
+    "outcome": "failure",
+    "errors": [],
+    "start": 4.519999999999844,
+    "resets": [
+      {
+        "reason": "imminent fall",
+        "testFailed": false,
+        "force": {
+          "rampAngleDeg": 0,
+          "time": 7.500000000000839,
+          "raw": [
+            1,
+            -8,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "commanded": [
+            -0.5342883467674255,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "kv": [
+            60.44088363647461,
+            400
+          ],
+          "cv": [
+            3.8477864265441895,
+            38
+          ],
+          "axis": [
+            -1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "referenceAxisWorld": [
+            -0.9995279312133789,
+            0.03072330728173256,
+            0,
+            0,
+            0,
+            0
+          ],
+          "torsoQuat": [
+            0.8522789504030981,
+            0.4812764204079811,
+            0.004652189477063418,
+            -0.20487058108020872
+          ],
+          "refHand": [
+            0.20854681730270386,
+            0.20999068021774292,
+            0.6410308480262756,
+            0.20049357414245605,
+            -0.22960960865020752,
+            0.6575281620025635
+          ],
+          "refAnchor": [
+            0,
+            0,
+            0.8108331561088562
+          ],
+          "anchorDelta": [
+            -0.001241171034052968,
+            -0.0003798467805609107,
+            -0.0001468062400817871
+          ],
+          "reaction": [
+            [
+              0.039929472314208854,
+              -0.014079367746214115,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "root": [
+            -0.0800216168455207,
+            -0.3855539584866277,
+            0.6950916290538605
+          ],
+          "rootQuat": [
+            0.947973943101158,
+            0.27142386696173826,
+            -0.09682036407797126,
+            -0.13527861894840346
+          ]
+        }
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": -0.45,
+        "turn": -1,
+        "speed_limit": 0.18,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      }
+    ],
+    "blocked": [],
+    "requestedForcePreserved": true,
+    "duration": 2.980000000000995,
+    "headingChangeDeg": -15.425625869741681,
+    "minUpright": 0.8339098030866914,
+    "minHeight": 0.6950916290538605,
+    "displacement": 0.38645286258936395,
+    "pathLength": 0.4169134267835394,
+    "referencePathLength": 0.6273797393355657,
+    "effectiveCombinedNormRange": [
+      0.4904329180717468,
+      1.0
+    ]
+  },
+  {
+    "id": "backward-push-right8-side-arc",
+    "direction": "X:-1",
+    "hand": "right",
+    "force": 8,
+    "backwardRestCap": 1,
+    "backwardSideArc": true,
+    "keys": [
+      "q"
+    ],
+    "seconds": 66,
+    "requireTurnDeg": 20,
+    "phases": [
+      {
+        "at": 60,
+        "keys": []
+      }
+    ],
+    "outcome": "success",
+    "errors": [],
+    "start": 4.6199999999998775,
+    "resets": [],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0.45,
+        "turn": 1,
+        "speed_limit": 0.18,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      }
+    ],
+    "blocked": [
+      "w"
+    ],
+    "requestedForcePreserved": true,
+    "duration": 66.03999999997346,
+    "headingChangeDeg": 57.73403303959129,
+    "minUpright": 0.9720666277246424,
+    "minHeight": 0.7434948516164349,
+    "displacement": 13.263155356840882,
+    "pathLength": 15.45117587117317,
+    "referencePathLength": 15.260896807849093,
+    "effectiveCombinedNormRange": [
+      1.0,
+      1.0
+    ]
+  }
+]

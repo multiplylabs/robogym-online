@@ -1,0 +1,352 @@
+[
+  {
+    "id": "native-careful-slope-arc",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "w",
+      "q"
+    ],
+    "slope": true,
+    "seconds": 50,
+    "outcome": "failure",
+    "errors": [],
+    "start": 4.939999999999984,
+    "resets": [
+      {
+        "reason": "imminent fall",
+        "testFailed": false,
+        "force": {
+          "rampAngleDeg": 9.857137087732553,
+          "time": 18.479999999999603,
+          "raw": [
+            1,
+            8,
+            0,
+            0,
+            8,
+            0,
+            0
+          ],
+          "commanded": [
+            0.5518701076507568,
+            0,
+            0,
+            0.5518701076507568,
+            0,
+            0
+          ],
+          "kv": [
+            59.34586715698242,
+            59.0331916809082
+          ],
+          "cv": [
+            3.7780752182006836,
+            3.7581698894500732
+          ],
+          "axis": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "referenceAxisWorld": [
+            0.9906071424484253,
+            0.13673920929431915,
+            0,
+            0.9906071424484253,
+            0.13673920929431915,
+            0
+          ],
+          "torsoQuat": [
+            0.6549631230337595,
+            0.08430411280054938,
+            -0.2583281975520999,
+            0.7051118112613486
+          ],
+          "refHand": [
+            0.17020225524902344,
+            0.24851594865322113,
+            0.6414586901664734,
+            0.22525453567504883,
+            -0.18778114020824432,
+            0.6273338198661804
+          ],
+          "refAnchor": [
+            0,
+            0,
+            0.801744818687439
+          ],
+          "anchorDelta": [
+            0.0023689952213317156,
+            0.0003386298776604235,
+            0.00036215782165527344
+          ],
+          "reaction": [
+            [
+              0.3259387877803431,
+              -3.600109507410316,
+              0
+            ],
+            [
+              -0.12091115380191267,
+              1.3355065756935012,
+              0
+            ]
+          ],
+          "root": [
+            2.732538986545573,
+            -0.5895949139675825,
+            0.5359822359464307
+          ],
+          "rootQuat": [
+            0.6710602197462318,
+            0.0828315811438804,
+            -0.2975314766783879,
+            0.6740119665294685
+          ]
+        }
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0.8,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 1.2000000000000002,
+        "lateral": 0,
+        "turn": 1,
+        "speed_limit": 0.8,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0.4,
+        "lateral": 0,
+        "turn": 1,
+        "speed_limit": 0.8,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      }
+    ],
+    "blocked": [],
+    "requestedForcePreserved": true,
+    "duration": 13.539999999999619,
+    "headingChangeDeg": -174.0530970486598,
+    "minUpright": 0.020338338482933427,
+    "minHeight": 0.08275921594541281,
+    "displacement": 2.0057658925591175,
+    "pathLength": 3.957334800464027,
+    "referencePathLength": 4.6951456948662535,
+    "effectiveCombinedNormRange": [
+      0.3535533905932738,
+      4.983859778791398
+    ]
+  },
+  {
+    "id": "settled-backward-steps",
+    "direction": "X:-1",
+    "force": 5,
+    "hand": "right",
+    "keys": [
+      "s"
+    ],
+    "seconds": 60,
+    "outcome": "failure",
+    "errors": [],
+    "start": 4.579999999999864,
+    "resets": [
+      {
+        "reason": "imminent fall",
+        "testFailed": false,
+        "force": {
+          "rampAngleDeg": 0,
+          "time": 50.29999999997347,
+          "raw": [
+            1,
+            0,
+            0,
+            0,
+            -5,
+            0,
+            0
+          ],
+          "commanded": [
+            0,
+            0,
+            0,
+            -0.45876002311706543,
+            0,
+            0
+          ],
+          "kv": [
+            400,
+            68.80427551269531
+          ],
+          "cv": [
+            22.11501693725586,
+            4.380217552185059
+          ],
+          "axis": [
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0
+          ],
+          "referenceAxisWorld": [
+            0,
+            0,
+            0,
+            -0.9989246129989624,
+            -0.04636477679014206,
+            0
+          ],
+          "torsoQuat": [
+            0.8215513104342961,
+            -0.19577308276258493,
+            -0.2179318615075608,
+            -0.4891135329646644
+          ],
+          "refHand": [
+            0.2147883176803589,
+            0.23369905352592468,
+            0.703572690486908,
+            0.2317126989364624,
+            -0.20559613406658173,
+            0.6857191920280457
+          ],
+          "refAnchor": [
+            0,
+            0,
+            0.8287582993507385
+          ],
+          "anchorDelta": [
+            -0.0008345418609678745,
+            0.00020843965467065573,
+            4.231929779052734e-06
+          ],
+          "reaction": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              -0.8205877193475537,
+              1.1723690480256985,
+              0
+            ]
+          ],
+          "root": [
+            -1.82671222776911,
+            0.19471880472283207,
+            0.5436849802929248
+          ],
+          "rootQuat": [
+            0.8329282045361791,
+            0.027386048332496058,
+            -0.3374483566710347,
+            -0.43773190085357877
+          ]
+        }
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": -0.5,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": 0.18,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      }
+    ],
+    "blocked": [],
+    "requestedForcePreserved": true,
+    "duration": 45.71999999997361,
+    "headingChangeDeg": -53.702814968569555,
+    "minUpright": 0.023204110708243908,
+    "minHeight": 0.07085231504519428,
+    "displacement": 2.1094651741003583,
+    "pathLength": 3.551384325867709,
+    "referencePathLength": 4.185740356243565,
+    "effectiveCombinedNormRange": [
+      0.25000011920928955,
+      2.47151780128479
+    ]
+  }
+]

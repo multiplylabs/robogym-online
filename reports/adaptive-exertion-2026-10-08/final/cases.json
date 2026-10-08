@@ -1,0 +1,254 @@
+[
+  {
+    "id": "final-full-left",
+    "direction": "X:1",
+    "hand": "right",
+    "force": 8,
+    "keys": [
+      "q"
+    ],
+    "style": "Slow walk",
+    "seconds": 96,
+    "phases": [
+      {
+        "at": 90,
+        "keys": []
+      }
+    ],
+    "requireRotation": true,
+    "minArcMeters": 20
+  },
+  {
+    "id": "final-full-right",
+    "direction": "X:1",
+    "hand": "both",
+    "force": 8,
+    "keys": [
+      "e"
+    ],
+    "style": "Object carrying",
+    "seconds": 96,
+    "phases": [
+      {
+        "at": 90,
+        "keys": []
+      }
+    ],
+    "requireRotation": true,
+    "minArcMeters": 20
+  },
+  {
+    "id": "final-side-reversals",
+    "direction": "X:1",
+    "hand": "both",
+    "force": 8,
+    "keys": [
+      "a"
+    ],
+    "seconds": 76,
+    "phases": [
+      {
+        "at": 15,
+        "keys": [
+          "d"
+        ]
+      },
+      {
+        "at": 30,
+        "keys": [
+          "w",
+          "a"
+        ]
+      },
+      {
+        "at": 45,
+        "keys": [
+          "w",
+          "d"
+        ]
+      },
+      {
+        "at": 60,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-lateral-push-forward-turn",
+    "direction": "Y:1",
+    "hand": "both",
+    "force": 8,
+    "keys": [
+      "w"
+    ],
+    "seconds": 66,
+    "phases": [
+      {
+        "at": 20,
+        "keys": [
+          "q"
+        ]
+      },
+      {
+        "at": 60,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-upward-full-arc",
+    "direction": "Z:1",
+    "hand": "left",
+    "force": 8,
+    "keys": [
+      "q"
+    ],
+    "style": "Careful",
+    "seconds": 96,
+    "phases": [
+      {
+        "at": 90,
+        "keys": []
+      }
+    ],
+    "requireRotation": true,
+    "minArcMeters": 20
+  },
+  {
+    "id": "final-downward-side",
+    "direction": "Z:-1",
+    "hand": "both",
+    "force": 8,
+    "keys": [
+      "a"
+    ],
+    "seconds": 66,
+    "phases": [
+      {
+        "at": 30,
+        "keys": [
+          "d"
+        ]
+      },
+      {
+        "at": 60,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-backward-steps",
+    "direction": "X:-1",
+    "hand": "right",
+    "force": 5,
+    "keys": [
+      "s"
+    ],
+    "style": "Slow walk",
+    "seconds": 66,
+    "phases": [
+      {
+        "at": 60,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-backward-arc",
+    "direction": "X:-1",
+    "hand": "left",
+    "force": 8,
+    "keys": [
+      "e"
+    ],
+    "seconds": 66,
+    "phases": [
+      {
+        "at": 60,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-slope-left-arc",
+    "direction": "X:1",
+    "hand": "both",
+    "force": 8,
+    "keys": [
+      "w",
+      "q"
+    ],
+    "slope": true,
+    "style": "Slow walk",
+    "seconds": 56,
+    "phases": [
+      {
+        "at": 50,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-slope-right-arc",
+    "direction": "X:1",
+    "hand": "left",
+    "force": 8,
+    "keys": [
+      "w",
+      "e"
+    ],
+    "slope": true,
+    "seconds": 56,
+    "phases": [
+      {
+        "at": 50,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-slope-side-transition",
+    "direction": "X:1",
+    "hand": "right",
+    "force": 8,
+    "keys": [
+      "w"
+    ],
+    "slope": true,
+    "seconds": 46,
+    "phases": [
+      {
+        "at": 12,
+        "keys": [
+          "a"
+        ]
+      },
+      {
+        "at": 15,
+        "keys": [
+          "d"
+        ]
+      },
+      {
+        "at": 18,
+        "keys": [
+          "w"
+        ]
+      },
+      {
+        "at": 40,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "final-opposite-blocked",
+    "direction": "X:1",
+    "hand": "right",
+    "force": 8,
+    "keys": [
+      "s"
+    ],
+    "seconds": 20
+  }
+]

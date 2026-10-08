@@ -52,3 +52,26 @@ class SpeedLimitTests(unittest.IsolatedAsyncioTestCase):
                     observed.append((stream.speed,stream._browser_slope_exertion))
         await _pump(Socket(),stream)
         self.assertEqual(observed,[(.8,True),(.8,True),(.8,True),(.5,False)])
+
+    async def test_adaptive_profiles_apply_arc_side_and_ramp_limits_across_styles(self):
+        class Stream:
+            style='object_carrying'
+            def set_target_speed(self,speed):self.speed=speed
+            def set_command(self,*command):self.command=command
+            def set_style(self,style):self.style=style
+        stream=Stream()
+        observed=[]
+        class Socket:
+            async def __aiter__(self):
+                import json
+                for request in [
+                    {'type':'command','forward':.4,'lateral':0,'turn':5,'speed_limit':.5,'movement_profile':'exertion_adaptive'},
+                    {'type':'style','name':'careful'},
+                    {'type':'command','forward':0,'lateral':.45,'turn':0,'speed_limit':.18,'movement_profile':'exertion_adaptive'},
+                    {'type':'command','forward':.8,'lateral':0,'turn':1,'speed_limit':.8,'movement_profile':'exertion_slope_adaptive'},
+                    {'type':'command','forward':0,'lateral':0,'turn':0,'movement_profile':None},
+                ]:
+                    yield json.dumps(request)
+                    observed.append((stream.speed,stream._browser_adaptive_exertion,stream._browser_slope_exertion))
+        await _pump(Socket(),stream)
+        self.assertEqual(observed,[(.5,True,False),(.5,True,False),(.18,True,False),(.8,True,True),(.8,False,False)])

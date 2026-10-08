@@ -1,0 +1,14 @@
+{
+  "assets/compiled_models_wrench/unified_pipeline.onnx": {
+    "sha256": "22e9e8549e448f18c656d373c6ebbe66e90ca11ca72629f5c3c2e93d9b434ec9",
+    "bytes": 31103501
+  },
+  "assets/brace_wrench.onnx": {
+    "sha256": "2d953bc58a847d1b1bd117441198a31071c5a382b42db76253211774e010445e",
+    "bytes": 5142573
+  },
+  "/home/seahorse/Humanoid/GR00T-WholeBodyControl/gear_sonic_deploy/planner/target_vel/V2/planner_sonic.onnx": {
+    "sha256": "39b553e197f62f077975ba38512bc04781a3fc37c2af7c6756e04629f760edea",
+    "bytes": 773952989
+  }
+}

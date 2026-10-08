@@ -1,0 +1,108 @@
+{
+  "screen": {
+    "counts": {
+      "success": 7,
+      "failure": 2
+    },
+    "trials": 9
+  },
+  "parameters": {
+    "counts": {
+      "failure": 2,
+      "success": 7
+    },
+    "trials": 9
+  },
+  "recovery": {
+    "counts": {
+      "failure": 2
+    },
+    "trials": 2
+  },
+  "quiet": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  },
+  "final": {
+    "counts": {
+      "success": 10,
+      "failure": 1,
+      "blocked": 1
+    },
+    "trials": 12
+  },
+  "backward": {
+    "counts": {
+      "failure": 1,
+      "success": 2
+    },
+    "trials": 3
+  },
+  "backward-rest": {
+    "counts": {
+      "success": 1,
+      "failure": 1
+    },
+    "trials": 2
+  },
+  "backward-side-arc": {
+    "counts": {
+      "failure": 1,
+      "success": 1
+    },
+    "trials": 2
+  },
+  "combined": {
+    "counts": {
+      "success": 1
+    },
+    "trials": 1
+  },
+  "downhill": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  },
+  "strict": {
+    "counts": {
+      "failure": 2,
+      "success": 3
+    },
+    "trials": 5
+  },
+  "cadence": {
+    "counts": {
+      "failure": 1,
+      "success": 1
+    },
+    "trials": 2
+  },
+  "strict-downhill": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  },
+  "idle": {
+    "counts": {
+      "success": 4,
+      "incomplete_turn": 1
+    },
+    "trials": 5
+  },
+  "back-yaw2": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  },
+  "idle-downhill": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  }
+}

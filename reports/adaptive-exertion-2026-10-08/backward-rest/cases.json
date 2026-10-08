@@ -1,0 +1,37 @@
+[
+  {
+    "id": "backward-rest1-left8-straight",
+    "direction": "X:-1",
+    "hand": "left",
+    "force": 8,
+    "backwardRestCap": 1,
+    "keys": [
+      "s"
+    ],
+    "seconds": 66,
+    "phases": [
+      {
+        "at": 60,
+        "keys": []
+      }
+    ]
+  },
+  {
+    "id": "backward-rest1-left8-arc",
+    "direction": "X:-1",
+    "hand": "left",
+    "force": 8,
+    "backwardRestCap": 1,
+    "keys": [
+      "e"
+    ],
+    "seconds": 66,
+    "phases": [
+      {
+        "at": 60,
+        "keys": []
+      }
+    ],
+    "requireTurnDeg": 5
+  }
+]

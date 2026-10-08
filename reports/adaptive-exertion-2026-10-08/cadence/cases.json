@@ -1,0 +1,4 @@
+[
+ {"id":"cadence1-5-left8-slow","direction":"X:-1","hand":"left","force":8,"style":"Slow walk","backwardRestCap":1,"keys":["s"],"seconds":66,"phases":[{"at":60,"keys":[]}]},
+ {"id":"cadence1-5-left8-arc","direction":"X:-1","hand":"left","force":8,"backwardRestCap":1,"keys":["e"],"seconds":66,"requireTurnDeg":5,"phases":[{"at":60,"keys":[]}]}
+]

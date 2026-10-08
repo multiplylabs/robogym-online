@@ -1,0 +1,4 @@
+[
+ {"id":"adaptive-downhill-slow-right8","style":"Slow walk","force":8,"hand":"right","direction":"X:1","angle":10,"seconds":65},
+ {"id":"adaptive-downhill-stealth-both8","style":"Stealth","force":8,"hand":"both","direction":"X:1","angle":10,"seconds":65}
+]

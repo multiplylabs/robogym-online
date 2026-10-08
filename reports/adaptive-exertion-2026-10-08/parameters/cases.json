@@ -1,0 +1,108 @@
+[
+  {
+    "id": "wide-slope-arc",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "w",
+      "q"
+    ],
+    "slope": true,
+    "seconds": 50
+  },
+  {
+    "id": "backward-budget-1N",
+    "direction": "X:-1",
+    "force": 5,
+    "hand": "right",
+    "keys": [
+      "s"
+    ],
+    "seconds": 60
+  },
+  {
+    "id": "full-rotation-cap3",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "right",
+    "keys": [
+      "q"
+    ],
+    "arcCap": 3,
+    "seconds": 90,
+    "requireRotation": true,
+    "minArcMeters": 20
+  },
+  {
+    "id": "full-rotation-cap5",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "right",
+    "keys": [
+      "q"
+    ],
+    "arcCap": 5,
+    "seconds": 90,
+    "requireRotation": true,
+    "minArcMeters": 20
+  },
+  {
+    "id": "full-rotation-cap8",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "right",
+    "keys": [
+      "q"
+    ],
+    "arcCap": 8,
+    "seconds": 90,
+    "requireRotation": true,
+    "minArcMeters": 20
+  },
+  {
+    "id": "full-rotation-right-cap3",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "e"
+    ],
+    "seconds": 90,
+    "requireRotation": true,
+    "minArcMeters": 20
+  },
+  {
+    "id": "side-a-cap4",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "a"
+    ],
+    "sideCap": 4,
+    "seconds": 60
+  },
+  {
+    "id": "side-d-cap4",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "d"
+    ],
+    "sideCap": 4,
+    "seconds": 60
+  },
+  {
+    "id": "side-d-cap8",
+    "direction": "X:1",
+    "force": 8,
+    "hand": "both",
+    "keys": [
+      "d"
+    ],
+    "sideCap": 8,
+    "seconds": 60
+  }
+]
