@@ -104,5 +104,102 @@
       "success": 2
     },
     "trials": 2
+  },
+  "public": {
+    "counts": {
+      "failure": 3
+    },
+    "trials": 3
+  },
+  "public-downhill": {
+    "counts": {
+      "success": 1
+    },
+    "trials": 1
+  },
+  "network": {
+    "counts": {
+      "success": 1
+    },
+    "trials": 1
+  },
+  "policy-blend": {
+    "counts": {
+      "success": 3
+    },
+    "trials": 3
+  },
+  "stream": {
+    "counts": {
+      "success": 3
+    },
+    "trials": 3
+  },
+  "public-stream": {
+    "counts": {
+      "success": 3
+    },
+    "trials": 3
+  },
+  "public-stream-downhill": {
+    "counts": {
+      "success": 1
+    },
+    "trials": 1
+  },
+  "diagonal": {
+    "counts": {
+      "success": 1
+    },
+    "trials": 1
+  },
+  "final-loop": {
+    "counts": {
+      "success": 1
+    },
+    "trials": 1
+  },
+  "final-cross": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  },
+  "public-final-loop": {
+    "counts": {
+      "success": 1
+    },
+    "trials": 1
+  },
+  "public-final-cross": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  },
+  "preserve6": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
+  },
+  "preserve-followup": {
+    "counts": {
+      "success": 3,
+      "failure": 1
+    },
+    "trials": 4
+  },
+  "preserve-backward": {
+    "counts": {
+      "failure": 1
+    },
+    "trials": 1
+  },
+  "preserve-tune": {
+    "counts": {
+      "success": 2
+    },
+    "trials": 2
   }
 }

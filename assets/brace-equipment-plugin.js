@@ -261,7 +261,7 @@ class GymEquipment {
       if([force[1],force[4]].some(v=>v>.05)) block('d','Rightward movement directly opposes the leftward hand push. Change or clear the push to walk right.');
       if([force[1],force[4]].some(v=>v<-.05)) block('a','Leftward movement directly opposes the rightward hand push. Change or clear the push to walk left.');
     }
-    this.setSteeringLock(blocked, active ? {adaptive:true,turnLimit:slope ? 1 : 5,slopeExertion:slope,offAxisSpeed:.18,turnSpeed:slope ? .8 : .50,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.364,forwardAligned} : null, reasons);
+    this.setSteeringLock(blocked, active ? {adaptive:true,turnLimit:slope ? 1 : 2,slopeExertion:slope,offAxisSpeed:.18,turnSpeed:slope ? .8 : .30,diagonalSpeed:.30,crossSpeed:.18,diagonalRatio:.20,forwardAligned} : null, reasons);
   }
 
   setSteeringLock(blocked, motion=null, reasons={}) {
@@ -400,7 +400,7 @@ class ExertionEnvelope {
     const moving=Math.hypot(f,l)>.01 || Math.abs(t)>.01;
     const turning=Math.abs(t)>.01;
     const cross=f<-.01 || Math.abs(l)>.01 || !window.BraceSteering?.motion?.forwardAligned;
-    let cap=!moving ? Infinity : slope ? (cross||turning ? 1.5 : 5) : cross ? 2 : turning ? 3 : Infinity;
+    let cap=!moving ? Infinity : slope ? 6 : cross ? 6 : turning ? 6 : Infinity;
     // Settle the backward-push stance at the same budget used for its first step.
     if([raw[1],raw[4]].some(v=>v<-.05)) cap=Math.min(cap,1);
     if(f<-.01) cap=Math.min(cap,1);
@@ -409,7 +409,9 @@ class ExertionEnvelope {
     if(now<this.holdUntil) cap=Math.min(cap,this.heldCap);
     const q=this.context.mjData?.qpos?.subarray(3,7);
     const tilt=q ? Math.acos(Math.max(-1,Math.min(1,1-2*(q[1]**2+q[2]**2)))) : 0;
-    if(tilt>.30 && moving) cap=Math.min(cap,Math.max(.25,2*(1-(tilt-.30)/.20)));
+    // Ordinary gait lean (including the ramp) must not collapse an 8 N push to 2 N.
+    // Retain the movement budget until substantial tipping; fall prediction remains separate.
+    if(tilt>.48 && moving) cap=Math.min(cap,Math.max(.25,6*(1-(tilt-.48)/.20)));
     const maximum=Math.max(Math.hypot(...raw.slice(1,4)),Math.hypot(...raw.slice(4,7)));
     const want=raw[0]>.5 && maximum>.01 ? Math.min(1,cap/maximum) : 1;
     const tau=want<this.scale ? .12 : 1;

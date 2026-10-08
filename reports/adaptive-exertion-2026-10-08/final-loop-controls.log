@@ -1,0 +1,1 @@
+PASS frame overruns keep browser callbacks live (max gap 1111 ms); delayed reference freezes clock/pose and resumes exertion arcs without a fall

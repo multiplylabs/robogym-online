@@ -1,0 +1,191 @@
+[
+  {
+    "id": "preserve6-backward-both-hands-arc",
+    "direction": "X:-1",
+    "hand": "both",
+    "force": 8,
+    "style": "Object carrying",
+    "sideCap": 6,
+    "arcCap": 6,
+    "slopeCap": 6,
+    "backwardCap": 6,
+    "tiltStart": 0.48,
+    "seconds": 66,
+    "keys": [
+      "q"
+    ],
+    "phases": [
+      {
+        "at": 60,
+        "keys": []
+      }
+    ],
+    "outcome": "failure",
+    "errors": [],
+    "start": 5.660000000000225,
+    "appliedPhases": [],
+    "progress": 0,
+    "resets": [
+      {
+        "reason": "fall",
+        "testFailed": false,
+        "force": {
+          "rampAngleDeg": 0,
+          "time": 15.599999999996793,
+          "raw": [
+            1,
+            -8,
+            0,
+            0,
+            -8,
+            0,
+            0
+          ],
+          "commanded": [
+            -0.6231525540351868,
+            0,
+            0,
+            -0.6231525540351868,
+            0,
+            0
+          ],
+          "kv": [
+            78.99465942382812,
+            78.98811340332031
+          ],
+          "cv": [
+            5.028955459594727,
+            5.028539180755615
+          ],
+          "axis": [
+            -1,
+            0,
+            0,
+            -1,
+            0,
+            0
+          ],
+          "referenceAxisWorld": [
+            -0.9956990480422974,
+            -0.09264777600765228,
+            0,
+            -0.9956990480422974,
+            -0.09264777600765228,
+            0
+          ],
+          "torsoQuat": [
+            0.8509509144337011,
+            -0.2827770594099725,
+            -0.43895398409647196,
+            -0.056912878522614715
+          ],
+          "refHand": [
+            0.21513581275939941,
+            0.2410590797662735,
+            0.7225449681282043,
+            0.25585752725601196,
+            -0.19703559577465057,
+            0.7220591306686401
+          ],
+          "refAnchor": [
+            0,
+            0,
+            0.8322161436080933
+          ],
+          "anchorDelta": [
+            -0.002190672792494297,
+            -0.00020395546744111925,
+            0.00018471479415893555
+          ],
+          "reaction": [
+            [
+              -2.5776334539759573,
+              -0.8413480589047119,
+              0
+            ],
+            [
+              5.606120797136164,
+              1.8298563138914947,
+              0
+            ]
+          ],
+          "root": [
+            -0.5024551385486763,
+            0.371168662931759,
+            0.614529497953222
+          ],
+          "rootQuat": [
+            0.8926783998857123,
+            0.0483877514953025,
+            -0.42048503142515553,
+            -0.15484262407392227
+          ]
+        }
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": -0.4,
+        "lateral": 0,
+        "turn": 2,
+        "speed_limit": 0.18,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      }
+    ],
+    "blocked": [],
+    "streamStats": {
+      "receivedTo": 850,
+      "cursor": 782,
+      "minFuture": 20,
+      "shortHorizonSamples": 0,
+      "future": 67
+    },
+    "requestedForcePreserved": true,
+    "duration": 9.93999999999657,
+    "requiredEnd": 71.66000000000022,
+    "headingChangeDeg": 0.5963793201255285,
+    "minUpright": 0.6711865137010644,
+    "minHeight": 0.6263185648543155,
+    "displacement": 0.6052853602805123,
+    "pathLength": 0.8182383395936714,
+    "referencePathLength": 0.7715832464751876,
+    "maxHeight": 0.7974353239033543,
+    "effectiveCombinedNormRange": [
+      0.881270793343994,
+      8.48528137423857
+    ]
+  }
+]

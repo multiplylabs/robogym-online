@@ -1,0 +1,1 @@
+[{"id": "final-loop-slope-diagonal-turn-reversal", "direction": "X:1", "hand": "both", "force": 8, "style": "Slow walk", "slope": true, "keys": ["w"], "seconds": 36, "requireRampCrossing": true, "phases": [{"at": 8, "keys": ["w", "q", "a"]}, {"at": 14, "keys": ["w", "e", "d"]}, {"at": 20, "keys": ["w"]}, {"at": 30, "keys": []}]}]

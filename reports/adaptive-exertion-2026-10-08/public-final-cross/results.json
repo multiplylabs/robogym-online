@@ -1,0 +1,270 @@
+[
+  {
+    "id": "public-final-cross-upward-downhill8",
+    "style": "Slow walk",
+    "force": 8,
+    "hand": "both",
+    "direction": "Z:1",
+    "angle": 10,
+    "seconds": 65,
+    "implementation": "74a036f",
+    "outcome": "success",
+    "errors": [],
+    "course": {
+      "pieces": {
+        "slope_ascent": {
+          "p": [
+            4.2483781812672206,
+            -0.0015191599114081104,
+            0.15797175690293042
+          ],
+          "q": [
+            0.9961942859475564,
+            -7.927996299624205e-05,
+            -0.08715570668971388,
+            -0.0009061741236080305
+          ],
+          "size": [
+            1.25,
+            2,
+            0.06
+          ]
+        },
+        "slope_plateau": {
+          "p": [
+            6.468965307075129,
+            -0.005559014959790343,
+            0.3741204441673258
+          ],
+          "q": [
+            0.999999586281487,
+            0,
+            0,
+            -0.0009096355615461984
+          ],
+          "size": [
+            1,
+            2,
+            0.06
+          ]
+        },
+        "slope_descent": {
+          "p": [
+            8.689552432883037,
+            -0.009598870008172574,
+            0.15797175690293042
+          ],
+          "q": [
+            0.9961942859475564,
+            7.927996299624205e-05,
+            0.08715570668971388,
+            -0.0009061741236080305
+          ],
+          "size": [
+            1.25,
+            2,
+            0.06
+          ]
+        }
+      },
+      "forward": [
+        0.9999983451262904,
+        -0.001819270370426253
+      ],
+      "toe": [
+        3.006951653749468,
+        0.0007393343246888243
+      ],
+      "run": 2.46201938253052,
+      "plateau": 2,
+      "width": 2
+    },
+    "start": 4.079999999999697,
+    "startRoot": [
+      0.027861919316294566,
+      0.024470680656093827,
+      0.7880522598763282
+    ],
+    "releaseTime": 24.160000000006544,
+    "resets": [],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0.8,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": 0.8,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      }
+    ],
+    "duration": 23.20000000001066,
+    "minClearance": 0.6904151382134996,
+    "maxTilt": 15.401757934945973,
+    "maxProgress": 8.641224181249006,
+    "failureSegment": null,
+    "requestedForcePreserved": true,
+    "maxDisplacement": 11.671334476433678,
+    "effectiveCombinedNormRange": [
+      2.1213203435596424,
+      9.343034478994577
+    ]
+  },
+  {
+    "id": "public-final-cross-lateral-downhill8",
+    "style": "Careful",
+    "force": 8,
+    "hand": "both",
+    "direction": "Y:1",
+    "angle": 10,
+    "seconds": 65,
+    "implementation": "74a036f",
+    "outcome": "success",
+    "errors": [],
+    "course": {
+      "pieces": {
+        "slope_ascent": {
+          "p": [
+            4.249913682852345,
+            0.014116246084856652,
+            0.15797175690293042
+          ],
+          "q": [
+            0.9961942866344367,
+            7.921387139929127e-05,
+            -0.0871557067498081,
+            0.0009054186931981102
+          ],
+          "size": [
+            1.25,
+            2,
+            0.06
+          ]
+        },
+        "slope_plateau": {
+          "p": [
+            6.470500814784676,
+            0.018152733318209,
+            0.3741204441673258
+          ],
+          "q": [
+            0.999999586970991,
+            0,
+            0,
+            0.0009088772455148369
+          ],
+          "size": [
+            1,
+            2,
+            0.06
+          ]
+        },
+        "slope_descent": {
+          "p": [
+            8.691087946717007,
+            0.022189220551561355,
+            0.15797175690293042
+          ],
+          "q": [
+            0.9961942866344367,
+            -7.921387139929127e-05,
+            0.0871557067498081,
+            0.0009054186931981102
+          ],
+          "size": [
+            1.25,
+            2,
+            0.06
+          ]
+        }
+      },
+      "forward": [
+        0.9999983478843052,
+        0.001817753740244338
+      ],
+      "toe": [
+        3.0084871519107126,
+        0.011859634636815757
+      ],
+      "run": 2.46201938253052,
+      "plateau": 2,
+      "width": 2
+    },
+    "start": 4.4999999999998375,
+    "startRoot": [
+      -0.01924241826827841,
+      0.012756647710664731,
+      0.7880573746216796
+    ],
+    "releaseTime": 23.700000000005982,
+    "resets": [],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0.8,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": 0.8,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      }
+    ],
+    "duration": 22.24000000000986,
+    "minClearance": 0.717177077153204,
+    "maxTilt": 19.590426819803444,
+    "maxProgress": 8.715795819572486,
+    "failureSegment": null,
+    "requestedForcePreserved": true,
+    "maxDisplacement": 11.799277012786854,
+    "effectiveCombinedNormRange": [
+      1.4818653233792656,
+      9.178901163901632
+    ]
+  }
+]

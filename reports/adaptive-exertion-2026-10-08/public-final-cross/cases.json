@@ -1,0 +1,1 @@
+[{"id": "public-final-cross-upward-downhill8", "style": "Slow walk", "force": 8, "hand": "both", "direction": "Z:1", "angle": 10, "seconds": 65, "implementation": "74a036f"}, {"id": "public-final-cross-lateral-downhill8", "style": "Careful", "force": 8, "hand": "both", "direction": "Y:1", "angle": 10, "seconds": 65, "implementation": "74a036f"}]

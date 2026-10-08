@@ -1,0 +1,85 @@
+[
+  {
+    "id": "network-upward-baseline",
+    "direction": "Z:1",
+    "hand": "left",
+    "force": 8,
+    "style": "Careful",
+    "keys": [
+      "e"
+    ],
+    "seconds": 42,
+    "phases": [
+      {
+        "at": 36,
+        "keys": []
+      }
+    ],
+    "outcome": "success",
+    "errors": [],
+    "start": 4.319999999999777,
+    "appliedPhases": [
+      {
+        "at": 36.63999999999546,
+        "requestedAt": 36,
+        "keys": []
+      }
+    ],
+    "resets": [],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0.4,
+        "lateral": 0,
+        "turn": -5,
+        "speed_limit": 0.5,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      }
+    ],
+    "blocked": [],
+    "streamStats": {
+      "receivedTo": 1850,
+      "cursor": 1776,
+      "minFuture": 0,
+      "shortHorizonSamples": 500,
+      "future": 73
+    },
+    "requestedForcePreserved": true,
+    "duration": 42.67999999998138,
+    "requiredEnd": 46.95999999999523,
+    "headingChangeDeg": -122.99889647271893,
+    "minUpright": 0.9706482126230923,
+    "minHeight": 0.7460158868582192,
+    "displacement": 6.826950212197314,
+    "pathLength": 9.618952464005332,
+    "referencePathLength": 11.254744159184588,
+    "effectiveCombinedNormRange": [
+      2.0,
+      7.929224491119385
+    ]
+  }
+]

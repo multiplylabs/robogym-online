@@ -1,0 +1,9 @@
+AssertionError [ERR_ASSERTION]: Browser callbacks starved for 1124.3150000572205 ms
+    at /home/seahorse/Humanoid2/robogym-online/tests/browser_reference_buffer.cjs:32:1 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

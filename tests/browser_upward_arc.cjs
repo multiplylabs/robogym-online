@@ -24,11 +24,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
       assert.equal(await key.getAttribute('aria-disabled'),'false');
     }
     await page.keyboard.down('q');
-    await page.waitForFunction(()=>window.__moves.at(-1)?.turn===5);
+    await page.waitForFunction(()=>window.__moves.at(-1)?.turn===2);
     assert.equal(await page.locator('.brace-style-override').isVisible(),true);
     let command=await page.evaluate(()=>window.__moves.at(-1));
     assert(command.forward>0);assert.equal(command.lateral,0);
-    assert.equal(command.speed_limit,.5);assert.equal(command.movement_profile,'exertion_adaptive');
+    assert.equal(command.speed_limit,.3);assert.equal(command.movement_profile,'exertion_adaptive');
     await page.keyboard.up('q');
     await page.evaluate(()=>window.__sockets.at(-1).close());
     await page.waitForFunction(()=>window.__sockets.length>=2&&window.__sockets.at(-1).readyState===1);

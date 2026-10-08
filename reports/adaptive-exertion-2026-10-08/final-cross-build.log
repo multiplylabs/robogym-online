@@ -1,0 +1,58 @@
+/home/seahorse/Humanoid2/robogym-online/.venv/lib/python3.12/site-packages/mjlab/scene/scene.py:66: UserWarning: Entity 'robot' has non-default <option> fields (timestep) that will not be propagated by MjSpec.attach(). Use MujocoCfg instead.
+  self._add_entities()
+WARNING: Attach conflict when attaching 'g1_29dof' to 'mjlab scene', policy is 'warning'
+timestep: parent has 0.002, child has 0.001, keeping parent value
+
+/home/seahorse/Humanoid2/robogym-online/.venv/lib/python3.12/site-packages/mjlab/sim/sim.py:252: UserWarning: Attach conflict when attaching 'g1_29dof' to 'mjlab scene', policy is 'warning'
+timestep: parent has 0.002, child has 0.001, keeping parent value
+  compiled = spec.compile()
+
+up to date, audited 276 packages in 722ms
+
+54 packages are looking for funding
+  run `npm fund` for details
+
+8 vulnerabilities (5 moderate, 3 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> mjswan@0.9.1 build:spa
+> tsc && vite build
+
+vite v8.0.16 building client environment for production...
+[2Ktransforming...✓ 7002 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/assets/__vite-browser-external-DxA7VlKZ.js             0.09 kB
+dist/assets/chunk-Bh1tDfsg.js                               0.56 kB
+dist/index.html                                             0.85 kB │ gzip:     0.44 kB
+dist/assets/mujoco-DArCKrXv.js                            111.22 kB
+dist/assets/mujoco-Dwp_ZZKt.js                            111.85 kB
+dist/assets/Inter-VariableFont_slnt_wght-Cl4AQHp9.ttf     804.61 kB
+dist/assets/mujoco-BrqJA_5D.wasm                        8,653.59 kB │ gzip: 2,224.22 kB
+dist/assets/mujoco-8POSCP5_.wasm                        8,698.12 kB │ gzip: 2,236.97 kB
+dist/assets/ort-wasm-simd-threaded.jsep-C887KxcQ.wasm  25,014.75 kB │ gzip: 5,919.30 kB
+dist/assets/index-CrgUmStW.css                            200.83 kB │ gzip:    29.88 kB
+dist/assets/__vite-browser-external-2n1CrYhI.js             0.09 kB │ gzip:     0.10 kB
+dist/assets/chunk-aKtaBQYM.js                               1.08 kB │ gzip:     0.62 kB
+dist/assets/preload-helper-zJ_50EbN.js                      1.19 kB │ gzip:     0.68 kB
+dist/assets/mujoco-f3HEi2np.js                            111.60 kB │ gzip:    38.35 kB
+dist/assets/mujoco-CrObmPjL.js                            112.22 kB │ gzip:    38.58 kB
+dist/assets/index-BFn_1NiS.js                           2,333.06 kB │ gzip:   649.03 kB
+
+✓ built in 1.50s
+Building the mjswan application...
+✓ Node.js 24.19.0 already available
+Installing npm dependencies (npm install)...
+Running npm script: build:spa
+✓ Build completed successfully
+  BRACE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1 Unitree G1
+✓ Saved mjswan application to: /home/seahorse/Humanoid2/robogym-online/dist
+  isolation worker -> /home/seahorse/Humanoid2/robogym-online/dist/isolation-worker.js
+  optimized brace_wrench.onnx: 54908 -> 12700 nodes
+  brace graph -> /home/seahorse/Humanoid2/robogym-online/dist/main/assets/unitree_g1/command/brace_wrench.onnx
+  stream pointer -> /home/seahorse/Humanoid2/robogym-online/dist/stream.json: {"url": "wss://thumbnail-prefix-wan-teach.trycloudflare.com"}
+built /home/seahorse/Humanoid2/robogym-online/dist

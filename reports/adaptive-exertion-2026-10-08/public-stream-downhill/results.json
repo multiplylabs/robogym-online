@@ -1,0 +1,136 @@
+[
+  {
+    "id": "public-stream-final-slow-downhill8",
+    "style": "Slow walk",
+    "force": 8,
+    "hand": "right",
+    "direction": "X:1",
+    "angle": 10,
+    "seconds": 65,
+    "implementation": "84f59d8",
+    "outcome": "success",
+    "errors": [],
+    "course": {
+      "pieces": {
+        "slope_ascent": {
+          "p": [
+            4.248865651426396,
+            0.002887578030668584,
+            0.15797175690293042
+          ],
+          "q": [
+            0.9961946268901364,
+            -3.2952152568562736e-05,
+            -0.08715573651832455,
+            -0.00037664482734724365
+          ],
+          "size": [
+            1.25,
+            2,
+            0.06
+          ]
+        },
+        "slope_plateau": {
+          "p": [
+            6.469455817177298,
+            0.0012084404473702644,
+            0.3741204441673258
+          ],
+          "q": [
+            0.9999999285264123,
+            0,
+            0,
+            -0.00037808354939925225
+          ],
+          "size": [
+            1,
+            2,
+            0.06
+          ]
+        },
+        "slope_descent": {
+          "p": [
+            8.690045982928199,
+            -0.0004706971359280552,
+            0.15797175690293042
+          ],
+          "q": [
+            0.9961946268901364,
+            3.2952152568562736e-05,
+            0.08715573651832455,
+            -0.00037664482734724365
+          ],
+          "size": [
+            1.25,
+            2,
+            0.06
+          ]
+        }
+      },
+      "forward": [
+        0.9999997141056594,
+        -0.000756167044752529
+      ],
+      "toe": [
+        3.007437424418526,
+        0.0038263054127343427
+      ],
+      "run": 2.46201938253052,
+      "plateau": 2,
+      "width": 2
+    },
+    "start": 4.319999999999777,
+    "startRoot": [
+      0.01710295250434429,
+      0.003459980028547344,
+      0.7864113470686528
+    ],
+    "releaseTime": 23.78000000000608,
+    "resets": [],
+    "commands": [
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": null
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0.8,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_slope_adaptive"
+      }
+    ],
+    "duration": 22.560000000010092,
+    "minClearance": 0.7239558263043295,
+    "maxTilt": 20.170440726505703,
+    "maxProgress": 9.120075643148068,
+    "failureSegment": null,
+    "requestedForcePreserved": true,
+    "maxDisplacement": 12.202108157530084,
+    "effectiveCombinedNormRange": [
+      2.386467695236206,
+      7.343862533569336
+    ]
+  }
+]

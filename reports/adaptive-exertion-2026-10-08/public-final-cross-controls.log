@@ -1,0 +1,2 @@
+PASS only opposite key disabled; forward/slope/arc/side commands enabled; raw 8 N versus adapted target; reconnect and clear restoration
+PASS frame overruns keep browser callbacks live (max gap 518 ms); delayed reference freezes clock/pose and resumes exertion arcs without a fall
