@@ -1,0 +1,22 @@
+{
+  "upward-on-ramp-forward-only": {
+    "outcome": "failure",
+    "duration": 15.860000000004355,
+    "headingChangeDeg": 4.128868648250268,
+    "pathLength": 6.388394890047148,
+    "referencePathLength": 6.126158350519589,
+    "requestedForcePreserved": true,
+    "minUpright": 0.8905864846166175,
+    "minHeight": 0.7391728813700327
+  },
+  "upward-slope-turn-blocked": {
+    "outcome": "blocked",
+    "duration": 30.060000000006376,
+    "headingChangeDeg": -0.23142791650879724,
+    "pathLength": 0.17569329861683794,
+    "referencePathLength": 1.8711285301016396,
+    "requestedForcePreserved": true,
+    "minUpright": 0.991546684695874,
+    "minHeight": 0.785303612756242
+  }
+}

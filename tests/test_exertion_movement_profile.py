@@ -34,3 +34,20 @@ class ExertionMovementTests(unittest.TestCase):
         previous=s._move_angle
         s._command_vectors()
         self.assertAlmostEqual(abs(s._move_angle-previous),math.radians(60)*.02)
+
+    def test_vertical_push_uses_forward_slow_walk_and_restores_selected_gait(self):
+        s=self.stream(True)
+        s._move_angle=s._heading
+        s._browser_vertical_exertion=True
+        s._command=(.4,0,10)
+        s._target_speed=.5
+        self.assertEqual(s.current_mode(),'slow_walk')
+        s._advance_target_speed()
+        self.assertAlmostEqual(s._speed_cmd,.5)
+        s._command=(.8,0,0)
+        self.assertEqual(s.current_mode(),'slow_walk')
+        s._command=(0,0,0)
+        self.assertEqual(s.current_mode(),'idle')
+        s._browser_vertical_exertion=False
+        s._command=(.4,0,20)
+        self.assertEqual(s.current_mode(),'stealth')

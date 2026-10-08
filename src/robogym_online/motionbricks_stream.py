@@ -528,6 +528,10 @@ class MotionBricksStream:
             )
             if self._slow_gait:
                 return "slow_walk"
+        # Slow locomotion produces a moving arc at moderate speed, rather than squeezing
+        # stealth/carrying clips down to near-in-place steps while the heading advances.
+        if getattr(self, '_browser_vertical_exertion', False) and forward > 0 and lateral == 0 and 'slow_walk' in self._modes:
+            return 'slow_walk'
         return self._walk_mode
 
     def tracking_error(self) -> float:

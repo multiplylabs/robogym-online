@@ -238,7 +238,7 @@ export class LiveMotionSource {
           if (this.styles.length) {
             socket.send(JSON.stringify({ type: 'style', name: this.styles[this.styleIndex] ?? this.styles[0] }));
           }
-          socket.send(JSON.stringify({type:'command',forward:this.command[0],lateral:this.command[1],turn:this.command[2],speed_limit:this.commandSpeedLimit,movement_profile:this.sentMotionProfile!== 'null' && this.sentMotionProfile!=='' ? 'exertion' : null}));
+          socket.send(JSON.stringify({type:'command',forward:this.command[0],lateral:this.command[1],turn:this.command[2],speed_limit:this.commandSpeedLimit,movement_profile:this.commandMovementProfile}));
           this.renderStyles();
           this.resolveReady?.();
           this.resolveReady = null;
@@ -559,11 +559,12 @@ export class LiveMotionSource {
 
   private sentMotionProfile = '';
   private commandSpeedLimit: number | null = null;
+  private commandMovementProfile: string | null = null;
 
   setCommand(forward: number, lateral: number, turn: number): void {
     const blocked=this.blockedKeys();
     const motion=typeof window==='undefined' ? null :
-      (window as Window & {BraceSteering?: {motion?: {turnLimit:number,offAxisSpeed:number,turnSpeed:number,diagonalRatio:number,diagonalSpeed:number,crossSpeed:number,forwardAligned:boolean}}}).BraceSteering?.motion;
+      (window as Window & {BraceSteering?: {motion?: {verticalArc?:boolean,turnLimit:number,offAxisSpeed:number,turnSpeed:number,diagonalRatio:number,diagonalSpeed:number,crossSpeed:number,forwardAligned:boolean}}}).BraceSteering?.motion;
     const profile=JSON.stringify(motion ?? null);
     let speedLimit: number | null=null;
     // Turning keys include forward travel; keep the turn but suppress an opposing translation.
@@ -572,8 +573,11 @@ export class LiveMotionSource {
     if((turn>0 && blocked.includes('q')) || (turn<0 && blocked.includes('e'))) turn=0;
     if(motion) {
       turn=Math.max(-motion.turnLimit,Math.min(motion.turnLimit,turn));
+      // Vertical-force turns are forward arcs, never a spin or backward/sideways turn.
+      if(motion.verticalArc && turn!==0 && (forward<=0 || lateral!==0)) turn=0;
       if(forward>0 && lateral!==0) lateral=Math.sign(lateral)*Math.min(Math.abs(lateral),forward*motion.diagonalRatio);
-      if(forward<0 || (forward===0 && lateral!==0)) speedLimit=motion.offAxisSpeed;
+      if(motion.verticalArc && forward>0 && lateral===0) speedLimit=motion.turnSpeed;
+      else if(forward<0 || (forward===0 && lateral!==0)) speedLimit=motion.offAxisSpeed;
       else if(forward>0 && !motion.forwardAligned) speedLimit=motion.crossSpeed;
       else if(lateral!==0) speedLimit=motion.diagonalSpeed;
       else if(turn!==0) speedLimit=motion.turnSpeed;
@@ -589,8 +593,9 @@ export class LiveMotionSource {
     this.command = [forward, lateral, turn];
     this.sentMotionProfile=profile;
     this.commandSpeedLimit=speedLimit;
+    this.commandMovementProfile=motion ? (motion.verticalArc ? 'exertion_vertical' : 'exertion') : null;
     if (this.connected) {
-      this.socket?.send(JSON.stringify({ type: 'command', forward, lateral, turn, speed_limit:speedLimit, movement_profile:motion ? 'exertion' : null }));
+      this.socket?.send(JSON.stringify({ type: 'command', forward, lateral, turn, speed_limit:speedLimit, movement_profile:this.commandMovementProfile }));
     }
   }
 

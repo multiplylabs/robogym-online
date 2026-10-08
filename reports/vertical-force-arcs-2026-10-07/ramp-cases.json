@@ -1,0 +1,1 @@
+[{"id": "upward-on-ramp-turn", "direction": "Z:1", "hand": "right", "force": 8, "keys": ["w"], "seconds": 60, "requireRotation": true, "minArcMeters": 8, "slope": true, "phases": [{"at": 8, "keys": ["w", "q"]}]}]

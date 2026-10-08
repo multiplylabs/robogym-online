@@ -22,14 +22,14 @@ await c.addInitScript(()=>{window.__resets=[];window.__commands=[];window.addEve
 page=await c.newPage();page.on('pageerror',e=>row.errors.push(e.message));await page.goto(process.env.BRACE_TEST_URL||'http://127.0.0.1:8080/?stream=ws%3A%2F%2F127.0.0.1%3A8765');await page.waitForFunction(()=>window.BraceGym?.ready,null,{timeout:120000});
 if(config.slope)await page.getByRole('checkbox',{name:'Slope ahead',exact:true}).check();
 if(config.style)await page.locator(`.brace-style[aria-label="${config.style}"]`).click();
-await page.getByRole('button',{name:'Exert force',exact:true}).click();await page.getByRole('combobox',{name:'Force hand',exact:true}).selectOption(config.hand);await page.getByRole('combobox',{name:'Force direction',exact:true}).selectOption(config.direction);await page.getByRole('button',{name:`Apply ${config.force} newtons`,exact:true}).click();
+if(config.force>0){await page.getByRole('button',{name:'Exert force',exact:true}).click();await page.getByRole('combobox',{name:'Force hand',exact:true}).selectOption(config.hand);await page.getByRole('combobox',{name:'Force direction',exact:true}).selectOption(config.direction);await page.getByRole('button',{name:`Apply ${config.force} newtons`,exact:true}).click();}
 const expected=new Array(6).fill(0);const axis={X:0,Y:1,Z:2}[config.direction[0]],sign=Number(config.direction.split(':')[1]);for(const h of config.hand==='both'?[0,1]:[config.hand==='left'?0:1])expected[h*3+axis]=sign*config.force;
 await page.waitForFunction(expected=>{const raw=window.BraceGym.force().raw;return raw.length===7&&expected.every((v,i)=>Math.abs(raw[i+1]-v)<.01)},expected,{timeout:30000});
 let start=await page.evaluate(()=>window.BraceGym.force().time);await page.waitForFunction(t=>window.BraceGym.force().time>t+2||window.__resets.length,start,{timeout:30000});
 start=await page.evaluate(()=>window.BraceGym.force().time);row.start=start;
 await page.evaluate(keys=>keys.forEach(key=>window.dispatchEvent(new KeyboardEvent('keydown',{key}))),config.keys);
 const wall=Date.now(),seconds=config.seconds||10;let activeKeys=config.keys,phase=0;
-while(Date.now()-wall<150000){await page.waitForTimeout(150);const snap=await page.evaluate(()=>({force:window.BraceGym.force(),reading:window.BraceExert?.reading,resets:window.__resets.length}));row.samples.push(snap);
+while(Date.now()-wall<150000){await page.waitForTimeout(150);const snap=await page.evaluate(()=>({force:window.BraceGym.force(),reading:window.BraceExert?.reading,resets:window.__resets.length,referenceSourceAnchor:window.BraceReference?.sourceAnchor}));row.samples.push(snap);
 while(config.phases && phase<config.phases.length && snap.force.time>=start+config.phases[phase].at && !snap.resets){
  const nextKeys=config.phases[phase++].keys;
  await page.evaluate(({old,next})=>{old.forEach(key=>window.dispatchEvent(new KeyboardEvent('keyup',{key})));next.forEach(key=>window.dispatchEvent(new KeyboardEvent('keydown',{key})))},{old:activeKeys,next:nextKeys});activeKeys=nextKeys;
@@ -42,6 +42,9 @@ row.duration=meta.resets.length ? meta.resets[0].force.time-start : row.samples.
 row.outcome=meta.resets.length?'failure':row.samples.at(-1)?.force.time>=start+seconds?'success':'interrupted';row.headingChangeDeg=0;let previousYaw=null;for(const sample of row.samples){const q=sample.force.rootQuat,yaw=Math.atan2(2*(q[0]*q[3]+q[1]*q[2]),1-2*(q[2]*q[2]+q[3]*q[3]));if(previousYaw!==null)row.headingChangeDeg+=Math.atan2(Math.sin(yaw-previousYaw),Math.cos(yaw-previousYaw))*180/Math.PI;previousYaw=yaw;}
 if(row.outcome==='success' && config.keys.length && config.keys.every(k=>meta.blocked?.includes(k))) row.outcome='blocked';
 row.minUpright=Math.min(...row.samples.map(s=>1-2*(s.force.rootQuat[1]**2+s.force.rootQuat[2]**2)));row.minHeight=Math.min(...row.samples.map(s=>s.force.root[2]));row.displacement=row.samples.length?Math.hypot(row.samples.at(-1).force.root[0]-row.samples[0].force.root[0],row.samples.at(-1).force.root[1]-row.samples[0].force.root[1]):0;
+row.pathLength=0;row.referencePathLength=0;for(let i=1;i<row.samples.length;i++){const a=row.samples[i-1],b=row.samples[i];row.pathLength+=Math.hypot(b.force.root[0]-a.force.root[0],b.force.root[1]-a.force.root[1]);if(a.referenceSourceAnchor&&b.referenceSourceAnchor)row.referencePathLength+=Math.hypot(b.referenceSourceAnchor[0]-a.referenceSourceAnchor[0],b.referenceSourceAnchor[2]-a.referenceSourceAnchor[2]);}
+if(config.requireRotation && row.outcome==='success' && Math.abs(row.headingChangeDeg)<350)row.outcome='incomplete_rotation';
+if(config.minArcMeters && row.outcome==='success' && (row.pathLength<config.minArcMeters || row.referencePathLength<config.minArcMeters))row.outcome='incomplete_arc';
 await page.screenshot({path:`${out}/${config.id}.png`});
 }catch(e){row.outcome='error';row.error=String(e)}finally{results.push(row);fs.writeFileSync(`${out}/results.json`,JSON.stringify(results,null,2));console.log(JSON.stringify({...row,samples:undefined}));await c.close()}}
 let next=0;await Promise.all(Array.from({length:Number(process.env.BRACE_AUDIT_CONCURRENCY||2)},async()=>{while(next<cases.length)await trial(cases[next++])}));

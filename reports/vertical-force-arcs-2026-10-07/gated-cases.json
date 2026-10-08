@@ -1,0 +1,1 @@
+[{"id": "upward-slope-turn-blocked", "direction": "Z:1", "hand": "right", "force": 8, "keys": ["q"], "seconds": 30, "slope": true}, {"id": "upward-on-ramp-forward-only", "direction": "Z:1", "hand": "right", "force": 8, "keys": ["w"], "seconds": 50, "minArcMeters": 8, "slope": true, "phases": [{"at": 8, "keys": ["w", "q"]}]}]

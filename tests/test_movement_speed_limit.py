@@ -15,17 +15,18 @@ class SpeedLimitTests(unittest.IsolatedAsyncioTestCase):
                 for message in [
                     {'type':'command','forward':0,'lateral':.45,'turn':0,'speed_limit':.18,'movement_profile':'exertion'},
                     {'type':'style','name':'slow_walk'},
-                    {'type':'command','forward':.4,'lateral':0,'turn':6,'speed_limit':.3,'movement_profile':'exertion'},
+                    {'type':'command','forward':.4,'lateral':0,'turn':10,'speed_limit':.5,'movement_profile':'exertion_vertical'},
                     {'type':'command','forward':.8,'lateral':0,'turn':0,'speed_limit':None},
                 ]:
                     import json
                     yield json.dumps(message)
-                    observed.append((stream.command,stream.speed,stream._browser_exertion_movement))
+                    observed.append((stream.command,stream.speed,stream._browser_exertion_movement,stream._browser_vertical_exertion))
         observed=[]
         await _pump(Socket(),stream)
-        self.assertEqual([row[1] for row in observed],[.18,.18,.3,.5])
-        self.assertEqual(observed[2][0],(.4,0,6))
+        self.assertEqual([row[1] for row in observed],[.18,.18,.5,.5])
+        self.assertEqual(observed[2][0],(.4,0,10))
         self.assertEqual([row[2] for row in observed],[True,True,True,False])
+        self.assertEqual([row[3] for row in observed],[False,False,True,False])
         independent=Stream()
         _apply_walk_speed(independent,'stealth')
         self.assertEqual(independent.speed,.8)

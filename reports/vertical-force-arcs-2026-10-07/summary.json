@@ -1,0 +1,178 @@
+{
+  "forceNewtons": 8,
+  "movement": {
+    "gait": "slow_walk",
+    "speedTargetMps": 0.5,
+    "yawLimitDegS": 10,
+    "onlyForwardArcs": true,
+    "upwardMotionOnSlope": "blocked"
+  },
+  "groups": {
+    "baseline": [
+      {
+        "id": "unloaded-stealth-left",
+        "outcome": "success",
+        "duration": 25.000000000010818,
+        "headingChangeDeg": 451.9346831657359,
+        "pathLength": 12.166470808955719,
+        "referencePathLength": 16.040372356279214,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-stealth-left",
+        "outcome": "success",
+        "duration": 65.0399999999741,
+        "headingChangeDeg": 357.28083172668056,
+        "pathLength": 6.273440770026602,
+        "referencePathLength": 10.940802381879474,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-stealth-right",
+        "outcome": "success",
+        "duration": 65.03999999996525,
+        "headingChangeDeg": -369.33435118115494,
+        "pathLength": 5.355224359600998,
+        "referencePathLength": 10.856594388476534,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-forward-turn",
+        "outcome": "failure",
+        "duration": 20.160000000007,
+        "headingChangeDeg": 113.86179998742585,
+        "pathLength": 3.8885481434711107,
+        "referencePathLength": 2.7585635415225576,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-slow-walk-right",
+        "outcome": "success",
+        "duration": 65.01999999997187,
+        "headingChangeDeg": -366.24696430243216,
+        "pathLength": 6.646563323821143,
+        "referencePathLength": 9.730399130048989,
+        "requestedForcePreserved": true
+      }
+    ],
+    "candidate": [
+      {
+        "id": "upward-stealth-right",
+        "outcome": "success",
+        "duration": 50.079999999964194,
+        "headingChangeDeg": -473.8613621578477,
+        "pathLength": 19.344261931608653,
+        "referencePathLength": 22.78753284900491,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-stealth-left",
+        "outcome": "success",
+        "duration": 50.039999999961196,
+        "headingChangeDeg": 475.73604199652425,
+        "pathLength": 18.634132633896442,
+        "referencePathLength": 18.68962555099569,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-forward-turn",
+        "outcome": "success",
+        "duration": 50.059999999961256,
+        "headingChangeDeg": 476.65092427979835,
+        "pathLength": 18.189196322154775,
+        "referencePathLength": 19.67256802061685,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-slow-walk-right",
+        "outcome": "success",
+        "duration": 50.079999999957266,
+        "headingChangeDeg": -474.41367568299586,
+        "pathLength": 19.644974333984024,
+        "referencePathLength": 22.591982932282345,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-careful-right",
+        "outcome": "success",
+        "duration": 50.11999999996378,
+        "headingChangeDeg": -404.77986481291515,
+        "pathLength": 16.496180574891326,
+        "referencePathLength": 20.15375889012788,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-carrying-left",
+        "outcome": "success",
+        "duration": 50.019999999961826,
+        "headingChangeDeg": 471.26175271674316,
+        "pathLength": 17.742066000670043,
+        "referencePathLength": 19.76730082814875,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "downward-left",
+        "outcome": "failure",
+        "duration": 0.12000000000004007,
+        "headingChangeDeg": 0,
+        "pathLength": 0,
+        "referencePathLength": 0,
+        "requestedForcePreserved": true
+      }
+    ],
+    "slope": [
+      {
+        "id": "upward-slope-arc",
+        "outcome": "success",
+        "duration": 50.09999999995812,
+        "headingChangeDeg": 442.73327629733643,
+        "pathLength": 16.35513589406345,
+        "referencePathLength": 17.441722215087946,
+        "requestedForcePreserved": true
+      }
+    ],
+    "ramp": [
+      {
+        "id": "upward-on-ramp-turn",
+        "outcome": "failure",
+        "duration": 22.560000000008845,
+        "headingChangeDeg": 132.50496905320819,
+        "pathLength": 8.849703932561688,
+        "referencePathLength": 8.590450545757504,
+        "requestedForcePreserved": true
+      }
+    ],
+    "gated": [
+      {
+        "id": "upward-on-ramp-forward-only",
+        "outcome": "failure",
+        "duration": 15.860000000004355,
+        "headingChangeDeg": 4.128868648250268,
+        "pathLength": 6.388394890047148,
+        "referencePathLength": 6.126158350519589,
+        "requestedForcePreserved": true
+      },
+      {
+        "id": "upward-slope-turn-blocked",
+        "outcome": "blocked",
+        "duration": 30.060000000006376,
+        "headingChangeDeg": -0.23142791650879724,
+        "pathLength": 0.17569329861683794,
+        "referencePathLength": 1.8711285301016396,
+        "requestedForcePreserved": true
+      }
+    ],
+    "final-gated": [
+      {
+        "id": "upward-ramp-movement-blocked",
+        "outcome": "blocked",
+        "duration": 40.059999999986,
+        "headingChangeDeg": 0.003335264570636931,
+        "pathLength": 0.27517428669428873,
+        "referencePathLength": 2.652757019274464,
+        "requestedForcePreserved": true
+      }
+    ]
+  },
+  "interpretation": "Six flat-ground upward arc trials passed complete rotations over 50 simulation seconds. Early ramp arc stayed mostly near ramp; actual ramp entry caused falls in turn and straight trials. Final gate blocks all movement with upward push and slope enabled and survived 40 s. Downward candidate onset failed and is not a supported arc condition. All raw attempts retained."
+}

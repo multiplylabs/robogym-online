@@ -1,0 +1,12 @@
+{
+  "upward-on-ramp-turn": {
+    "outcome": "failure",
+    "duration": 22.560000000008845,
+    "headingChangeDeg": 132.50496905320819,
+    "pathLength": 8.849703932561688,
+    "referencePathLength": 8.590450545757504,
+    "requestedForcePreserved": true,
+    "minUpright": 0.762375276894333,
+    "minHeight": 0.7340011517448264
+  }
+}

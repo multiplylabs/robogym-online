@@ -1,0 +1,52 @@
+{
+  "unloaded-stealth-left": {
+    "outcome": "success",
+    "duration": 25.000000000010818,
+    "headingChangeDeg": 451.9346831657359,
+    "pathLength": 12.166470808955719,
+    "referencePathLength": 16.040372356279214,
+    "requestedForcePreserved": true,
+    "minUpright": 0.976870549952214,
+    "minHeight": 0.689641950323622
+  },
+  "upward-stealth-left": {
+    "outcome": "success",
+    "duration": 65.0399999999741,
+    "headingChangeDeg": 357.28083172668056,
+    "pathLength": 6.273440770026602,
+    "referencePathLength": 10.940802381879474,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9196865583849789,
+    "minHeight": 0.6500975611680063
+  },
+  "upward-stealth-right": {
+    "outcome": "success",
+    "duration": 65.03999999996525,
+    "headingChangeDeg": -369.33435118115494,
+    "pathLength": 5.355224359600998,
+    "referencePathLength": 10.856594388476534,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9720538905749342,
+    "minHeight": 0.6566722910071974
+  },
+  "upward-forward-turn": {
+    "outcome": "failure",
+    "duration": 20.160000000007,
+    "headingChangeDeg": 113.86179998742585,
+    "pathLength": 3.8885481434711107,
+    "referencePathLength": 2.7585635415225576,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9147743138892123,
+    "minHeight": 0.6425128739875094
+  },
+  "upward-slow-walk-right": {
+    "outcome": "success",
+    "duration": 65.01999999997187,
+    "headingChangeDeg": -366.24696430243216,
+    "pathLength": 6.646563323821143,
+    "referencePathLength": 9.730399130048989,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9809810564299839,
+    "minHeight": 0.7696415391382034
+  }
+}

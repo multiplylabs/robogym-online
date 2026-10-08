@@ -494,9 +494,13 @@ are filtered as well. Mixed horizontal pushes can disable all translation when n
 The fall guard has a 0.75 s spawn grace, predicts tipping 0.35 s ahead and downward motion
 0.30 s ahead, and confirms predicted danger for 60 ms before respawning. Hard falls reset immediately.
 
-Exertion movement uses a 0.18 m/s planner target cap for side/back steps, 0.30 m/s for
-turns/diagonals and 6 deg/s yaw for vertical-only pushes. Horizontal push yaw is capped at zero
-and cross-axis translations are blocked. The generator limits travel
+Exertion movement uses a 0.18 m/s planner target cap for supported side steps. Upward-only
+pushes temporarily use Slow walk at a 0.50 m/s target with forward arc turns capped at
+10 deg/s. Backward and sideways inputs are disabled for vertical pushes; downward or opposing
+vertical pushes also disable turning. Upward pushes disable all movement when the slope is
+enabled: both ramp turns and straight ramp walking failed sustained 8 N tests. Clear force
+restores the selected gait and keys. Horizontal push yaw is capped at zero and cross-axis
+translations are blocked. The generator limits travel
 direction changes to 30 deg/s and retains the slow gait/speed until both the requested and
 slewed travel direction are within 30 degrees of facing. Straight forward travel under a forward
 push retains its selected gait speed. These caps change movement commands, never force requests.
@@ -532,3 +536,12 @@ world-frame reaction. MuJoCo/stream quaternions are wxyz; the brace converts onc
 `test_force_coordinates.py` checks all six signed axes at four headings through the exported
 ONNX, and `contact_parity.cjs` checks different robot/reference headings, origins and torso tilt.
 `browser_force_coordinates.cjs` verifies real 8 N local commands and world reactions after turning.
+
+Upward-force arc validation (2026-10-07): the old command priority imposed 0.18 m/s before
+the turn limit could apply, compressing the reference into short steps. A combined W+Q trial
+fell after 20.2 s. With the corrected speed priority and Slow walk override, six flat-ground
+8 N trials passed 50 simulation seconds, completing 405–477 degrees of rotation and
+16–20 m of robot travel across both turn directions, all four selected styles and left/right/both
+hand selections. Force values, effective-force computation, frame conventions and contact physics
+were unchanged. The ramp failure attempts and blocked-input checks are retained separately in
+`reports/vertical-force-arcs-2026-10-07`; finite-duration results do not guarantee all conditions.

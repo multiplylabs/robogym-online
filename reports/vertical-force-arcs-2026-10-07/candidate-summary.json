@@ -1,0 +1,72 @@
+{
+  "upward-stealth-right": {
+    "outcome": "success",
+    "duration": 50.079999999964194,
+    "headingChangeDeg": -473.8613621578477,
+    "pathLength": 19.344261931608653,
+    "referencePathLength": 22.78753284900491,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9685118435413094,
+    "minHeight": 0.7229621755851402
+  },
+  "upward-stealth-left": {
+    "outcome": "success",
+    "duration": 50.039999999961196,
+    "headingChangeDeg": 475.73604199652425,
+    "pathLength": 18.634132633896442,
+    "referencePathLength": 18.68962555099569,
+    "requestedForcePreserved": true,
+    "minUpright": 0.965371346847033,
+    "minHeight": 0.7470911273290521
+  },
+  "upward-forward-turn": {
+    "outcome": "success",
+    "duration": 50.059999999961256,
+    "headingChangeDeg": 476.65092427979835,
+    "pathLength": 18.189196322154775,
+    "referencePathLength": 19.67256802061685,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9691157867366075,
+    "minHeight": 0.7367916321574539
+  },
+  "upward-slow-walk-right": {
+    "outcome": "success",
+    "duration": 50.079999999957266,
+    "headingChangeDeg": -474.41367568299586,
+    "pathLength": 19.644974333984024,
+    "referencePathLength": 22.591982932282345,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9691959607809606,
+    "minHeight": 0.7402952218102382
+  },
+  "upward-careful-right": {
+    "outcome": "success",
+    "duration": 50.11999999996378,
+    "headingChangeDeg": -404.77986481291515,
+    "pathLength": 16.496180574891326,
+    "referencePathLength": 20.15375889012788,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9621735341395468,
+    "minHeight": 0.7469238284491378
+  },
+  "upward-carrying-left": {
+    "outcome": "success",
+    "duration": 50.019999999961826,
+    "headingChangeDeg": 471.26175271674316,
+    "pathLength": 17.742066000670043,
+    "referencePathLength": 19.76730082814875,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9674782777753205,
+    "minHeight": 0.737444822168145
+  },
+  "downward-left": {
+    "outcome": "failure",
+    "duration": 0.12000000000004007,
+    "headingChangeDeg": 0,
+    "pathLength": 0,
+    "referencePathLength": 0,
+    "requestedForcePreserved": true,
+    "minUpright": 0.9969495143361456,
+    "minHeight": 0.789767004823879
+  }
+}

@@ -326,7 +326,8 @@ async def _pump(websocket, stream) -> None:
     async for message in websocket:
         request = json.loads(message)  # a closed connection ends the iteration, not an error
         if request["type"] == "command":
-            stream._browser_exertion_movement = request.get('movement_profile') == 'exertion'
+            stream._browser_exertion_movement = request.get('movement_profile') in ('exertion', 'exertion_vertical')
+            stream._browser_vertical_exertion = request.get('movement_profile') == 'exertion_vertical'
             stream._browser_speed_limit = (max(.15, min(.8, float(request["speed_limit"])))
                                            if request.get("speed_limit") is not None else None)
             _apply_walk_speed(stream, getattr(stream, "style", "stealth"))
