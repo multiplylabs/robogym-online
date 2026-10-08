@@ -297,6 +297,7 @@ class GymEquipment {
     this.fallRiskSince ??= time;
     if(!hard && time-this.fallRiskSince<.06) return;
     this.respawnPending=true;
+    if(Number.isFinite(d.qpos[0]+d.qpos[1])) window.BraceRespawn={xy:Array.from(d.qpos.subarray(0,2)),mocapPos:Array.from(d.mocap_pos ?? []),mocapQuat:Array.from(d.mocap_quat ?? [])};
     const reason=hard ? 'fall' : 'imminent fall';
     this.respawnReason=reason;
     if(this.trial?.phase==='testing') {
@@ -388,6 +389,7 @@ class GymEquipment {
     window.BraceGym?.remove();
     if (window.BraceExert) window.BraceExert.enabled=false;
     window.dispatchEvent(new CustomEvent('brace:gym-reset'));
+    delete window.BraceRespawn;
     if(autoReason) window.dispatchEvent(new CustomEvent('brace:respawned',{detail:{reason:autoReason}}));
     if(failed) this.stabilityEvent();
   }

@@ -1135,12 +1135,26 @@ def browser_contact_source():
     core = Path(mjswan.__file__).parent / "template/src/core"
     source = HERE.parent.parent / "assets"
     targets = [core / "engine" / name for name in ("handSpringContact.ts", "externalWrench.ts")]
-    targets += [core / "command" / name for name in ("TrackingCommand.ts", "referenceFrame.ts", "liveMotion.ts")]
+    targets += [core / "command" / name for name in ("TrackingCommand.ts", "referenceFrame.ts", "liveMotion.ts", "respawn.ts")]
     targets += [core / "onnx/slotReader.ts"]
     originals = {target: target.read_bytes() if target.exists() else None for target in targets}
     runtime = core / "engine/runtime.ts"
     runtime_original = runtime.read_bytes()
+    slope = core / "command/slopeTerrain.ts"
+    slope_original = slope.read_bytes()
     try:
+        slope_source = slope_original.decode()
+        reset_hook = '  reset(): void {\n'
+        if reset_hook not in slope_source:
+            raise RuntimeError("Slope reset hook changed; cannot preserve terrain on respawn")
+        slope.write_text("import { pendingRespawn } from './respawn';\n" + slope_source.replace(
+            reset_hook, reset_hook +
+            '    const spawn=pendingRespawn();\n'
+            '    if(spawn && this.context.mjData) {\n'
+            '      this.context.mjData.mocap_pos.set(spawn.mocapPos);\n'
+            '      this.context.mjData.mocap_quat.set(spawn.mocapQuat);\n'
+            '      this.placementPending=false; return;\n'
+            '    }\n', 1))
         disabled_drag = runtime_original.decode().replace("draggableBodyIds: this.dynamicBodyIds", "draggableBodyIds: new Set<number>()").replace("setDraggableBodyIds(this.dynamicBodyIds)", "setDraggableBodyIds(new Set<number>())")
         if disabled_drag == runtime_original.decode():
             raise RuntimeError("Viewer drag hook changed; cannot disable robot pulling")
@@ -1149,6 +1163,7 @@ def browser_contact_source():
             target.write_bytes((source / target.name).read_bytes())
         yield
     finally:
+        slope.write_bytes(slope_original)
         runtime.write_bytes(runtime_original)
         for target, original in originals.items():
             target.write_bytes(original) if original is not None else target.unlink()
@@ -1172,7 +1187,7 @@ def install_brace_ui(dist: Path, contract: dict | None = None, mjcf: Path = DEFA
     source = HERE.parent.parent / "assets"
     version = hashlib.sha256(b"".join((source / name).read_bytes() for name in (
         "brace-ui.css", "brace-ui.js", "brace-forces.js", "brace-gym.js",
-        "brace-equipment-plugin.js", "liveMotion.ts", "slotReader.ts",
+        "brace-equipment-plugin.js", "TrackingCommand.ts", "respawn.ts", "liveMotion.ts", "slotReader.ts",
     )) + Path(__file__).read_bytes()).hexdigest()[:12]
     for page in (dist / "index.html", dist / "main" / "index.html"):
         if not page.is_file():

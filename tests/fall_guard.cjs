@@ -11,8 +11,9 @@ sample(3,.72);sample(3.02,.76);sample(3.04,.70);assert.equal(events.length,0);
 // Sustained outward tipping predicts collapse while still above the hard-fall angle.
 for(let i=0;i<20&&!gym.respawnPending;i++)sample(4+i*.02,.48+i*.04);
 assert(gym.respawnPending);assert.equal(events.at(-1).detail.reason,'imminent fall');assert(gym.fallSample.angle<.75);const count=events.length;sample(5,1.5);assert.equal(events.length,count);
+assert.deepEqual(window.BraceRespawn.xy,[0,0]);
 // A failed stability trial survives automatic reset, but manual reset clears it.
-gym.trial={phase:'testing',fallen:false};gym.respawnPending=false;sample(6,1.3);assert.equal(gym.trial.phase,'failed');gym.reset();assert.equal(gym.trial.phase,'failed');gym.reset();assert.equal(gym.trial,null);
+gym.trial={phase:'testing',fallen:false};gym.respawnPending=false;sample(6,1.3);assert.equal(gym.trial.phase,'failed');gym.reset();assert.equal(gym.trial.phase,'failed');assert.equal(window.BraceRespawn,undefined);gym.reset();assert.equal(gym.trial,null);
 // Startup grace avoids reset loops during spawn initialization.
 events=[];sample(.2,1.5,.2,-2);assert.equal(events.length,0);
 // Low pelvis with rapid downward velocity is caught before ground impact.

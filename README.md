@@ -492,7 +492,12 @@ Hover/focus explanations describe the active restriction; held keys and direct c
 are filtered as well. Mixed horizontal pushes can disable all translation when no axis is supported.
 
 The fall guard has a 0.75 s spawn grace, predicts tipping 0.35 s ahead and downward motion
-0.30 s ahead, and confirms predicted danger for 60 ms before respawning. Hard falls reset immediately.
+0.30 s ahead, and confirms predicted danger for 60 ms before respawning. Hard falls reset immediately. Automatic recovery keeps the fall XY location and existing ramp
+placement, restores an upright reference pose, clears velocity and places the foot collision
+capsules just above the local terrain. Policy/contact history resets and hand loads are cleared.
+The green reference retains its flat-ground height. The explicit Reset button still starts a
+new episode using the reference and places a fresh ramp. `browser_respawn_location.cjs` checks
+flat ground, ascent, plateau and descent, plus five seconds without another fall per recovery.
 
 Exertion movement uses a 0.18 m/s planner target cap for supported side steps. Upward-only
 pushes temporarily use Slow walk at a 0.50 m/s target with forward arc turns capped at

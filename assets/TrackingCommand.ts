@@ -1,4 +1,5 @@
 import { referenceLocalXY } from './referenceFrame';
+import { pendingRespawn, placeRespawn } from './respawn';
 import * as THREE from 'three';
 
 import { quatApply, quatApplyInv, quatInverse, quatMultiply, yawQuat } from '../observation/math';
@@ -961,7 +962,8 @@ export class TrackingCommand implements CommandTerm {
     }
 
     this.context.mujoco.mj_forward(mjModel, mjData);
-    this.applyResetJitter();
+    if(pendingRespawn())placeRespawn(this.context);
+    else this.applyResetJitter();
   }
 
   /**
