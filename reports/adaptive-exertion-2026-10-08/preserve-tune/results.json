@@ -239,6 +239,30 @@
     "effectiveCombinedNormRange": [
       8.48528137423857,
       11.280344379353961
+    ],
+    "movingForcePerHand": [
+      {
+        "hand": "left",
+        "effectiveRange": [
+          6.0,
+          6.0
+        ],
+        "effectiveMedian": 6.0,
+        "measuredMedian": 5.999852895736694,
+        "measuredP05": 5.519926071166992,
+        "measuredP95": 6.428179740905762
+      },
+      {
+        "hand": "right",
+        "effectiveRange": [
+          6.0,
+          6.0
+        ],
+        "effectiveMedian": 6.0,
+        "measuredMedian": 5.999528884887695,
+        "measuredP05": 5.502681255340576,
+        "measuredP95": 6.423472881317139
+      }
     ]
   },
   {
@@ -479,6 +503,30 @@
     "effectiveCombinedNormRange": [
       8.48528137423857,
       11.282909605141727
+    ],
+    "movingForcePerHand": [
+      {
+        "hand": "left",
+        "effectiveRange": [
+          6.0,
+          6.0
+        ],
+        "effectiveMedian": 6.0,
+        "measuredMedian": 5.97812032699585,
+        "measuredP05": 4.772092342376709,
+        "measuredP95": 7.430238246917725
+      },
+      {
+        "hand": "right",
+        "effectiveRange": [
+          6.0,
+          6.0
+        ],
+        "effectiveMedian": 6.0,
+        "measuredMedian": 6.062769174575806,
+        "measuredP05": 4.971933841705322,
+        "measuredP95": 6.961814880371094
+      }
     ]
   }
 ]

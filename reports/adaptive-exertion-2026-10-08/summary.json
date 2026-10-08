@@ -201,5 +201,11 @@
       "success": 2
     },
     "trials": 2
+  },
+  "public-preserve": {
+    "counts": {
+      "success": 3
+    },
+    "trials": 3
   }
 }

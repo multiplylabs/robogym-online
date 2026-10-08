@@ -186,6 +186,30 @@
     "effectiveCombinedNormRange": [
       0.881270793343994,
       8.48528137423857
+    ],
+    "movingForcePerHand": [
+      {
+        "hand": "left",
+        "effectiveRange": [
+          0.6231525540351868,
+          5.999998569488525
+        ],
+        "effectiveMedian": 5.999942302703857,
+        "measuredMedian": 6.011847496032715,
+        "measuredP05": 3.404858112335205,
+        "measuredP95": 6.291719436645508
+      },
+      {
+        "hand": "right",
+        "effectiveRange": [
+          0.6231525540351868,
+          5.999998569488525
+        ],
+        "effectiveMedian": 5.999942302703857,
+        "measuredMedian": 6.0387282371521,
+        "measuredP05": 5.466839790344238,
+        "measuredP95": 6.41363525390625
+      }
     ]
   }
 ]

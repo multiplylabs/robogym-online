@@ -45,12 +45,38 @@ The initial higher-force forward/turn/sideways candidate at 0.50 m/s and 5°/s f
 19.58 seconds (`preserve-followup`). Slowing and widening its movement, while retaining
 6 N, produced the selected 42-second passes (`preserve-tune`). The 8 N side-only candidate
 is retained as evidence, but the default keeps the tested 6 N budget across combined
-movement. These finite trials do not establish universal fall-free behavior.
+movement. The ramp candidate used the earlier 0.364 diagonal ratio; the final 0.20 ratio
+is verified in the public repeat. These finite trials do not establish universal fall-free behavior.
 
 The source contract checks cover requested-force preservation, the 6 N movement budget,
 ordinary ramp lean without excess unloading, genuine emergency reduction, lower requests,
 and compensation bypass. Browser checks verify the 6 N slope/arc target, raw 8 N dial,
 only-opposite key restriction, restored commands after reconnect, and clear-force recovery.
+
+## Published verification
+
+[Deployment 37860904034](https://github.com/multiplylabs/robogym-online/actions/runs/37860904034)
+succeeded for source commit `32e3ba0`. The published plugin hash matched the validated
+local source before testing the actual public page and its normal generator configuration.
+These trials use the final defaults, with no parameter overrides:
+
+| Public case | Duration | Moving effective minimum | Measured median per active hand | Outcome |
+| --- | ---: | --- | --- | --- |
+| Forward push, right hand, sideways reversal | 36.12 s | 6.00 N | 6.00 N | No fall or respawn |
+| Forward push, both hands, turn/diagonal reversal | 42.18 s | 6.00 N per hand | 6.02 / 6.01 N | No fall or respawn |
+| Forward push, both hands, 10° ramp with turns/diagonals | 36.12 s | 6.00 N per hand | 6.03 / 5.98 N | Complete crossing, no fall or respawn |
+
+Requested force remained 8 N per active hand. Every sampled context had at least 20 future
+reference frames. All three continued for six simulation seconds after actual release.
+The ramp trial reached 1.228 m root height, returned to flat ground and traveled 12.40 m.
+The final check asserts no reset, an unchanged requested dial, moving effective force at
+least 5.8 N, measured median at least 5.5 N, and completion of the ramp crossing.
+Full traces and force summaries are in `public-preserve`; the figure shows the actual
+measured force, the effective target and the unchanged request through release/recovery.
+
+![Published force traces](force-preservation.png)
+
+[Vector figure](force-preservation.svg)
 
 ## Earlier investigation and results
 
@@ -154,16 +180,14 @@ The overrun integration check injects 25 ms of work into each frame and verifies
 callbacks continue, simulation time/root pose freeze while incoming frames are withheld, exertion
 remains active after delivery, and no automatic respawn occurs. An initial additional 1-second
 callback-gap limit failed at 1.124 s under software rendering; that log is retained. The test checks
-callback progress rather than assuming a universal latency limit. Final publication verification
-of the combined ramp preset and scheduler is in `public-final-loop` when complete.
+callback progress rather than assuming a universal latency limit. The earlier public preset/scheduler repeat passed for 36.12 seconds in `public-final-loop`.
 
 Straight ramp travel under an upward or lateral push also keeps Careful at 0.80 m/s rather than
 compressing it to the flat cross-axis pace of 0.18 m/s. Its force budget remains 1.5 N per hand.
 Two full-course tunnel trials passed (`final-cross`): upward 8 N in both hands, 23.10 s / 17.41°
 maximum tilt; lateral 8 N in both hands, 22.48 s / 19.84° maximum tilt. Both include at least three
 simulation seconds after actual release. These are force-axis changes, not hidden command reductions.
-Requested force remains 8 N while the effective target adapts. Public repeats are in `public-final-cross`
-when complete.
+Requested force remains 8 N while the effective target adapts. The earlier public repeats both passed in `public-final-cross`: upward 23.20 seconds and lateral 22.24 seconds.
 
 ## Method and retained attempts
 

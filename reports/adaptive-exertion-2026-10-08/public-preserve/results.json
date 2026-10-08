@@ -1,13 +1,9 @@
 [
   {
     "direction": "X:1",
-    "hand": "both",
+    "hand": "right",
     "force": 8,
-    "style": "Slow walk",
-    "sideCap": 8,
-    "arcCap": 8,
-    "slopeCap": 6,
-    "tiltStart": 0.48,
+    "style": "Stealth",
     "seconds": 36,
     "keys": [
       "a"
@@ -24,20 +20,20 @@
         "keys": []
       }
     ],
-    "id": "preserve8-side-both-hands",
+    "id": "public-preserve-forward-side-reversal",
     "outcome": "success",
     "errors": [],
-    "start": 4.539999999999851,
+    "start": 4.699999999999904,
     "appliedPhases": [
       {
-        "at": 15.080000000001146,
+        "at": 15.080000000001288,
         "requestedAt": 15,
         "keys": [
           "d"
         ]
       },
       {
-        "at": 30.04000000001026,
+        "at": 30.08000000000974,
         "requestedAt": 30,
         "keys": []
       }
@@ -98,48 +94,37 @@
       "s"
     ],
     "streamStats": {
-      "receivedTo": 2100,
-      "cursor": 2032,
+      "receivedTo": 2125,
+      "cursor": 2044,
       "minFuture": 20,
       "shortHorizonSamples": 0,
-      "future": 67
+      "future": 55
     },
     "requestedForcePreserved": true,
-    "duration": 36.05999999999623,
-    "requiredEnd": 40.5800000000101,
-    "headingChangeDeg": 1.8344021466955658,
-    "minUpright": 0.9815178630609056,
-    "minHeight": 0.7477250989814497,
-    "displacement": 2.916271191122957,
-    "pathLength": 6.669074550897835,
-    "referencePathLength": 7.299740281408305,
-    "maxHeight": 0.787202127956391,
+    "duration": 36.11999999999566,
+    "requiredEnd": 40.780000000009636,
+    "headingChangeDeg": 1.3847490700183003,
+    "minUpright": 0.9875680411414214,
+    "minHeight": 0.7428664556743038,
+    "displacement": 1.7728122646123026,
+    "pathLength": 6.114215300484764,
+    "referencePathLength": 7.4649164781789805,
+    "maxHeight": 0.7871753854003762,
     "effectiveCombinedNormRange": [
-      11.313708498984761,
-      11.313708498984761
+      6.0,
+      7.976408004760742
     ],
     "movingForcePerHand": [
       {
-        "hand": "left",
-        "effectiveRange": [
-          8.0,
-          8.0
-        ],
-        "effectiveMedian": 8.0,
-        "measuredMedian": 7.846747159957886,
-        "measuredP05": 7.494137763977051,
-        "measuredP95": 8.266780853271484
-      },
-      {
         "hand": "right",
         "effectiveRange": [
-          8.0,
-          8.0
+          6.0,
+          6.0
         ],
-        "effectiveMedian": 8.0,
-        "measuredMedian": 7.799810886383057,
-        "measuredP05": 7.45956563949585,
-        "measuredP95": 8.147514343261719
+        "effectiveMedian": 6.0,
+        "measuredMedian": 6.001675605773926,
+        "measuredP05": 5.2587456703186035,
+        "measuredP95": 6.621725082397461
       }
     ]
   },
@@ -148,18 +133,14 @@
     "hand": "both",
     "force": 8,
     "style": "Slow walk",
-    "sideCap": 6,
-    "arcCap": 6,
-    "slopeCap": 6,
-    "tiltStart": 0.48,
-    "seconds": 36,
+    "seconds": 42,
     "keys": [
       "w",
       "q"
     ],
     "phases": [
       {
-        "at": 10,
+        "at": 12,
         "keys": [
           "w",
           "q",
@@ -167,7 +148,7 @@
         ]
       },
       {
-        "at": 20,
+        "at": 24,
         "keys": [
           "w",
           "e",
@@ -175,124 +156,41 @@
         ]
       },
       {
-        "at": 30,
+        "at": 36,
         "keys": []
       }
     ],
-    "id": "preserve6-forward-turn-diagonal",
-    "outcome": "failure",
+    "id": "public-preserve-forward-turn-diagonal",
+    "outcome": "success",
     "errors": [],
-    "start": 4.959999999999991,
+    "start": 4.779999999999931,
     "appliedPhases": [
       {
-        "at": 10.039999999997136,
-        "requestedAt": 10,
+        "at": 12.119999999997741,
+        "requestedAt": 12,
         "keys": [
           "w",
           "q",
           "a"
         ]
-      }
-    ],
-    "progress": 1,
-    "resets": [
+      },
       {
-        "reason": "imminent fall",
-        "testFailed": false,
-        "force": {
-          "rampAngleDeg": 0,
-          "time": 24.54000000000701,
-          "raw": [
-            1,
-            8,
-            0,
-            0,
-            8,
-            0,
-            0
-          ],
-          "commanded": [
-            1.6362409591674805,
-            0,
-            0,
-            1.6362409591674805,
-            0,
-            0
-          ],
-          "kv": [
-            65.92144775390625,
-            65.72473907470703
-          ],
-          "cv": [
-            4.196689605712891,
-            4.18416690826416
-          ],
-          "axis": [
-            1,
-            0,
-            0,
-            1,
-            0,
-            0
-          ],
-          "referenceAxisWorld": [
-            0.14683425426483154,
-            0.9891610741615295,
-            0,
-            0.14683425426483154,
-            0.9891610741615295,
-            0
-          ],
-          "torsoQuat": [
-            0.7640793492043627,
-            -0.02877575277275714,
-            -0.45243832208874335,
-            0.45897088020627386
-          ],
-          "refHand": [
-            -0.1874535083770752,
-            0.24924230575561523,
-            0.6778261065483093,
-            0.24729156494140625,
-            0.1822972297668457,
-            0.6678036451339722
-          ],
-          "refAnchor": [
-            0,
-            0,
-            0.8162461519241333
-          ],
-          "anchorDelta": [
-            0.0009993035346269608,
-            0.006595028564333916,
-            0.00043392181396484375
-          ],
-          "reaction": [
-            [
-              -0.7619650075289381,
-              -3.178167305488877,
-              0
-            ],
-            [
-              0.002587807756670682,
-              0.010793784391508195,
-              0
-            ]
-          ],
-          "root": [
-            2.1290839694046806,
-            2.406093562653737,
-            0.6810118494177596
-          ],
-          "rootQuat": [
-            0.8366127293685143,
-            0.2164558774820527,
-            -0.2746750531491457,
-            0.42163919331527316
-          ]
-        }
+        "at": 24.020000000012285,
+        "requestedAt": 24,
+        "keys": [
+          "w",
+          "e",
+          "d"
+        ]
+      },
+      {
+        "at": 36.0999999999955,
+        "requestedAt": 36,
+        "keys": []
       }
     ],
+    "progress": 4,
+    "resets": [],
     "commands": [
       {
         "type": "command",
@@ -322,16 +220,16 @@
         "type": "command",
         "forward": 1.2000000000000002,
         "lateral": 0,
-        "turn": 5,
-        "speed_limit": 0.5,
+        "turn": 2,
+        "speed_limit": 0.3,
         "movement_profile": "exertion_adaptive"
       },
       {
         "type": "command",
         "forward": 0.4,
         "lateral": 0,
-        "turn": 5,
-        "speed_limit": 0.5,
+        "turn": 2,
+        "speed_limit": 0.3,
         "movement_profile": "exertion_adaptive"
       },
       {
@@ -354,32 +252,32 @@
         "type": "command",
         "forward": 1.2000000000000002,
         "lateral": 0,
-        "turn": 5,
-        "speed_limit": 0.5,
+        "turn": 2,
+        "speed_limit": 0.3,
         "movement_profile": "exertion_adaptive"
       },
       {
         "type": "command",
         "forward": 1.2000000000000002,
-        "lateral": 0.4368000000000001,
-        "turn": 5,
-        "speed_limit": 0.5,
+        "lateral": 0.24000000000000005,
+        "turn": 2,
+        "speed_limit": 0.3,
         "movement_profile": "exertion_adaptive"
       },
       {
         "type": "command",
         "forward": 0.4,
-        "lateral": 0.1456,
-        "turn": 5,
-        "speed_limit": 0.5,
+        "lateral": 0.08000000000000002,
+        "turn": 2,
+        "speed_limit": 0.3,
         "movement_profile": "exertion_adaptive"
       },
       {
         "type": "command",
-        "forward": 0.4,
-        "lateral": 0,
-        "turn": 5,
-        "speed_limit": 0.5,
+        "forward": 0,
+        "lateral": 0.45,
+        "turn": 0,
+        "speed_limit": 0.18,
         "movement_profile": "exertion_adaptive"
       },
       {
@@ -392,57 +290,99 @@
       },
       {
         "type": "command",
+        "forward": 0.8,
+        "lateral": 0,
+        "turn": 0,
+        "speed_limit": null,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 1.2000000000000002,
+        "lateral": 0,
+        "turn": -2,
+        "speed_limit": 0.3,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 1.2000000000000002,
+        "lateral": -0.24000000000000005,
+        "turn": -2,
+        "speed_limit": 0.3,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0.4,
+        "lateral": -0.08000000000000002,
+        "turn": -2,
+        "speed_limit": 0.3,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
+        "forward": 0,
+        "lateral": -0.45,
+        "turn": 0,
+        "speed_limit": 0.18,
+        "movement_profile": "exertion_adaptive"
+      },
+      {
+        "type": "command",
         "forward": 0,
         "lateral": 0,
         "turn": 0,
         "speed_limit": null,
-        "movement_profile": null
+        "movement_profile": "exertion_adaptive"
       }
     ],
-    "blocked": [],
+    "blocked": [
+      "s"
+    ],
     "streamStats": {
-      "receivedTo": 1300,
-      "cursor": 1228,
+      "receivedTo": 2425,
+      "cursor": 2352,
       "minFuture": 20,
       "shortHorizonSamples": 0,
-      "future": 71
+      "future": 72
     },
     "requestedForcePreserved": true,
-    "duration": 19.58000000000702,
-    "requiredEnd": 40.959999999999994,
-    "headingChangeDeg": 93.13764952649302,
-    "minUpright": 0.7655532524916103,
-    "minHeight": 0.6733324019320727,
-    "displacement": 3.2175494970642418,
-    "pathLength": 5.577187038966621,
-    "referencePathLength": 7.040407758294751,
-    "maxHeight": 0.8212749374253583,
+    "duration": 42.17999999998133,
+    "requiredEnd": 46.87999999999542,
+    "headingChangeDeg": 20.075306849902887,
+    "minUpright": 0.9720192495201134,
+    "minHeight": 0.7684210205282594,
+    "displacement": 3.9978858212303052,
+    "pathLength": 6.050676388395584,
+    "referencePathLength": 7.6950461321508,
+    "maxHeight": 0.8020427986863442,
     "effectiveCombinedNormRange": [
-      2.3139941557650126,
-      11.313457640942424
+      8.48528137423857,
+      11.281652617531739
     ],
     "movingForcePerHand": [
       {
         "hand": "left",
         "effectiveRange": [
-          1.6362409591674805,
+          6.0,
           6.0
         ],
         "effectiveMedian": 6.0,
-        "measuredMedian": 5.956156015396118,
-        "measuredP05": 5.176632404327393,
-        "measuredP95": 6.697991847991943
+        "measuredMedian": 6.023128509521484,
+        "measuredP05": 5.354716777801514,
+        "measuredP95": 6.5310492515563965
       },
       {
         "hand": "right",
         "effectiveRange": [
-          1.6362409591674805,
+          6.0,
           6.0
         ],
         "effectiveMedian": 6.0,
-        "measuredMedian": 6.034554719924927,
-        "measuredP05": 5.1871562004089355,
-        "measuredP95": 6.586751937866211
+        "measuredMedian": 6.004867076873779,
+        "measuredP05": 5.607746601104736,
+        "measuredP95": 6.388018608093262
       }
     ]
   },
@@ -451,10 +391,6 @@
     "hand": "both",
     "force": 8,
     "style": "Slow walk",
-    "sideCap": 6,
-    "arcCap": 6,
-    "slopeCap": 6,
-    "tiltStart": 0.48,
     "seconds": 36,
     "keys": [
       "w"
@@ -487,14 +423,15 @@
         "keys": []
       }
     ],
-    "id": "preserve6-ramp-turn-diagonal",
+    "id": "public-preserve-ramp-turn-diagonal",
     "slope": true,
+    "requireRampCrossing": true,
     "outcome": "success",
     "errors": [],
-    "start": 5.420000000000145,
+    "start": 5.6800000000002315,
     "appliedPhases": [
       {
-        "at": 8.119999999997791,
+        "at": 8.11999999999756,
         "requestedAt": 8,
         "keys": [
           "w",
@@ -503,7 +440,7 @@
         ]
       },
       {
-        "at": 14.020000000000632,
+        "at": 14.10000000000096,
         "requestedAt": 14,
         "keys": [
           "w",
@@ -512,14 +449,14 @@
         ]
       },
       {
-        "at": 20.060000000008014,
+        "at": 20.020000000008196,
         "requestedAt": 20,
         "keys": [
           "w"
         ]
       },
       {
-        "at": 30.02000000000796,
+        "at": 30.02000000000727,
         "requestedAt": 30,
         "keys": []
       }
@@ -578,7 +515,7 @@
       {
         "type": "command",
         "forward": 1.2000000000000002,
-        "lateral": 0.4368000000000001,
+        "lateral": 0.24000000000000005,
         "turn": 1,
         "speed_limit": 0.3,
         "movement_profile": "exertion_slope_adaptive"
@@ -586,7 +523,7 @@
       {
         "type": "command",
         "forward": 0.4,
-        "lateral": 0.1456,
+        "lateral": 0.08000000000000002,
         "turn": 1,
         "speed_limit": 0.3,
         "movement_profile": "exertion_slope_adaptive"
@@ -626,7 +563,7 @@
       {
         "type": "command",
         "forward": 1.2000000000000002,
-        "lateral": -0.4368000000000001,
+        "lateral": -0.24000000000000005,
         "turn": -1,
         "speed_limit": 0.3,
         "movement_profile": "exertion_slope_adaptive"
@@ -634,7 +571,7 @@
       {
         "type": "command",
         "forward": 0.4,
-        "lateral": -0.1456,
+        "lateral": -0.08000000000000002,
         "turn": -1,
         "speed_limit": 0.3,
         "movement_profile": "exertion_slope_adaptive"
@@ -676,22 +613,22 @@
       "s"
     ],
     "streamStats": {
-      "receivedTo": 2150,
-      "cursor": 2080,
+      "receivedTo": 2175,
+      "cursor": 2094,
       "minFuture": 20,
       "shortHorizonSamples": 0,
-      "future": 69
+      "future": 80
     },
     "requestedForcePreserved": true,
-    "duration": 36.119999999993745,
-    "requiredEnd": 41.4400000000081,
-    "headingChangeDeg": 3.4600103930124275,
-    "minUpright": 0.9464804003382745,
-    "minHeight": 0.7316522838368016,
-    "displacement": 10.407508287144942,
-    "pathLength": 12.153330273898307,
-    "referencePathLength": 14.339775650697119,
-    "maxHeight": 1.2264367435703603,
+    "duration": 36.11999999999305,
+    "requiredEnd": 41.70000000000749,
+    "headingChangeDeg": -0.311630685336552,
+    "minUpright": 0.9462785062951227,
+    "minHeight": 0.7248345475907346,
+    "displacement": 10.779544138852252,
+    "pathLength": 12.395474096796487,
+    "referencePathLength": 14.431875148621263,
+    "maxHeight": 1.228104042347928,
     "effectiveCombinedNormRange": [
       8.48528137423857,
       11.28228718048292
@@ -704,9 +641,9 @@
           6.0
         ],
         "effectiveMedian": 6.0,
-        "measuredMedian": 6.018974781036377,
-        "measuredP05": 5.031277656555176,
-        "measuredP95": 6.824251651763916
+        "measuredMedian": 6.029925346374512,
+        "measuredP05": 5.087303161621094,
+        "measuredP95": 6.8336405754089355
       },
       {
         "hand": "right",
@@ -715,124 +652,9 @@
           6.0
         ],
         "effectiveMedian": 6.0,
-        "measuredMedian": 6.0332536697387695,
-        "measuredP05": 5.006717205047607,
-        "measuredP95": 6.936150074005127
-      }
-    ]
-  },
-  {
-    "direction": "Z:1",
-    "hand": "both",
-    "force": 8,
-    "style": "Careful",
-    "sideCap": 6,
-    "arcCap": 6,
-    "slopeCap": 6,
-    "tiltStart": 0.48,
-    "seconds": 54,
-    "keys": [
-      "e"
-    ],
-    "phases": [
-      {
-        "at": 48,
-        "keys": []
-      }
-    ],
-    "id": "preserve6-upward-arc",
-    "requireTurnDeg": 200,
-    "minArcMeters": 15,
-    "outcome": "success",
-    "errors": [],
-    "start": 4.959999999999991,
-    "appliedPhases": [
-      {
-        "at": 48.039999999967186,
-        "requestedAt": 48,
-        "keys": []
-      }
-    ],
-    "progress": 5,
-    "resets": [],
-    "commands": [
-      {
-        "type": "command",
-        "forward": 0,
-        "lateral": 0,
-        "turn": 0,
-        "speed_limit": null,
-        "movement_profile": null
-      },
-      {
-        "type": "command",
-        "forward": 0,
-        "lateral": 0,
-        "turn": 0,
-        "speed_limit": null,
-        "movement_profile": "exertion_adaptive"
-      },
-      {
-        "type": "command",
-        "forward": 0.4,
-        "lateral": 0,
-        "turn": -5,
-        "speed_limit": 0.5,
-        "movement_profile": "exertion_adaptive"
-      },
-      {
-        "type": "command",
-        "forward": 0,
-        "lateral": 0,
-        "turn": 0,
-        "speed_limit": null,
-        "movement_profile": "exertion_adaptive"
-      }
-    ],
-    "blocked": [],
-    "streamStats": {
-      "receivedTo": 3025,
-      "cursor": 2956,
-      "minFuture": 20,
-      "shortHorizonSamples": 0,
-      "future": 68
-    },
-    "requestedForcePreserved": true,
-    "duration": 54.07999999995311,
-    "requiredEnd": 58.99999999996717,
-    "headingChangeDeg": -240.74641296998382,
-    "minUpright": 0.9716137959259271,
-    "minHeight": 0.7443267993421255,
-    "displacement": 6.878450022504433,
-    "pathLength": 19.38259126128959,
-    "referencePathLength": 21.858926582690405,
-    "maxHeight": 0.8123055420986885,
-    "effectiveCombinedNormRange": [
-      8.48528137423857,
-      11.280344379353961
-    ],
-    "movingForcePerHand": [
-      {
-        "hand": "left",
-        "effectiveRange": [
-          6.0,
-          6.0
-        ],
-        "effectiveMedian": 6.0,
-        "measuredMedian": 5.9227423667907715,
-        "measuredP05": 4.524162769317627,
-        "measuredP95": 7.663081645965576
-      },
-      {
-        "hand": "right",
-        "effectiveRange": [
-          6.0,
-          6.0
-        ],
-        "effectiveMedian": 6.0,
-        "measuredMedian": 5.983364582061768,
-        "measuredP05": 4.3329973220825195,
-        "measuredP95": 7.710562229156494
+        "measuredMedian": 5.977194786071777,
+        "measuredP05": 5.068572998046875,
+        "measuredP95": 6.975706100463867
       }
     ]
   }
